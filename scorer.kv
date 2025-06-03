@@ -1,0 +1,62 @@
+#:kivy 2.3.0
+
+<ScorerRootWidget>:
+    orientation: 'vertical'
+    padding: dp(10)
+    spacing: dp(10)
+
+    Label:
+        text: 'Scorer App - Main Screen'
+        font_size: '24sp'
+        size_hint_y: None
+        height: dp(40)
+
+    BoxLayout:
+        orientation: 'horizontal'
+        spacing: dp(10)
+
+        # Player 1 Area (Placeholder)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 0.5
+            Label:
+                text: 'Player 1'
+                font_size: '20sp'
+            Label:
+                id: p1_score_label
+                text: 'Score: 0'
+            Label:
+                id: p1_cp_label
+                text: 'CP: 0'
+
+        # Player 2 Area (Placeholder)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 0.5
+            Label:
+                text: 'Player 2'
+                font_size: '20sp'
+            Label:
+                id: p2_score_label
+                text: 'Score: 0'
+            Label:
+                id: p2_cp_label
+                text: 'CP: 0'
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(50)
+        orientation: 'horizontal'
+        spacing: dp(10)
+        Label:
+            id: round_label
+            text: 'Round: 1'
+        Label:
+            id: timer_label
+            text: 'Timer: 00:00:00'
+
+    Label:
+        id: status_label
+        text: 'Status: Game Ready'
+        size_hint_y: None
+        height: dp(30) 

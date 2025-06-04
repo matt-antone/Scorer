@@ -8,6 +8,7 @@ if os_type == "Linux":  # Assuming Raspberry Pi OS reports as Linux
     Config.set('graphics', 'fullscreen', 'auto')
     Config.set('graphics', 'show_cursor', '0') # Hide cursor for kiosk on Pi
     Config.set('graphics', 'borderless', '1') # Attempt to set borderless early for Pi
+    Config.set('graphics', 'window_state', 'maximized') # Add attempt to maximize window state
 else:  # Default to development mode (e.g., macOS, Windows)
     Config.set('graphics', 'fullscreen', '0') # Ensure not fullscreen
     Config.set('graphics', 'show_cursor', '1') # Show cursor for dev

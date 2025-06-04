@@ -967,16 +967,36 @@ class ResumeOrNewScreen(Screen):
         app = App.get_running_app()
         gs = app.game_state
         
-        # Determine target screen based on loaded game_phase
-        target_screen = app._determine_screen_from_gamestate()
-        print(f"ResumeOrNewScreen: Resuming game. Transitioning to '{target_screen}' based on game_phase: {gs.get('game_phase')}")
+        current_phase = gs.get('game_phase')
+        target_screen_for_resume = 'name_entry' # Default fallback
+
+        if current_phase == 'playing':
+            target_screen_for_resume = 'scorer_root'
+        elif current_phase == 'first_turn_setup':
+            target_screen_for_resume = 'first_turn_setup'
+        elif current_phase == 'deployment_setup':
+            target_screen_for_resume = 'deployment_setup'
+        # Add other phases here if they are legitimately resumable states
+        # For example, if you could resume directly to 'name_entry' under some condition
+        # elif current_phase == 'name_entry':
+        #     target_screen_for_resume = 'name_entry'
+        else:
+            # If the phase is unknown or not considered directly resumable to a specific game screen,
+            # it might indicate an issue or a need to go to a more general starting point.
+            # However, given our load_game_state logic, a "resumable" status should imply a valid phase.
+            print(f"ResumeOrNewScreen: Warning - Unexpected game_phase '{current_phase}' for resume. Defaulting to 'scorer_root'.")
+            target_screen_for_resume = 'scorer_root' # Fallback to scorer if phase is unusual but game was 'resumable'
+
+        print(f"ResumeOrNewScreen: Resuming game. Determined target screen: '{target_screen_for_resume}' from game_phase: '{current_phase}'")
         
-        # Special handling if resuming directly to scorer_root for timer
-        if target_screen == 'scorer_root':
+        # Special handling if resuming directly to scorer_root for timer and UI updates
+        if target_screen_for_resume == 'scorer_root':
             scorer_screen = app.screen_manager.get_screen('scorer_root')
             if scorer_screen:
-                # Logic similar to transition_from_splash for scorer_root
-                if gs.get('game_phase') == 'playing':
+                # Ensure UI is updated based on the loaded state
+                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
+                # Handle timer state
+                if gs.get('game_phase') == 'playing': # Double check, should be true if going to scorer_root
                     if gs.get('game_timer', {}).get('status') == 'running':
                         is_scheduled = False
                         for event in Clock.get_events():
@@ -984,15 +1004,18 @@ class ResumeOrNewScreen(Screen):
                                 is_scheduled = True
                                 break
                         if not is_scheduled:
-                            print("ResumeOrNewScreen: Timer status 'running', re-scheduling for scorer_root.")
+                            print("ResumeOrNewScreen (to scorer_root): Timer status 'running', re-scheduling.")
                             Clock.schedule_interval(scorer_screen.update_timer_display, 1)
-                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
-                        print("ResumeOrNewScreen: Game playing, timer stopped & never started. Calling start_timer for scorer_root.")
+                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0 and gs.get('active_player_id') is not None:
+                        # This condition implies game is playing, timer was never started (e.g. quit before first turn fully ended)
+                        # or was explicitly stopped but should now resume.
+                        print("ResumeOrNewScreen (to scorer_root): Game playing, timer seems stopped/reset. Calling start_timer.")
                         scorer_screen.start_timer()
-                # Ensure UI is updated after transition
-                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
-        
-        app.screen_manager.current = target_screen
+                    else:
+                         # Ensure timer display reflects current state even if not actively running (e.g., was paused)
+                        Clock.schedule_once(lambda x: scorer_screen.update_timer_display(0), 0.1)
+
+        app.screen_manager.current = target_screen_for_resume
 
     def start_new_game_from_resume_screen_action(self):
         print("ResumeOrNewScreen: Starting new game.")
@@ -1060,48 +1083,78 @@ class ScorerApp(App):
             print(f"Error saving game state to {save_path}: {e}")
 
     def load_game_state(self):
-        load_path = self.get_save_file_path()
-        if os.path.exists(load_path):
-            try:
-                with open(load_path, 'r') as f:
+        """
+        Loads game state from SAVE_FILE_NAME.
+        Initializes to default if no valid save file is found or if the game was over.
+        Returns a status: "no_save", "game_over", or "resumable".
+        """
+        save_file_path = self.get_save_file_path()
+        try:
+            if os.path.exists(save_file_path):
+                with open(save_file_path, 'r') as f:
                     loaded_state = json.load(f)
+                    # Basic validation: check if it's a dictionary and has player keys
                     if isinstance(loaded_state, dict) and \
-                       'player1' in loaded_state and \
-                       'game_phase' in loaded_state and \
-                       loaded_state.get('game_phase') != self._get_default_game_state().get('game_phase'):
-                        self.game_state.update(loaded_state)
-                        print(f"Game state loaded from {load_path}")
-                        return True
+                       'player1' in loaded_state and 'player2' in loaded_state and \
+                       'game_phase' in loaded_state: # Ensure game_phase exists
+                        
+                        self.game_state.update(loaded_state) # Load valid state
+                        print(f"Game state loaded from {save_file_path}")
+                        
+                        if self.game_state.get('game_phase') == 'game_over':
+                            print("Loaded game state is 'game_over'. Treating as new game for screen choice.")
+                            # We've loaded it, but for screen determination, it's like starting fresh for 'name_entry'
+                            return "game_over" 
+                        else:
+                            # Game is not over, or game_phase is something else (e.g. playing, setup)
+                            print(f"Resumable game state loaded. Phase: {self.game_state.get('game_phase')}")
+                            return "resumable"
                     else:
-                        print(f"Save file at {load_path} does not appear to be a valid in-progress game. Starting fresh.")
-                        self.game_state = self._get_default_game_state()
-                        return False
-            except Exception as e:
-                print(f"Error loading game state from {load_path}: {e}. Starting with default state.")
-                self.game_state = self._get_default_game_state()
-                return False
-        else:
-            print(f"No save file found at {load_path}. Starting with default state.")
-            self.game_state = self._get_default_game_state()
-            return False
+                        print(f"Save file {save_file_path} is incomplete or malformed. Starting new game state.")
+                        self.initialize_game_state() # Reset to default
+                        return "no_save"
+            else:
+                print("No save file found. Initializing new game state.")
+                self.initialize_game_state() # Ensure clean state if no file
+                return "no_save"
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {save_file_path}. Initializing new game state.")
+            self.initialize_game_state() # Reset to default
+            return "no_save"
+        except Exception as e:
+            print(f"An unexpected error occurred during load_game_state: {e}. Initializing new game state.")
+            self.initialize_game_state() # Reset to default
+            return "no_save"
 
     def _determine_screen_from_gamestate(self):
-        gs = self.game_state
-        if gs.get('game_phase') == 'name_entry' or not gs.get('player1', {}).get('name') or gs.get('game_phase') == 'setup':
-            return 'name_entry'
-        elif gs.get('game_phase') == 'deployment_setup':
-            return 'deployment_setup'
-        elif gs.get('game_phase') == 'first_turn_setup':
-            return 'first_turn_setup'
-        elif gs.get('game_phase') == 'playing':
-            if gs.get('current_round', 0) > 5:
-                return 'game_over' 
+        """
+        Determines the initial screen based on the loaded game state.
+        """
+        load_status = self.load_game_state() # This now populates self.game_state
+
+        if load_status == "resumable":
+            # Check if essential player names are present for a truly resumable game.
+            # This prevents going to resume_or_new if the game state is somehow partial
+            # before names are even entered (though load_game_state's initialize should prevent this).
+            p1_name = self.game_state.get('player1', {}).get('name')
+            p2_name = self.game_state.get('player2', {}).get('name')
+            if p1_name and p2_name:
+                print(f"Determined screen: resume_or_new (status: {load_status})")
+                return 'resume_or_new'
             else:
-                return 'scorer_root'
-        elif gs.get('game_phase') == 'game_over':
-            return 'game_over'
-        else:
-            print(f"Warning: Unknown game_phase '{gs.get('game_phase')}' in _determine_screen_from_gamestate. Defaulting to name_entry.")
+                # If names are missing even if it thought it was resumable, something is off. Start new.
+                print("Resumable state but missing player names. Defaulting to name_entry.")
+                self.initialize_game_state() # Ensure a fresh start if names were bad
+                return 'name_entry'
+        elif load_status == "game_over":
+            print(f"Determined screen: name_entry (status: {load_status}, game was over)")
+            # Game was over, so we want to start a new game by going to name entry.
+            # Ensure a clean slate for the new game by re-initializing
+            self.initialize_game_state()
+            return 'name_entry'
+        else: # "no_save" or any other unhandled case from load_game_state
+            print(f"Determined screen: name_entry (status: {load_status})")
+            # No save or bad save, so start new. initialize_game_state was already called in load_game_state.
             return 'name_entry'
 
     def build(self):
@@ -1116,14 +1169,10 @@ class ScorerApp(App):
         self.screen_manager.add_widget(ScorerRootWidget(name='scorer_root'))
         self.screen_manager.add_widget(GameOverScreen(name='game_over'))
 
-        has_meaningful_save = self.load_game_state()
-
-        if has_meaningful_save:
-            actual_initial_screen_after_splash = 'resume_or_new'
-            print(f"Build: Meaningful save detected. Initial screen will be 'resume_or_new'.")
-        else:
-            actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
-            print(f"Build: No meaningful save. Initial screen will be '{actual_initial_screen_after_splash}'.")
+        # Directly determine the target screen after splash.
+        # _determine_screen_from_gamestate now handles loading and deciding.
+        actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
+        print(f"Build: Initial screen after splash will be '{actual_initial_screen_after_splash}'.")
             
         self.screen_manager.current = 'splash_screen'
         Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen_after_splash, dt), self.SPLASH_DURATION)

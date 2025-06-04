@@ -10,7 +10,7 @@
 
 <ScoreboardButton@Button>:
     font_name: 'InterBlack'
-    background_color: 1, 1, 1, 1    # White background
+    background_color: 0, 0, 0, 0    # Button's own background transparent
     color: 0, 0, 0, 1                # Black text
     size_hint_y: None
     height: dp(35) # Adjust as needed, similar to CSS padding/font size
@@ -19,15 +19,34 @@
     # To get a solid color, we draw on the canvas.
     canvas.before:
         Color:
-            rgba: self.background_color
+            rgba: 1, 1, 1, 1            # Explicitly white for the RoundedRectangle
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [dp(5)] # Direct value to fix the TypeError
+            radius: [dp(10)]
     # Reset Kivy's default button image backgrounds
     background_normal: ''
     background_down: ''
 
+<Player1Button@ScoreboardButton>:
+    color: 1, 1, 1, 1 # White text
+    canvas.before:
+        Color:
+            rgba: 1, 0, 0, 1 # Red background (#FF0000)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+<Player2Button@ScoreboardButton>:
+    color: 1, 1, 1, 1 # White text
+    canvas.before:
+        Color:
+            rgba: 0, 0.349, 1, 1 # Blue background (#0059FF)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
 
 <HeaderLayout@BoxLayout>:
     orientation: 'horizontal'
@@ -558,7 +577,7 @@ ScreenManager:
                     height: self.texture_size[1] + dp(5)
 
                 # P1 Concede Button (Corrected Placement)
-                ScoreboardButton:
+                Player1Button:
                     id: p1_concede_button_id
                     text: "Concede"
                     size_hint_y: None
@@ -582,17 +601,17 @@ ScreenManager:
                     BoxLayout: 
                         size_hint_y: None
                         height: dp(35)
-                        ScoreboardButton:
+                        Player1Button:
                             id: p1_end_turn_button_id
-                            text: "End Turn"  # CORRECTED TEXT
+                            text: "End Turn"
                             font_size: '16sp'
                             on_press: root.end_turn()
                             opacity: 0 
                             disabled: True
 
-                    ScoreboardButton:
-                        id: p1_set_score_button_id # Added id for clarity, though not strictly needed if text is static
-                        text: "Set Score" # CORRECTED TEXT in upcoming step, done here for atomicity
+                    Player1Button:
+                        id: p1_set_score_button_id
+                        text: "Set Score"
                         size_hint_y: None
                         height: dp(35)
                         on_press: root.open_score_numpad(1)
@@ -603,7 +622,7 @@ ScreenManager:
                         size_hint_y: None
                         height: dp(35)
                         spacing: dp(5)
-                        ScoreboardButton:
+                        Player1Button:
                             text: "-1 CP"
                             font_size: '14sp'
                             on_press: root.remove_cp(1)
@@ -614,7 +633,7 @@ ScreenManager:
                             width: dp(30)
                             halign: 'center'
                             valign: 'middle'
-                        ScoreboardButton:
+                        Player1Button:
                             text: "+1 CP"
                             font_size: '14sp'
                             on_press: root.add_cp(1)
@@ -665,7 +684,7 @@ ScreenManager:
                     height: self.texture_size[1] + dp(5)
 
                 # P2 Concede Button (Corrected Placement)
-                ScoreboardButton:
+                Player2Button:
                     id: p2_concede_button_id
                     text: "Concede"
                     size_hint_y: None
@@ -689,17 +708,17 @@ ScreenManager:
                     BoxLayout: 
                         size_hint_y: None
                         height: dp(35)
-                        ScoreboardButton:
+                        Player2Button:
                             id: p2_end_turn_button_id 
-                            text: "End Turn"  # CORRECTED TEXT
+                            text: "End Turn"
                             font_size: '16sp'
                             on_press: root.end_turn()
                             opacity: 0
                             disabled: True
 
-                    ScoreboardButton:
-                        id: p2_set_score_button_id # Added id for clarity
-                        text: "Set Score" # CORRECTED TEXT in upcoming step, done here for atomicity
+                    Player2Button:
+                        id: p2_set_score_button_id
+                        text: "Set Score"
                         size_hint_y: None
                         height: dp(35)
                         on_press: root.open_score_numpad(2)
@@ -710,7 +729,7 @@ ScreenManager:
                         size_hint_y: None
                         height: dp(35)
                         spacing: dp(5)
-                        ScoreboardButton:
+                        Player2Button:
                             text: "-1 CP"
                             font_size: '14sp'
                             on_press: root.remove_cp(2)
@@ -721,7 +740,7 @@ ScreenManager:
                             width: dp(30)
                             halign: 'center'
                             valign: 'middle'
-                        ScoreboardButton:
+                        Player2Button:
                             text: "+1 CP"
                             font_size: '14sp'
                             on_press: root.add_cp(2)

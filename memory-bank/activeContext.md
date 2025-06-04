@@ -4,40 +4,49 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## 1. Current Work Focus
 
-- Stabilizing the application after a recent revert to an earlier commit.
-- Verifying all core Kivy application functionality on macOS, including setup screens, main game interface, scoring, timers, and game state persistence.
-- Preparing for the next phase of development, which could involve addressing macOS-specific SDL2 warnings or proceeding with new features.
+- Thoroughly testing the newly implemented "Resume or New Game" feature flow.
+- Confirming overall application stability and UI consistency after recent major feature additions and bug fixes.
+- Preparing for user feedback and potentially moving towards Raspberry Pi deployment and testing if macOS stability is satisfactory.
 
 ## 2. Recent Changes & Decisions
 
-- **Project Reverted**: The project was reverted to a commit from before the recent series of `ObjectProperty` binding issues and subsequent complex troubleshooting steps.
-- **OS-Specific Graphics Re-applied**: The Python code in `main.py` for OS-specific graphics configuration (fullscreen on Pi, windowed with cursor on macOS) was successfully re-implemented and is functional.
-- **Application Stability**: The application is currently launching, the splash screen displays, and navigation through all implemented screens (`NameEntryScreen`, `DeploymentSetupScreen`, `FirstTurnSetupScreen`, `ScorerRootWidget`, `GameOverScreen`) is working on macOS. Core game logic (scoring, CP, timers, round progression, game state saving/loading) is believed to be in its previously functional state.
-- **Acknowledged macOS Warnings**: The `objc` class duplication warnings related to SDL2 (from Kivy and `ffpyplayer`) are still present in the console output on macOS. These are noted as a potential source of instability on the development environment but are not currently preventing the application from running.
-- **Previous UI Work**: Prior to the revert, significant work had been done on:
-  - Implementing the full setup flow (name entry, deployment, first turn).
-  - Developing the main scoring screen with player scores, CPs, timers, and round tracking.
-  - Implementing game state persistence using `game_state.json`.
-  - Redesigning the UI based on SVG/CSS mockups, including font and color scheme updates.
-  - Extensive troubleshooting of Kivy `ObjectProperty` bindings and KV language intricacies.
-- **Global UI Theme Adopted**: A "Red vs. Blue" two-column visual theme will be applied to all screens, except for the `SplashScreen`. This will typically involve using `assets/background.png` and organizing content into left (red) and right (blue) areas. The "InterBlack" font will be used for key text elements to match the design.
+- **"Resume or New Game" Feature Implemented**:
+  - A new screen (`ResumeOrNewScreen`) has been added after the `SplashScreen`.
+  - If a valid `game_state.json` is detected, this screen prompts the user to either "Resume Game" or "Start New Game".
+  - "Resume Game" loads the existing game state and navigates to the appropriate screen based on `game_phase`.
+  - "Start New Game" clears the old state and proceeds to `NameEntryScreen`.
+  - If no save file (or an invalid/initial state save file) is found, the app proceeds directly to `NameEntryScreen` (or the appropriate screen for a new game flow) after the splash.
+  - `ScorerApp.load_game_state()` was updated to return a boolean indicating if a _meaningful_ (in-progress) save was loaded.
+  - `ScorerApp._determine_screen_from_gamestate()` helper method was added to centralize screen determination logic.
+  - `ScorerApp.build()` logic was significantly updated to manage this new initial flow.
+  - File deletion for `game_state.json` was tested (manual deletion required for out-of-workspace files).
+- **Timer and End Turn Button Logic Resolved**:
+  - Issues where the timer was running for the inactive player have been fixed; the timer display now correctly reflects only the active player's time.
+  - The "End Turn" button visibility is now correctly managed, appearing only for the active player.
+  - The "End Turn" button correctly switches turns, updates player states, and advances rounds.
+  - Corrected Kivy `ObjectProperty` mapping for `p2_end_turn_button` in `scorer.kv` resolved "widget not ready" issues.
+- **Application Structure Corrected**:
+  - An `AttributeError` related to `_determine_screen_from_gamestate` was resolved by moving this method, along with `load_game_state` and the main `build` method, into the `ScorerApp` class from `ScorerRootWidget`. This ensures correct `self` context and proper application lifecycle management.
+- **Global UI Theme & `ScorerRootWidget` Redesign**:
+  - The "Red vs. Blue" two-column theme is active on `ScorerRootWidget` and other new screens (like `ResumeOrNewScreen`).
+  - "InterBlack" font is registered and used as specified.
+  - The `ScorerRootWidget` uses the new layout based on the HTML/CSS design, with updated KV and Python `ObjectProperty` bindings.
+- **General Stability**: The application is significantly more stable and feature-complete regarding the core Kivy GUI operations. The main game loop, setup screens, and state transitions are functioning as intended on macOS.
+- **Acknowledged macOS Warnings**: The `objc` class duplication warnings (SDL2) remain but are not currently blocking development.
 
 ## 3. Next Steps
 
-- Conduct thorough testing of all existing Kivy application features on macOS to confirm the stability and correctness of the reverted state plus the re-applied cursor fix. This includes:
-  - Name entry and saving.
-  - Deployment initiative rolls and attacker/defender choices.
-  - First turn initiative rolls and first turn choices.
-  - Main game screen: score updates, CP updates, timer functionality (game timer, player timers), end turn logic, round advancement.
-  - Game over screen: correct display of winner and stats.
-  - "New Game" functionality from all relevant points.
-  - Game state saving on exit and loading on startup.
-- Based on testing, decide on the next immediate development priority:
-  - Option A: Attempt to resolve the `objc` SDL2 duplication warnings on macOS to improve development environment stability.
-  - Option B: Proceed with new feature development (e.g., Flask web server integration) if the current stability is deemed sufficient for now.
+- Conduct comprehensive testing of the "Resume or New Game" flow under various conditions:
+  - No save file present.
+  - Save file from an early game phase (e.g., `deployment_setup`).
+  - Save file from mid-game (`playing` phase).
+  - Save file from `game_over` phase.
+- Verify game state persistence and timer states when resuming games.
+- Gather user feedback on the current feature set and UI.
+- Depending on feedback and stability, prepare for initial testing on the Raspberry Pi.
 
 ## 4. Active Questions & Considerations
 
-- What is the most effective and least disruptive way to address the SDL2 duplication warnings on macOS, if chosen as the next step?
-- Confirm that all UI elements and logic from the more recent (pre-revert) UI redesign efforts are satisfactory in the current reverted state or identify any desired elements to reintegrate carefully.
-- Plan for the Flask web server implementation, including API design and Kivy-Flask communication.
+- Are there any edge cases in the "Resume or New Game" logic that need further refinement?
+- Is the current state sufficiently stable to begin Raspberry Pi deployment and testing?
+- Revisit Flask web server integration planning once Kivy app stability is fully confirmed on target hardware.

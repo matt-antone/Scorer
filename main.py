@@ -1,5 +1,6 @@
 from kivy.config import Config # Ensure Config is imported first for this change
 import platform # For OS detection
+from kivy.core.window import Window # Ensure Window is imported
 
 # OS-specific graphics configuration
 os_type = platform.system()
@@ -67,8 +68,8 @@ else:
 
 # Configure the window to be a fixed size, simulating the Pi screen for now
 # We can make this more dynamic or fullscreen later.
-Config.set('graphics', 'width', '800') # Typical 5-inch screen resolution might be 800x480
-Config.set('graphics', 'height', '480')
+Config.set('graphics', 'width', '800') # Restored to 800
+Config.set('graphics', 'height', '480') # Restored to 480
 Config.set('graphics', 'resizable', False) # Change to True if you want to resize on desktop
 
 # --- New Setup Screens ---
@@ -458,19 +459,17 @@ class ScorerRootWidget(Screen):
     p1_name_label = ObjectProperty(None)
     p1_score_label = ObjectProperty(None)
     p1_cp_label = ObjectProperty(None)
-    p1_player_timer_label = ObjectProperty(None) # Was already here, KV id matches now
+    p1_player_timer_label = ObjectProperty(None)
     p1_end_turn_button = ObjectProperty(None)
+    p1_concede_button = ObjectProperty(None)
 
     # Player 2 elements from KV
     p2_name_label = ObjectProperty(None)
     p2_score_label = ObjectProperty(None)
     p2_cp_label = ObjectProperty(None)
-    p2_player_timer_label = ObjectProperty(None) # Was already here, KV id matches now
-    p2_end_turn_button = ObjectProperty(None) # NEW: ObjectProperty for Player 2's end turn button
-    # Note: No p2_end_turn_button in KV based on HTML design
-
-    # Obsolete properties (p1_action_area, p2_action_area) are removed.
-    # status_label is also removed as it's not in the new KV design for this screen.
+    p2_player_timer_label = ObjectProperty(None)
+    p2_end_turn_button = ObjectProperty(None)
+    p2_concede_button = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -513,10 +512,12 @@ class ScorerRootWidget(Screen):
             "p2_score_label": self.p2_score_label,
             "p2_cp_label": self.p2_cp_label,
             "p1_end_turn_button": self.p1_end_turn_button,
-            "p2_end_turn_button": self.p2_end_turn_button, # NEW: Add to required_widgets check
+            "p2_end_turn_button": self.p2_end_turn_button,
             "header_total_time_label": self.header_total_time_label,
             "p1_player_timer_label": self.p1_player_timer_label,
-            "p2_player_timer_label": self.p2_player_timer_label
+            "p2_player_timer_label": self.p2_player_timer_label,
+            "p1_concede_button": self.p1_concede_button,
+            "p2_concede_button": self.p2_concede_button
         }
         all_ready = True
         for name, widget_ref in required_widgets.items():
@@ -578,6 +579,18 @@ class ScorerRootWidget(Screen):
         
         print(f"ScorerRootWidget: p1_end_turn_button.opacity={self.p1_end_turn_button.opacity}, .disabled={self.p1_end_turn_button.disabled}")
         print(f"ScorerRootWidget: p2_end_turn_button.opacity={self.p2_end_turn_button.opacity}, .disabled={self.p2_end_turn_button.disabled}")
+
+        # Manage Concede button visibility and state
+        if is_playing:
+            self.p1_concede_button.opacity = 1
+            self.p1_concede_button.disabled = False
+            self.p2_concede_button.opacity = 1
+            self.p2_concede_button.disabled = False
+        else:
+            self.p1_concede_button.opacity = 0
+            self.p1_concede_button.disabled = True
+            self.p2_concede_button.opacity = 0
+            self.p2_concede_button.disabled = True
 
         if gs['game_phase'] == "playing":
             self.header_round_label.text = f"Round {gs['current_round']}"
@@ -714,7 +727,35 @@ class ScorerRootWidget(Screen):
         if not round_advanced_or_game_ended or gs["game_phase"] == "playing": # Ensure timer display updates if game still playing
              print("End Turn: Calling self.update_timer_display(0)")
              self.update_timer_display(0)
+        App.get_running_app().save_game_state() # Save state after turn ends
         print(f"--- End Turn Processing Complete. Active player: {gs['active_player_id']} ---")
+
+    def player_concedes(self, conceding_player_id):
+        gs = App.get_running_app().game_state
+        print(f"--- Player {conceding_player_id} Pressed Concede Button ---")
+
+        if gs["game_phase"] != "playing":
+            print(f"Concede: Game not in 'playing' phase. No action.")
+            return
+
+        winning_player_id = 1 if conceding_player_id == 2 else 2
+        conceding_player_name = gs[f'player{conceding_player_id}']['name']
+        winning_player_name = gs[f'player{winning_player_id}']['name']
+
+        gs["game_phase"] = "game_over"
+        gs["status_message"] = f"{conceding_player_name} concedes. {winning_player_name} wins!"
+        # Scores remain as they were when concede was pressed unless specified otherwise
+        gs["last_round_played"] = gs["current_round"] # Record the round of concession
+
+        print(f"Concede: Player {conceding_player_id} ({conceding_player_name}) conceded.")
+        print(f"Concede: Player {winning_player_id} ({winning_player_name}) wins.")
+        print(f"Concede: Game phase set to 'game_over'. Last round played: {gs['last_round_played']}")
+
+        self.stop_timer()
+        self.update_ui_from_state() # Update UI to hide buttons, show game over state on labels
+        self.manager.current = 'game_over'
+        App.get_running_app().save_game_state()
+        print(f"--- Concession Processing Complete ---")
 
     def open_score_numpad(self, player_id_to_score):
         gs = App.get_running_app().game_state
@@ -745,6 +786,7 @@ class ScorerRootWidget(Screen):
             gs[player_key]["total_score"] = gs[player_key]["primary_score"] + gs[player_key].get("secondary_score", 0) 
             gs["status_message"] = f"{gs[player_key]['name']} Score Updated"
             self.update_ui_from_state()
+            App.get_running_app().save_game_state() # Save after processing numpad value
         else:
             gs["status_message"] = f"Error: Invalid player ID"
             self.update_ui_from_state()
@@ -757,6 +799,7 @@ class ScorerRootWidget(Screen):
             gs[player_key]["cp"] = max(0, gs[player_key]["cp"] + amount)
             gs["status_message"] = f"{gs[player_key]['name']} CP Updated"
             self.update_ui_from_state()
+            App.get_running_app().save_game_state() # Save after adding CP
 
     def remove_cp(self, player_id, amount=1): 
         gs = App.get_running_app().game_state
@@ -769,6 +812,7 @@ class ScorerRootWidget(Screen):
             else:
                 gs["status_message"] = f"{gs[player_key]['name']} CP is 0"
             self.update_ui_from_state()
+            App.get_running_app().save_game_state() # Save after removing CP
     
     def request_new_game(self):
         print("New Game button pressed.")
@@ -859,16 +903,29 @@ class GameOverScreen(Screen):
     def on_pre_enter(self, *args):
         gs = App.get_running_app().game_state
         
-        # Determine winner
+        winner_text = ""
+        raw_status_message = gs.get("status_message", "")
+        status_message_lower = raw_status_message.lower()
+        print(f"GameOverScreen.on_pre_enter: Raw status_message from game_state: '{raw_status_message}'")
+
+        # Always get player scores from game_state for display
         p1_score = gs['player1']['total_score']
         p2_score = gs['player2']['total_score']
-        winner_text = ""
-        if p1_score > p2_score:
-            winner_text = f"{gs['player1']['name']} Wins!"
-        elif p2_score > p1_score:
-            winner_text = f"{gs['player2']['name']} Wins!"
+
+        # Check for concession: looking for "concedes." and "wins!" (note the period)
+        if "concedes." in status_message_lower and "wins!" in status_message_lower:
+            # Game ended by concession, winner is in the status message
+            winner_text = raw_status_message # Use the original casing from game_state as it's already formatted
+            print(f"GameOverScreen: Detected concession. Winner text set to: '{winner_text}'")
         else:
-            winner_text = "It's a Tie!"
+            # Game ended normally or status_message format for concession not matched, determine by score
+            if p1_score > p2_score:
+                winner_text = f"{gs['player1']['name']} Wins by Score!"
+            elif p2_score > p1_score:
+                winner_text = f"{gs['player2']['name']} Wins by Score!"
+            else:
+                winner_text = "It's a Tie by Score!"
+            print(f"GameOverScreen: No concession detected or message format mismatch. Determined winner by score. P1: {p1_score}, P2: {p2_score}. Winner text: '{winner_text}'")
         
         if self.result_status_label: self.result_status_label.text = winner_text
         
@@ -1107,4 +1164,5 @@ class ScorerApp(App):
         self.save_game_state()
 
 if __name__ == '__main__':
+    Window.size = (800, 480) # Explicitly set window size before run
     ScorerApp().run() 

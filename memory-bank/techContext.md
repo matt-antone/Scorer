@@ -12,7 +12,8 @@ This document lists the technologies, development setup, technical constraints, 
 - **QR Code Generation**: `qrcode` library (likely with `Pillow` for image manipulation).
   - Reason: A popular and easy-to-use Python library for creating QR codes.
 - **Data Persistence**: JSON files.
-  - Reason: Game sessions (current scores, CPs, round, timer state, etc.) will be saved to local JSON files. This allows for game state to be preserved between application runs or in case of a restart, and for players to potentially reference past games.
+  - Reason: Game sessions (current scores, CPs, round, timer state, etc.) will be saved to local JSON files (specifically `game_state.json` in the Kivy user data directory). This allows for game state to be preserved between application runs or in case of a restart.
+- **Custom Fonts**: Uses `LabelBase.register` from `kivy.core.text` to register custom fonts like "InterBlack" for use throughout the application via KV language or Python styling.
 
 ## 2. Platform & Deployment
 

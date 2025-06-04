@@ -439,14 +439,16 @@ ScreenManager:
     p1_name_label: p1_name_label_id
     p1_score_label: p1_score_label_id
     p1_cp_label: p1_cp_label_id
-    p1_player_timer_label: p1_player_timer_label_id # Changed from p1_player_timer_id
+    p1_player_timer_label: p1_player_timer_label_id
     p1_end_turn_button: p1_end_turn_button_id
+    p1_concede_button: p1_concede_button_id
     # P2 elements
     p2_name_label: p2_name_label_id
     p2_score_label: p2_score_label_id
     p2_cp_label: p2_cp_label_id
-    p2_player_timer_label: p2_player_timer_label_id # Changed from p2_player_timer_id
-    p2_end_turn_button: p2_end_turn_button_id # NEW: Explicitly map the ObjectProperty to the id
+    p2_player_timer_label: p2_player_timer_label_id
+    p2_end_turn_button: p2_end_turn_button_id
+    p2_concede_button: p2_concede_button_id
 
     canvas.before:
         Color:
@@ -547,70 +549,75 @@ ScreenManager:
                     height: self.texture_size[1] + dp(5)
 
                 InterBlack:
-                    id: p1_player_timer_label_id # Matched to Python ObjectProperty
-                    text: '00:00:00' # Placeholder
-                    font_size: '18sp' # From CSS .player_time
+                    id: p1_player_timer_label_id
+                    text: '00:00:00'
+                    font_size: '18sp'
                     halign: 'left'
                     valign: 'top'
                     size_hint_y: None
                     height: self.texture_size[1] + dp(5)
 
+                # P1 Concede Button (Corrected Placement)
+                ScoreboardButton:
+                    id: p1_concede_button_id
+                    text: "Concede"
+                    size_hint_y: None
+                    height: dp(35) 
+                    on_press: root.player_concedes(1)
+                    opacity: 0
+                    disabled: True
+
                 Widget: # Spacer to push UI to bottom
                     size_hint_y: 1
 
-                # UI controls container (Kivy: BoxLayout, orientation: 'vertical', children aligned center horizontally)
+                # Player 1 UI Controls
                 BoxLayout:
                     id: p1_ui_controls_id
                     orientation: 'vertical'
-                    spacing: dp(20) # From CSS .ui gap
+                    spacing: dp(10) 
                     size_hint_y: None
-                    height: self.minimum_height # Adjust to content
+                    height: self.minimum_height
 
-                    # End Turn button container
-                    BoxLayout: # To center the button if ScoreboardButton itself doesn't fill width
+                    # End Turn button container (MOVED TO TOP)
+                    BoxLayout: 
                         size_hint_y: None
                         height: dp(35)
                         ScoreboardButton:
                             id: p1_end_turn_button_id
-                            text: 'End Turn'
-                            on_press: root.end_turn() # Assuming player 1 is ID 1
-                            size_hint_x: 0.6 # Centered
-                            pos_hint: {'center_x': 0.5}
+                            text: "End Turn"  # CORRECTED TEXT
+                            font_size: '16sp'
+                            on_press: root.end_turn()
+                            opacity: 0 
+                            disabled: True
 
-
-                    # Settings group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution)
-                    BoxLayout:
-                        id: p1_settings_id
-                        orientation: 'horizontal'
-                        spacing: dp(20) # From CSS .settings gap
+                    ScoreboardButton:
+                        id: p1_set_score_button_id # Added id for clarity, though not strictly needed if text is static
+                        text: "Set Score" # CORRECTED TEXT in upcoming step, done here for atomicity
                         size_hint_y: None
-                        height: dp(35) # Match button height
-
+                        height: dp(35)
+                        on_press: root.open_score_numpad(1)
+                    
+                    # CP Buttons for P1 (RESTORED)
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: dp(35)
+                        spacing: dp(5)
                         ScoreboardButton:
-                            id: p1_set_score_button_id
-                            text: 'Set Score'
-                            on_press: root.open_score_numpad(1)
-                            size_hint_x: 1 # Takes up proportional space
-
-                        # Set CP group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution)
-                        BoxLayout:
-                            id: p1_set_cp_id
-                            orientation: 'horizontal'
-                            spacing: dp(10) # From CSS .set_cp gap
-                            size_hint_x: 1 # Takes up proportional space
-                            ScoreboardButton:
-                                text: '-1'
-                                on_press: root.remove_cp(1)
-                            InterBlack:
-                                text: 'CP'
-                                font_size: '18sp' # From CSS .set_cp font-size
-                                size_hint_x: None
-                                width: dp(30)
-                                halign: 'center'
-                                valign: 'middle'
-                            ScoreboardButton:
-                                text: '+1'
-                                on_press: root.add_cp(1)
+                            text: "-1 CP"
+                            font_size: '14sp'
+                            on_press: root.remove_cp(1)
+                        InterBlack:
+                            text: "CP"
+                            font_size: '16sp'
+                            size_hint_x: None
+                            width: dp(30)
+                            halign: 'center'
+                            valign: 'middle'
+                        ScoreboardButton:
+                            text: "+1 CP"
+                            font_size: '14sp'
+                            on_press: root.add_cp(1)
 
             # Blue Player Panel Area (Grid cell 2)
             # (Kivy: Inner Blue Player Panel. CSS suggests: BoxLayout, orientation: 'vertical', children aligned to end (right), with padding and spacing.)
@@ -649,72 +656,75 @@ ScreenManager:
                     height: self.texture_size[1] + dp(5)
 
                 InterBlack:
-                    id: p2_player_timer_label_id # Matched to Python ObjectProperty
-                    text: '00:00:00' # Placeholder
-                    font_size: '18sp' # From CSS .player_time
+                    id: p2_player_timer_label_id
+                    text: '00:00:00'
+                    font_size: '18sp'
                     halign: 'right'
                     valign: 'top'
                     size_hint_y: None
                     height: self.texture_size[1] + dp(5)
 
+                # P2 Concede Button (Corrected Placement)
+                ScoreboardButton:
+                    id: p2_concede_button_id
+                    text: "Concede"
+                    size_hint_y: None
+                    height: dp(35)
+                    on_press: root.player_concedes(2)
+                    opacity: 0
+                    disabled: True
+
                 Widget: # Spacer to push UI to bottom
                     size_hint_y: 1
 
-                # UI controls container (Kivy: BoxLayout, orientation: 'vertical', children aligned center horizontally)
+                # Player 2 UI Controls
                 BoxLayout:
                     id: p2_ui_controls_id
                     orientation: 'vertical'
-                    spacing: dp(20) # From CSS .ui gap (same as p1)
+                    spacing: dp(10) 
                     size_hint_y: None
-                    height: self.minimum_height # Adjust to content
-                    # Note: No 'end_turn' for P2 in the provided HTML structure
+                    height: self.minimum_height 
 
-                    # End Turn button container for P2 (NEW)
-                    BoxLayout: # To center the button
+                    # End Turn button container for P2 (MOVED TO TOP)
+                    BoxLayout: 
                         size_hint_y: None
                         height: dp(35)
                         ScoreboardButton:
-                            id: p2_end_turn_button_id # New ID for P2's button
-                            text: 'End Turn'
-                            on_press: root.end_turn() # Python method handles active player
-                            size_hint_x: 0.6 # Centered
-                            pos_hint: {'center_x': 0.5}
-                            opacity: 0 # Initially hidden, Python will control
-                            disabled: True # Initially disabled
+                            id: p2_end_turn_button_id 
+                            text: "End Turn"  # CORRECTED TEXT
+                            font_size: '16sp'
+                            on_press: root.end_turn()
+                            opacity: 0
+                            disabled: True
 
-                    # Settings group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution)
+                    ScoreboardButton:
+                        id: p2_set_score_button_id # Added id for clarity
+                        text: "Set Score" # CORRECTED TEXT in upcoming step, done here for atomicity
+                        size_hint_y: None
+                        height: dp(35)
+                        on_press: root.open_score_numpad(2)
+
+                    # CP Buttons for P2 (RESTORED)
                     BoxLayout:
-                        id: p2_settings_id
                         orientation: 'horizontal'
-                        spacing: dp(20) # From CSS .settings gap
                         size_hint_y: None
                         height: dp(35)
-
+                        spacing: dp(5)
                         ScoreboardButton:
-                            id: p2_set_score_button_id
-                            text: 'Set Score'
-                            on_press: root.open_score_numpad(2)
-                            size_hint_x: 1
-
-                        # Set CP group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution)
-                        BoxLayout:
-                            id: p2_set_cp_id
-                            orientation: 'horizontal'
-                            spacing: dp(10) # From CSS .set_cp gap
-                            size_hint_x: 1
-                            ScoreboardButton:
-                                text: '-1'
-                                on_press: root.remove_cp(2)
-                            InterBlack:
-                                text: 'CP'
-                                font_size: '18sp'
-                                size_hint_x: None
-                                width: dp(30)
-                                halign: 'center'
-                                valign: 'middle'
-                            ScoreboardButton:
-                                text: '+1'
-                                on_press: root.add_cp(2)
+                            text: "-1 CP"
+                            font_size: '14sp'
+                            on_press: root.remove_cp(2)
+                        InterBlack:
+                            text: "CP"
+                            font_size: '16sp'
+                            size_hint_x: None
+                            width: dp(30)
+                            halign: 'center'
+                            valign: 'middle'
+                        ScoreboardButton:
+                            text: "+1 CP"
+                            font_size: '14sp'
+                            on_press: root.add_cp(2)
 
 
 <GameOverScreen>:
@@ -855,22 +865,12 @@ ScreenManager:
                     font_size: '20sp'
                     on_press: root.exit_app_from_game_over()
 
-<SplashScreen>: # Definition for SplashScreen
+<SplashScreen>:
     name: 'splash_screen'
-    BoxLayout:
-        orientation: 'vertical'
-        padding: dp(50) # Add some padding around the logo
-        canvas.before:
-            Color:
-                rgba: 0.05, 0.05, 0.1, 1 # Dark background for splash
-            Rectangle:
-                pos: self.pos
-                size: self.size
-        Image:
-            source: 'assets/logo-original.png'
-            # allow_stretch: True  # Deprecated
-            # keep_ratio: True     # Deprecated
-            fit_mode: 'contain' # Use fit_mode instead 
+    Image:
+        source: 'assets/splash.png'
+        allow_stretch: True
+        keep_ratio: False # Fill the entire screen
 
 <ResumeOrNewScreen>:
     name: 'resume_or_new'

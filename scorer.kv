@@ -1,6 +1,7 @@
 #:kivy 2.3.0
 #:import TextInput kivy.uix.textinput.TextInput
 #:import Factory kivy.factory.Factory
+#:import StringProperty kivy.properties.StringProperty
 
 <HeaderLayout@BoxLayout>:
     orientation: 'horizontal'
@@ -18,9 +19,10 @@
         source: 'assets/icon_64.png'
         size_hint_x: None
         width: self.height # Keep it square based on header height
+    title_text: "Default Title" # Define the property for HeaderLayout
     Label:
         id: header_title
-        text: 'Screen Title' # Default text, will be overridden
+        text: root.title_text # Bind to the HeaderLayout's property
         font_size: '22sp'
         bold: True
         halign: 'left'
@@ -44,7 +46,7 @@ ScreenManager:
     BoxLayout: # New Main Root for NameEntryScreen
         orientation: 'vertical'
         HeaderLayout:
-            header_title.text: 'Player Name Entry'
+            title_text: 'Player Name Entry' # Set the property of HeaderLayout
         # Original Root BoxLayout for NameEntryScreen content
         BoxLayout: 
             orientation: 'vertical'
@@ -148,7 +150,7 @@ ScreenManager:
     BoxLayout: # New Main Root
         orientation: 'vertical'
         HeaderLayout:
-            header_title.text: 'Deployment Setup'
+            title_text: 'Deployment Setup' # Set the property
         # Original Root BoxLayout for DeploymentSetupScreen content
         BoxLayout:
             orientation: 'vertical'
@@ -285,7 +287,7 @@ ScreenManager:
     BoxLayout: # New Main Root
         orientation: 'vertical'
         HeaderLayout:
-            header_title.text: 'First Turn Setup'
+            title_text: 'First Turn Setup' # Set the property
         # Original Root BoxLayout for FirstTurnSetupScreen content
         BoxLayout:
             orientation: 'vertical'
@@ -560,7 +562,7 @@ ScreenManager:
     BoxLayout: # New Main Root
         orientation: 'vertical'
         HeaderLayout:
-            header_title.text: 'Game Over'
+            title_text: 'Game Over' # Set the property
         # Original Root BoxLayout for GameOverScreen content
         BoxLayout:
             orientation: 'vertical'

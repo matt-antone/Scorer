@@ -439,7 +439,7 @@ class ScorerRootWidget(Screen):
     p2_player_timer_label = ObjectProperty(None)
 
     def __init__(self, **kwargs):
-        super(ScorerRootWidget, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.numpad_popup = None
 
     def on_pre_enter(self, *args):
@@ -462,7 +462,7 @@ class ScorerRootWidget(Screen):
         if self.p2_action_area: self.p2_action_area.clear_widgets()
         
         if gs['game_phase'] == "playing":
-            self.ids.round_label.text = f"Round: {gs['current_round']}"
+            self.ids.game_round_label.text = f"Round: {gs['current_round']}"
             if gs.get("active_player_id"):
                 active_player_name = gs[f'player{gs["active_player_id"]}']['name']
                 self.ids.status_label.text = f"Status: {active_player_name}'s Turn"
@@ -476,10 +476,10 @@ class ScorerRootWidget(Screen):
                  self.ids.status_label.text = "Status: Initializing..."
         elif gs['game_phase'] == "game_over":
             final_round = gs.get('last_round_played', 5)
-            self.ids.round_label.text = f"Round: {final_round} (Game Over)"
+            self.ids.game_round_label.text = f"Round: {final_round} (Game Over)"
             self.ids.status_label.text = f"Status: Game Over - Round {final_round} complete"
         else: 
-            self.ids.round_label.text = "Round: -"
+            self.ids.game_round_label.text = "Round: -"
             self.ids.status_label.text = f"Status: {gs['status_message']}"
 
     def start_timer(self):

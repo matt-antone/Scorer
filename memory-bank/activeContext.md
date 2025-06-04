@@ -4,41 +4,39 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## 1. Current Work Focus
 
-- Finalizing the initial development plan (complete).
-- Setting up the development environment on the primary development machine (macOS).
-- Preparing for the first phase of development: basic Kivy application structure locally on macOS.
+- Stabilizing the application after a recent revert to an earlier commit.
+- Verifying all core Kivy application functionality on macOS, including setup screens, main game interface, scoring, timers, and game state persistence.
+- Preparing for the next phase of development, which could involve addressing macOS-specific SDL2 warnings or proceeding with new features.
 
 ## 2. Recent Changes & Decisions
 
-- **Memory Bank Created**: All core memory bank files (`projectbrief.md`, `productContext.md`, `techContext.md`, `systemPatterns.md`, `activeContext.md`, `progress.md`) have been created and populated with initial content.
-- **Game Edition**: Confirmed as Warhammer 40k 10th Edition.
-- **Core Features Defined**: Point tracking (Primary/Secondary), CP tracking (manual), Round tracking (5 rounds), Game Timer.
-- **Platform**: Raspberry Pi 5, 5-inch touchscreen (fullscreen), Python.
-- **Key Technologies Chosen**:
-  - GUI: Kivy
-  - Web Server: Flask
-  - QR Codes: `qrcode` library
-  - Data Persistence: JSON files for game sessions.
-- **Player Interaction**: Pi is primary controller; Web is for viewing and optional self-updates.
-- **Data Storage**: Game sessions to be saved locally in a file for later reference.
-- **Future Enhancement Identified**: Integration with "Dicer" (AI D6 dice detector, background process on Pi 5). This is a significant planned feature, with details to be refined as Dicer development progresses.
-- **Development Environment Strategy**: Initial development will be done on macOS, with subsequent deployment and testing on the Raspberry Pi (`madlab5.local`).
-- **TensorFlow Dependency Clarification**: Realized that `tensorflow-macos` and `tensorflow-metal` are for macOS development only and should not be in `requirements.txt` for Raspberry Pi deployment. A Pi-compatible TensorFlow package will be needed if Dicer is implemented on Pi.
+- **Project Reverted**: The project was reverted to a commit from before the recent series of `ObjectProperty` binding issues and subsequent complex troubleshooting steps.
+- **OS-Specific Graphics Re-applied**: The Python code in `main.py` for OS-specific graphics configuration (fullscreen on Pi, windowed with cursor on macOS) was successfully re-implemented and is functional.
+- **Application Stability**: The application is currently launching, the splash screen displays, and navigation through all implemented screens (`NameEntryScreen`, `DeploymentSetupScreen`, `FirstTurnSetupScreen`, `ScorerRootWidget`, `GameOverScreen`) is working on macOS. Core game logic (scoring, CP, timers, round progression, game state saving/loading) is believed to be in its previously functional state.
+- **Acknowledged macOS Warnings**: The `objc` class duplication warnings related to SDL2 (from Kivy and `ffpyplayer`) are still present in the console output on macOS. These are noted as a potential source of instability on the development environment but are not currently preventing the application from running.
+- **Previous UI Work**: Prior to the revert, significant work had been done on:
+  - Implementing the full setup flow (name entry, deployment, first turn).
+  - Developing the main scoring screen with player scores, CPs, timers, and round tracking.
+  - Implementing game state persistence using `game_state.json`.
+  - Redesigning the UI based on SVG/CSS mockups, including font and color scheme updates.
+  - Extensive troubleshooting of Kivy `ObjectProperty` bindings and KV language intricacies.
 
 ## 3. Next Steps
 
-- Set up the development environment on macOS:
-  - Install Python (if not already satisfactorily configured), Kivy, Flask, `qrcode`, `Pillow`, Black, Flake8.
-  - Initialize the Git repository locally.
-  - Create a project directory and Python virtual environment (`venv`).
-- Once the local environment is ready, proceed with:
-  - Creating the basic Kivy application structure on macOS.
-  - Implementing core game state management locally.
-  - Developing the JSON-based game state saving/loading mechanism locally.
+- Conduct thorough testing of all existing Kivy application features on macOS to confirm the stability and correctness of the reverted state plus the re-applied cursor fix. This includes:
+  - Name entry and saving.
+  - Deployment initiative rolls and attacker/defender choices.
+  - First turn initiative rolls and first turn choices.
+  - Main game screen: score updates, CP updates, timer functionality (game timer, player timers), end turn logic, round advancement.
+  - Game over screen: correct display of winner and stats.
+  - "New Game" functionality from all relevant points.
+  - Game state saving on exit and loading on startup.
+- Based on testing, decide on the next immediate development priority:
+  - Option A: Attempt to resolve the `objc` SDL2 duplication warnings on macOS to improve development environment stability.
+  - Option B: Proceed with new feature development (e.g., Flask web server integration) if the current stability is deemed sufficient for now.
 
 ## 4. Active Questions & Considerations
 
-- Specific layout details for the Kivy touchscreen interface.
-- Detailed structure of the game state JSON file.
-- Mechanism for inter-thread communication between Kivy and Flask.
-- Interface and data exchange details for Dicer integration (to be defined as Dicer project evolves).
+- What is the most effective and least disruptive way to address the SDL2 duplication warnings on macOS, if chosen as the next step?
+- Confirm that all UI elements and logic from the more recent (pre-revert) UI redesign efforts are satisfactory in the current reverted state or identify any desired elements to reintegrate carefully.
+- Plan for the Flask web server implementation, including API design and Kivy-Flask communication.

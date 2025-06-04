@@ -1,6 +1,15 @@
 from kivy.config import Config # Ensure Config is imported first for this change
-Config.set('graphics', 'fullscreen', 'auto')
-Config.set('graphics', 'show_cursor', '0') # 0 to hide, 1 to show
+import platform # For OS detection
+
+# OS-specific graphics configuration
+os_type = platform.system()
+if os_type == "Linux":  # Assuming Raspberry Pi OS reports as Linux
+    Config.set('graphics', 'fullscreen', 'auto')
+    Config.set('graphics', 'show_cursor', '0') # Hide cursor for kiosk on Pi
+else:  # Default to development mode (e.g., macOS, Windows)
+    Config.set('graphics', 'fullscreen', '0') # Ensure not fullscreen
+    Config.set('graphics', 'show_cursor', '1') # Show cursor for dev
+    # The existing width/height settings below will define the window size
 
 import random # Added for initiative roll
 import time # Added for timer

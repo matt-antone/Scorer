@@ -23,6 +23,7 @@ This document outlines the current work focus, recent changes, next steps, and a
 - **Data Storage**: Game sessions to be saved locally in a file for later reference.
 - **Future Enhancement Identified**: Integration with "Dicer" (AI D6 dice detector, background process on Pi 5). This is a significant planned feature, with details to be refined as Dicer development progresses.
 - **Development Environment Strategy**: Initial development will be done on macOS, with subsequent deployment and testing on the Raspberry Pi (`madlab5.local`).
+- **TensorFlow Dependency Clarification**: Realized that `tensorflow-macos` and `tensorflow-metal` are for macOS development only and should not be in `requirements.txt` for Raspberry Pi deployment. A Pi-compatible TensorFlow package will be needed if Dicer is implemented on Pi.
 
 ## 3. Next Steps
 

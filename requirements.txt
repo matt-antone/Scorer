@@ -235,7 +235,6 @@ tensorflow==2.19.0
 tensorflow-datasets==4.9.4
 tensorflow-estimator==2.15.0
 tensorflow-io-gcs-filesystem==0.37.1
-tensorflow-metal==1.1.0
 tensorflow-metadata==1.14.0
 tensorflow-object-detection-api==0.1.1
 termcolor==3.1.0

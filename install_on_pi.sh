@@ -84,7 +84,7 @@ Version=1.0
 Name=Scorer
 Comment=Warhammer 40k Score Tracking App
 Exec="$PROJECT_DIR/launch_scorer.sh"
-Icon="$PROJECT_DIR/assets/icon.png"
+Icon="$PROJECT_DIR/assets/icon_128.png"
 Terminal=false
 Type=Application
 Categories=Game;Utility;
@@ -140,9 +140,9 @@ echo ""
 echo "IMPORTANT: This script must be run with sudo privileges (e.g., 'sudo bash install_on_pi.sh') to install system dependencies."
 echo ""
 echo "NEXT STEPS:"
-echo "1. (Optional) Add an icon.png (e.g., 64x64 or 128x128) to the '$PROJECT_DIR/assets/' directory."
+echo "1. Ensure your desired icons (e.g., icon_128.png for the desktop, icon_64.png for in-app headers) are in the '$PROJECT_DIR/assets/' directory."
+echo "   The desktop icon is set to use '$PROJECT_DIR/assets/icon_128.png'."
 echo "2. You may need to reboot or log out/log in for the Scorer application icon to appear in your Desktop or application menu."
-echo "3. Launch Scorer by clicking its icon."
 echo ""
 echo "Troubleshooting Kivy on Pi:"
 echo " - If the app doesn't display correctly, you might need to set Kivy environment variables."

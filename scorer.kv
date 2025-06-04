@@ -19,10 +19,9 @@
         source: 'assets/icon_64.png'
         size_hint_x: None
         width: self.height # Keep it square based on header height
-    title_text: "Default Title" # Define the property for HeaderLayout
     Label:
         id: header_title
-        text: root.title_text # Bind to the HeaderLayout's property
+        text: root.title_text # root.title_text will be provided when HeaderLayout is used
         font_size: '22sp'
         bold: True
         halign: 'left'

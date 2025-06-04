@@ -419,13 +419,13 @@ class FirstTurnSetupScreen(Screen):
         active_player_name = gs[f'player{gs["active_player_id"]}']["name"]
         gs["status_message"] = f"Round 1 - {active_player_name}'s Turn"
         
-        scorer_screen = App.get_running_app().root.get_screen('scorer')
+        scorer_screen = App.get_running_app().root.get_screen('scorer_root')
         if scorer_screen:
             scorer_screen.start_timer()
 
         App.get_running_app().save_game_state() # Save state when game starts
 
-        self.manager.current = 'scorer'
+        self.manager.current = 'scorer_root'
         if scorer_screen:
              Clock.schedule_once(lambda dt: scorer_screen.update_ui_from_state(), 0)
              # Also ensure timers are visually updated if loading into an active game state
@@ -579,7 +579,7 @@ class ScorerRootWidget(Screen):
             gs["status_message"] = f"Game Over - Round 5 complete" 
             self.stop_timer()
             # Transition to GameOverScreen
-            self.manager.current = 'game_over_screen' 
+            self.manager.current = 'game_over' 
             # No need to call update_ui_from_state() here for ScorerRootWidget as we are leaving it.
             # GameOverScreen's on_pre_enter will handle its own UI.
             return # Important to return here to skip further UI updates for ScorerRootWidget
@@ -771,7 +771,7 @@ class GameOverScreen(Screen):
 
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
-    SPLASH_DURATION = 2.5 # Duration in seconds for the splash screen
+    SPLASH_DURATION = 10 # Duration in seconds for the splash screen
 
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""
@@ -805,8 +805,8 @@ class ScorerApp(App):
     def start_new_game_flow(self):
         print("Starting new game flow...")
         # Stop timer on current game screen if it exists and is active
-        if self.root and self.root.current == 'scorer':
-            scorer_screen = self.root.get_screen('scorer')
+        if self.root and self.root.current == 'scorer_root':
+            scorer_screen = self.root.get_screen('scorer_root')
             if scorer_screen:
                 scorer_screen.stop_timer()
         

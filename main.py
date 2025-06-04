@@ -771,7 +771,7 @@ class GameOverScreen(Screen):
 
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
-    SPLASH_DURATION = 10 # Duration in seconds for the splash screen
+    SPLASH_DURATION = 5 # Duration in seconds for the splash screen
 
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""

@@ -58,15 +58,91 @@ else
     exit 1
 fi
 
+# 7. Create Launcher Script
+echo "Creating launcher script (launch_scorer.sh)..."
+cat << EOF > "$PROJECT_DIR/launch_scorer.sh"
+#!/bin/bash
+# Script to launch the Scorer Kivy application
+cd "$PROJECT_DIR"
+source "$VENV_DIR/bin/activate"
+# Uncomment the following line if needed, or experiment with other Kivy environment variables
+# export KIVY_WINDOW=egl_rpi
+python main.py
+EOF
+
+chmod +x "$PROJECT_DIR/launch_scorer.sh"
+
+# 8. Create assets directory for icon
+echo "Creating assets directory for icon (if it doesn't exist)..."
+mkdir -p "$PROJECT_DIR/assets"
+
+# 9. Create Desktop Entry
+echo "Creating desktop entry (Scorer.desktop)..."
+cat << EOF > "$PROJECT_DIR/Scorer.desktop"
+[Desktop Entry]
+Version=1.0
+Name=Scorer
+Comment=Warhammer 40k Score Tracking App
+Exec="$PROJECT_DIR/launch_scorer.sh"
+Icon="$PROJECT_DIR/assets/icon.png"
+Terminal=false
+Type=Application
+Categories=Game;Utility;
+StartupNotify=true
+Path="$PROJECT_DIR/"
+EOF
+
+chmod +x "$PROJECT_DIR/Scorer.desktop"
+
+# Determine the actual user's home directory
+if [ -n "$SUDO_USER" ]; then
+    USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    USER_HOME=$(getent passwd "$(whoami)" | cut -d: -f6)
+fi
+
+# Create directories for desktop entries if they don't exist and copy the .desktop file
+if [ -d "$USER_HOME/Desktop" ]; then
+    echo "Copying Scorer.desktop to $USER_HOME/Desktop/..."
+    if [ -n "$SUDO_USER" ]; then
+        sudo -u "$SUDO_USER" cp "$PROJECT_DIR/Scorer.desktop" "$USER_HOME/Desktop/"
+        sudo -u "$SUDO_USER" chmod +x "$USER_HOME/Desktop/Scorer.desktop"
+    else
+        cp "$PROJECT_DIR/Scorer.desktop" "$USER_HOME/Desktop/"
+        chmod +x "$USER_HOME/Desktop/Scorer.desktop"
+    fi
+elif [ -d "$USER_HOME/desktop" ]; then # Some systems use lowercase 'desktop'
+    echo "Copying Scorer.desktop to $USER_HOME/desktop/..."
+    if [ -n "$SUDO_USER" ]; then
+        sudo -u "$SUDO_USER" cp "$PROJECT_DIR/Scorer.desktop" "$USER_HOME/desktop/"
+        sudo -u "$SUDO_USER" chmod +x "$USER_HOME/desktop/Scorer.desktop"
+    else
+        cp "$PROJECT_DIR/Scorer.desktop" "$USER_HOME/desktop/"
+        chmod +x "$USER_HOME/desktop/Scorer.desktop"
+    fi
+fi
+
+APPLICATIONS_DIR="$USER_HOME/.local/share/applications"
+echo "Creating $APPLICATIONS_DIR if it doesn't exist..."
+if [ -n "$SUDO_USER" ]; then
+    sudo -u "$SUDO_USER" mkdir -p "$APPLICATIONS_DIR"
+    echo "Copying Scorer.desktop to $APPLICATIONS_DIR/..."
+    sudo -u "$SUDO_USER" cp "$PROJECT_DIR/Scorer.desktop" "$APPLICATIONS_DIR/"
+else
+    mkdir -p "$APPLICATIONS_DIR"
+    echo "Copying Scorer.desktop to $APPLICATIONS_DIR/..."
+    cp "$PROJECT_DIR/Scorer.desktop" "$APPLICATIONS_DIR/"
+fi
+
 echo "-----------------------------------------------------"
 echo "Installation and setup script finished."
 echo ""
 echo "IMPORTANT: This script must be run with sudo privileges (e.g., 'sudo bash install_on_pi.sh') to install system dependencies."
 echo ""
 echo "NEXT STEPS:"
-echo "1. After the script completes, in your terminal, navigate to the project directory: cd $PROJECT_DIR"
-echo "2. Activate the virtual environment: source venv/bin/activate"
-echo "3. Run the application: python main.py"
+echo "1. (Optional) Add an icon.png (e.g., 64x64 or 128x128) to the '$PROJECT_DIR/assets/' directory."
+echo "2. You may need to reboot or log out/log in for the Scorer application icon to appear in your Desktop or application menu."
+echo "3. Launch Scorer by clicking its icon."
 echo ""
 echo "Troubleshooting Kivy on Pi:"
 echo " - If the app doesn't display correctly, you might need to set Kivy environment variables."

@@ -101,7 +101,19 @@ else
     USER_HOME=$(getent passwd "$(whoami)" | cut -d: -f6)
 fi
 
-# Create directories for desktop entries if they don't exist and copy the .desktop file
+# Clean up old .desktop files and copy the new one
+DESKTOP_UPPER_PATH="$USER_HOME/Desktop/Scorer.desktop"
+DESKTOP_LOWER_PATH="$USER_HOME/desktop/Scorer.desktop"
+APPLICATIONS_DIR="$USER_HOME/.local/share/applications"
+APPLICATIONS_FILE_PATH="$APPLICATIONS_DIR/Scorer.desktop"
+
+echo "Removing any existing Scorer.desktop files from Desktop and application menu..."
+if [ -n "$SUDO_USER" ]; then
+    sudo -u "$SUDO_USER" rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH"
+else
+    rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH"
+fi 
+
 if [ -d "$USER_HOME/Desktop" ]; then
     echo "Copying Scorer.desktop to $USER_HOME/Desktop/..."
     if [ -n "$SUDO_USER" ]; then
@@ -122,7 +134,6 @@ elif [ -d "$USER_HOME/desktop" ]; then # Some systems use lowercase 'desktop'
     fi
 fi
 
-APPLICATIONS_DIR="$USER_HOME/.local/share/applications"
 echo "Creating $APPLICATIONS_DIR if it doesn't exist..."
 if [ -n "$SUDO_USER" ]; then
     sudo -u "$SUDO_USER" mkdir -p "$APPLICATIONS_DIR"
@@ -134,6 +145,18 @@ else
     cp "$PROJECT_DIR/Scorer.desktop" "$APPLICATIONS_DIR/"
 fi
 
+# Attempt to update the desktop database for the application menu
+if command -v update-desktop-database &> /dev/null; then
+    echo "Updating desktop application database..."
+    if [ -n "$SUDO_USER" ]; then
+        sudo -u "$SUDO_USER" update-desktop-database "$APPLICATIONS_DIR"
+    else
+        update-desktop-database "$APPLICATIONS_DIR"
+    fi
+else
+    echo "update-desktop-database command not found, skipping. A logout/login or reboot may be needed."
+fi
+
 echo "-----------------------------------------------------"
 echo "Installation and setup script finished."
 echo ""
@@ -142,7 +165,9 @@ echo ""
 echo "NEXT STEPS:"
 echo "1. Ensure your desired icons (e.g., icon_128.png for the desktop, icon_64.png for in-app headers) are in the '$PROJECT_DIR/assets/' directory."
 echo "   The desktop icon is set to use '$PROJECT_DIR/assets/icon_128.png'."
-echo "2. You may need to reboot or log out/log in for the Scorer application icon to appear in your Desktop or application menu."
+echo "2. You may need to reboot or log out/log in for the Scorer application icon to appear correctly in your Desktop or application menu."
+echo "3. For the Desktop icon, you might need to right-click it and select 'Allow Launching' or a similar trust option."
+echo "4. Launch Scorer by clicking its icon."
 echo ""
 echo "Troubleshooting Kivy on Pi:"
 echo " - If the app doesn't display correctly, you might need to set Kivy environment variables."

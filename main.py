@@ -1,8 +1,11 @@
+from kivy.config import Config # Ensure Config is imported first for this change
+Config.set('graphics', 'fullscreen', 'auto')
+Config.set('graphics', 'show_cursor', '0') # 0 to hide, 1 to show
+
 import random # Added for initiative roll
 import time # Added for timer
 import json # For saving/loading game state
 import os   # For path manipulation
-from kivy.config import Config # Ensure Config is imported first for this change
 # Set default font *before* other Kivy components are imported if possible
 # Note: Paths here assume the script is run from the project root where assets/fonts exists.
 # If running from a different CWD, these paths might need to be absolute or adjusted.

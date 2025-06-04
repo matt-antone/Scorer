@@ -106,12 +106,14 @@ DESKTOP_UPPER_PATH="$USER_HOME/Desktop/Scorer.desktop"
 DESKTOP_LOWER_PATH="$USER_HOME/desktop/Scorer.desktop"
 APPLICATIONS_DIR="$USER_HOME/.local/share/applications"
 APPLICATIONS_FILE_PATH="$APPLICATIONS_DIR/Scorer.desktop"
+AUTOSTART_DIR="$USER_HOME/.config/autostart"
+AUTOSTART_FILE_PATH="$AUTOSTART_DIR/Scorer.desktop"
 
-echo "Removing any existing Scorer.desktop files from Desktop and application menu..."
+echo "Removing any existing Scorer.desktop files from Desktop, application menu, and autostart..."
 if [ -n "$SUDO_USER" ]; then
-    sudo -u "$SUDO_USER" rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH"
+    sudo -u "$SUDO_USER" rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH" "$AUTOSTART_FILE_PATH"
 else
-    rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH"
+    rm -f "$DESKTOP_UPPER_PATH" "$DESKTOP_LOWER_PATH" "$APPLICATIONS_FILE_PATH" "$AUTOSTART_FILE_PATH"
 fi 
 
 if [ -d "$USER_HOME/Desktop" ]; then
@@ -143,6 +145,21 @@ else
     mkdir -p "$APPLICATIONS_DIR"
     echo "Copying Scorer.desktop to $APPLICATIONS_DIR/..."
     cp "$PROJECT_DIR/Scorer.desktop" "$APPLICATIONS_DIR/"
+fi
+
+# Create autostart directory and copy Scorer.desktop for kiosk mode
+echo "Setting up autostart for Scorer application (kiosk mode)..."
+echo "Creating $AUTOSTART_DIR if it doesn't exist..."
+if [ -n "$SUDO_USER" ]; then
+    sudo -u "$SUDO_USER" mkdir -p "$AUTOSTART_DIR"
+    echo "Copying Scorer.desktop to $AUTOSTART_DIR/..."
+    sudo -u "$SUDO_USER" cp "$PROJECT_DIR/Scorer.desktop" "$AUTOSTART_DIR/"
+    sudo -u "$SUDO_USER" chmod +x "$AUTOSTART_DIR/Scorer.desktop" # Ensure it's executable if needed
+else
+    mkdir -p "$AUTOSTART_DIR"
+    echo "Copying Scorer.desktop to $AUTOSTART_DIR/..."
+    cp "$PROJECT_DIR/Scorer.desktop" "$AUTOSTART_DIR/"
+    chmod +x "$AUTOSTART_DIR/Scorer.desktop" # Ensure it's executable if needed
 fi
 
 # Attempt to update the desktop database for the application menu

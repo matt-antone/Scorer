@@ -7,6 +7,7 @@ os_type = platform.system()
 if os_type == "Linux":  # Assuming Raspberry Pi OS reports as Linux
     Config.set('graphics', 'fullscreen', 'auto')
     Config.set('graphics', 'show_cursor', '0') # Hide cursor for kiosk on Pi
+    Config.set('graphics', 'borderless', '1') # Attempt to set borderless early for Pi
 else:  # Default to development mode (e.g., macOS, Windows)
     Config.set('graphics', 'fullscreen', '0') # Ensure not fullscreen
     Config.set('graphics', 'show_cursor', '1') # Show cursor for dev
@@ -1009,7 +1010,7 @@ class ResumeOrNewScreen(Screen):
                         if not is_scheduled:
                             print("ResumeOrNewScreen (to scorer_root): Timer status 'running', re-scheduling.")
                             Clock.schedule_interval(scorer_screen.update_timer_display, 1)
-                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0 and gs.get('active_player_id') is not None:
+                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
                         # This condition implies game is playing, timer was never started (e.g. quit before first turn fully ended)
                         # or was explicitly stopped but should now resume.
                         print("ResumeOrNewScreen (to scorer_root): Game playing, timer seems stopped/reset. Calling start_timer.")
@@ -1180,6 +1181,12 @@ class ScorerApp(App):
         self.screen_manager.current = 'splash_screen'
         Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen_after_splash, dt), self.SPLASH_DURATION)
         
+        # Explicitly set fullscreen and borderless for Linux just before returning screen_manager
+        if platform.system() == "Linux":
+            Window.fullscreen = True
+            Window.borderless = True
+            print("Linux detected in build(): Set Window.fullscreen=True and Window.borderless=True")
+
         return self.screen_manager
 
     def transition_from_splash(self, target_screen_name, dt):

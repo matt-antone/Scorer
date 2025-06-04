@@ -10,7 +10,10 @@ if os_type == "Linux":  # Assuming Raspberry Pi OS reports as Linux
 else:  # Default to development mode (e.g., macOS, Windows)
     Config.set('graphics', 'fullscreen', '0') # Ensure not fullscreen
     Config.set('graphics', 'show_cursor', '1') # Show cursor for dev
-    # The existing width/height settings below will define the window size
+    # Set fixed size for development environments only
+    Config.set('graphics', 'width', '800')
+    Config.set('graphics', 'height', '480')
+    Config.set('graphics', 'resizable', False)
 
 import random # Added for initiative roll
 import time # Added for timer
@@ -68,9 +71,9 @@ else:
 
 # Configure the window to be a fixed size, simulating the Pi screen for now
 # We can make this more dynamic or fullscreen later.
-Config.set('graphics', 'width', '800') # Restored to 800
-Config.set('graphics', 'height', '480') # Restored to 480
-Config.set('graphics', 'resizable', False) # Change to True if you want to resize on desktop
+# Config.set('graphics', 'width', '800') # MOVED
+# Config.set('graphics', 'height', '480') # MOVED
+# Config.set('graphics', 'resizable', False) # MOVED
 
 # --- New Setup Screens ---
 
@@ -1213,5 +1216,7 @@ class ScorerApp(App):
         self.save_game_state()
 
 if __name__ == '__main__':
-    Window.size = (800, 480) # Explicitly set window size before run
+    # Conditionally set Window.size for non-Linux environments
+    if platform.system() != "Linux":
+        Window.size = (800, 480) # Explicitly set window size before run for dev
     ScorerApp().run() 

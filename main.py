@@ -885,11 +885,12 @@ class ScorerApp(App):
         print(f"After load, determined actual initial screen: {actual_initial_screen}")
 
         self.screen_manager.current = 'splash_screen'
-        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen), self.SPLASH_DURATION)
+        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen, dt), self.SPLASH_DURATION)
         
         return self.screen_manager
 
     def transition_from_splash(self, target_screen_name, dt):
+        """Transitions from splash screen to the target screen."""
         print(f"Transitioning from splash to {target_screen_name}")
         if target_screen_name == 'scorer_root' and self.game_state.get('current_round', 0) == 0:
             # This ensures if we are going to scorer_root but it's effectively a new game setup state

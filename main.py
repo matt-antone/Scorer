@@ -668,7 +668,8 @@ class ScorerRootWidget(Screen):
 
 class NumberPadPopup(Popup):
     def __init__(self, caller_widget, **kwargs):
-        super(NumberPadPopup, self).__init__(**kwargs)
+        super().__init__(**kwargs)
+        self.auto_dismiss = False # Prevent auto-dismissal on outside click
         self.caller_widget = caller_widget 
         self.title = "Enter Score"
         self.caller_info = kwargs.pop('caller_info', {'player_id': 1, 'score_type': 'primary'}) 

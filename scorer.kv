@@ -28,6 +28,13 @@
         halign: 'left'
         valign: 'middle'
         text_size: self.width, None
+        size_hint_x: 0.8 # Allow label to take most space
+    Button:
+        text: 'X'
+        font_size: '20sp'
+        size_hint_x: None
+        width: dp(50) # Fixed width for the close button
+        on_press: app.stop() # Call app.stop() to exit
 
 ScreenManager:
     SplashScreen: # Added SplashScreen

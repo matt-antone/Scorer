@@ -14,7 +14,8 @@ echo "Installing Kivy system dependencies and python3-venv..."
 sudo apt-get install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
      pkg-config libgl1-mesa-dev libgles2-mesa-dev python3-setuptools libgstreamer1.0-dev \
      git-core gstreamer1.0-plugins-{bad,base,good,ugly} gstreamer1.0-omx \
-     libmtdev-dev xclip xsel libjpeg-dev python3-pip python3-venv
+     libmtdev-dev xclip xsel libjpeg-dev python3-pip python3-venv \
+     libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev libpostproc-dev libswresample-dev libswscale-dev
 # The python3-venv package is crucial here.
 
 # 3. Create a Python virtual environment

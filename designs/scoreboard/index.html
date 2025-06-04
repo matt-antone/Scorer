@@ -9,54 +9,86 @@
     <title>Game Screen</title>
   </head>
   <body>
+    <!-- Kivy: Root container, likely a FloatLayout or RelativeLayout if screen is main widget, or just a Screen -->
     <div class="screen">
+      <!-- Kivy: Header section. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution. -->
       <div class="header">
-        <span class="logo"><img src="./icon_48.png" alt="logo" /> Scorer</span>
-        <span>Round 1</span>
-        <span class="total_time">Total Time: 10:00</span>
+        <!-- Kivy: Logo group. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center. -->
+        <div class="logo"><img src="./icon_48.png" alt="logo" /> Scorer</div>
+        <!-- Kivy: Label for Round -->
+        <div>Round 1</div>
+        <!-- Kivy: Label for Total Time -->
+        <div class="total_time">Total Time: 10:00</div>
       </div>
+      <!-- Kivy: Main content for players. CSS suggests: GridLayout, cols: 2. -->
       <div class="players">
+        <!-- Kivy: Red Player Panel Container (Grid cell 1) -->
         <div class="red_panel">
+          <!-- Kivy: Inner Red Player Panel. CSS suggests: BoxLayout, orientation: 'vertical', children aligned to start (left), with padding and spacing. -->
           <div class="player_red_panel">
-            <span class="player_name">Player 1 - Active</span>
-            <span class="player_score">90</span>
-            <span class="player_cp">Command Points: 2</span>
-            <span class="player_time">00:00:00</span>
-            <span class="ui">
-              <span class="end_turn">
+            <!-- Kivy: Label for Player Name -->
+            <div class="player_name">Player 1 - Active</div>
+            <!-- Kivy: Label for Player Score -->
+            <div class="player_score">90</div>
+            <!-- Kivy: Label for Player CP -->
+            <div class="player_cp">Command Points: 2</div>
+            <!-- Kivy: Label for Player Time -->
+            <div class="player_time">00:00:00</div>
+            <!-- Kivy: UI controls container. CSS 'position: absolute, bottom: 20px' suggests this should be at the bottom of its parent ('player_red_panel').
+                       Achieved in Kivy by ordering it last in a BoxLayout and having elements above take fixed height or using a spacer with size_hint_y: 1 above it.
+                       Inner CSS suggests: BoxLayout, orientation: 'vertical', children aligned center horizontally. -->
+            <div class="ui">
+              <!-- Kivy: End Turn button container. -->
+              <div class="end_turn">
                 <button>End Turn</button>
-              </span>
-              <div class="settings">
-                <span class="set_score">
-                  <button>Set Score</button>
-                </span>
-                <span class="set_cp">
-                  <button>-1</button>
-                  <span>CP</span>
-                  <button>+1</button>
-                </span>
               </div>
-            </span>
+              <!-- Kivy: Settings group. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution. -->
+              <div class="settings">
+                <!-- Kivy: Set Score button container. -->
+                <div class="set_score">
+                  <button>Set Score</button>
+                </div>
+                <!-- Kivy: Set CP group. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution. -->
+                <div class="set_cp">
+                  <button>-1</button>
+                  <!-- Kivy: Label for "CP" text -->
+                  <div>CP</div>
+                  <button>+1</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        <!-- Kivy: Blue Player Panel Container (Grid cell 2) -->
         <div class="blue_panel">
+          <!-- Kivy: Inner Blue Player Panel. CSS suggests: BoxLayout, orientation: 'vertical', children aligned to end (right), with padding and spacing. -->
           <div class="player_blue_panel">
-            <span class="player_name">Player 2</span>
-            <span class="player_score">90</span>
-            <span class="player_cp">Command Points: 2</span>
-            <span class="player_time">00:00:00</span>
-            <span class="ui">
+            <!-- Kivy: Label for Player Name -->
+            <div class="player_name">Player 2</div>
+            <!-- Kivy: Label for Player Score -->
+            <div class="player_score">90</div>
+            <!-- Kivy: Label for Player CP -->
+            <div class="player_cp">Command Points: 2</div>
+            <!-- Kivy: Label for Player Time -->
+            <div class="player_time">00:00:00</div>
+            <!-- Kivy: UI controls container. CSS 'position: absolute, bottom: 20px' suggests similar bottom alignment as in red panel.
+                       Inner CSS suggests: BoxLayout, orientation: 'vertical', children aligned center horizontally. (Note: Blue panel has no 'end_turn' in HTML provided) -->
+            <div class="ui">
+              <!-- Kivy: Settings group. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution. -->
               <div class="settings">
-                <span class="set_score">
+                <!-- Kivy: Set Score button container. -->
+                <div class="set_score">
                   <button>Set Score</button>
-                </span>
-                <span class="set_cp">
+                </div>
+                <!-- Kivy: Set CP group. CSS suggests: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution. -->
+                <div class="set_cp">
                   <button>-1</button>
-                  <span>CP</span>
+                  <!-- Kivy: Label for "CP" text -->
+                  <div>CP</div>
                   <button>+1</button>
-                </span>
+                </div>
               </div>
-            </span>
+            </div>
           </div>
         </div>
       </div>

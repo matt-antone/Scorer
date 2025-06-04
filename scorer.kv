@@ -3,6 +3,32 @@
 #:import Factory kivy.factory.Factory
 #:import StringProperty kivy.properties.StringProperty
 
+# Define some global properties based on the CSS for reusability
+<InterBlack@Label>:
+    font_name: 'InterBlack'
+    color: 1, 1, 1, 1 # Default white text
+
+<ScoreboardButton@Button>:
+    font_name: 'InterBlack'
+    background_color: 1, 1, 1, 1    # White background
+    color: 0, 0, 0, 1                # Black text
+    size_hint_y: None
+    height: dp(35) # Adjust as needed, similar to CSS padding/font size
+    padding: [dp(5), dp(5)] # Approximate CSS padding
+    # For Kivy Button, background_normal and background_down are usually images.
+    # To get a solid color, we draw on the canvas.
+    canvas.before:
+        Color:
+            rgba: self.background_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(5)] # Direct value to fix the TypeError
+    # Reset Kivy's default button image backgrounds
+    background_normal: ''
+    background_down: ''
+
+
 <HeaderLayout@BoxLayout>:
     orientation: 'horizontal'
     size_hint_y: None
@@ -38,6 +64,7 @@
 
 ScreenManager:
     SplashScreen: # Added SplashScreen
+    ResumeOrNewScreen: # Added ResumeOrNewScreen
     NameEntryScreen:
     DeploymentSetupScreen:
     FirstTurnSetupScreen:
@@ -404,152 +431,291 @@ ScreenManager:
 
 <ScorerRootWidget>:
     name: 'scorer_root'
-    p1_action_area: p1_action_area_id
-    p2_action_area: p2_action_area_id
-    p1_player_timer_label: p1_player_timer_id
-    p2_player_timer_label: p2_player_timer_id
+    # These ObjectProperties need to be in main.py for ScorerRootWidget class
+    # Header elements
+    header_round_label: header_round_label_id
+    header_total_time_label: header_total_time_label_id
+    # P1 elements
+    p1_name_label: p1_name_label_id
+    p1_score_label: p1_score_label_id
+    p1_cp_label: p1_cp_label_id
+    p1_player_timer_label: p1_player_timer_label_id # Changed from p1_player_timer_id
+    p1_end_turn_button: p1_end_turn_button_id
+    # P2 elements
+    p2_name_label: p2_name_label_id
+    p2_score_label: p2_score_label_id
+    p2_cp_label: p2_cp_label_id
+    p2_player_timer_label: p2_player_timer_label_id # Changed from p2_player_timer_id
+    p2_end_turn_button: p2_end_turn_button_id # NEW: Explicitly map the ObjectProperty to the id
 
-    BoxLayout: # Main vertical layout for ScorerRootWidget
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1 # Opaque white, so image is not tinted
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
+
+    BoxLayout: # Main vertical layout for the whole screen
         orientation: 'vertical'
-        #padding: dp(5) # Keep or adjust padding as needed
-        #spacing: dp(5)
+        #padding: dp(5) # CSS .screen has no padding, background does it all
 
-        # Top section: Game Info (Round, Timer)
+        # Header section (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution)
         BoxLayout:
-            id: game_info_area # Make sure this ID is unique or remove if not used in .py
-            orientation: 'horizontal'
+            id: scoreboard_header_id # New ID for the header
             size_hint_y: None
-            height: dp(55) # Match header height
-            padding: dp(5)
-            spacing: dp(10)
-            canvas.before:
-                Color:
-                    rgba: 0.1, 0.1, 0.15, 1 # Match header background
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
-            Image:
-                source: 'assets/icon_64.png'
+            height: dp(48) # From CSS .header height
+            # Background color is black in CSS, but here we want the main background.png to show
+            # If a distinct header background is needed on top of background.png, add canvas instructions here.
+            # For now, assuming header elements are directly on the main background image sections.
+            padding: [dp(10), 0, dp(20), 0] # Approximate (left, top, right, bottom) gap/padding seen in CSS
+            spacing: dp(20) # From CSS .header gap
+
+            # Logo group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center)
+            BoxLayout:
                 size_hint_x: None
-                width: self.height - dp(5) # Slightly smaller than height to fit padding
-                allow_stretch: True
-                keep_ratio: True
-            Label:
-                id: game_round_label
-                text: 'Round: 0'
-                size_hint_x: 0.5 
-                halign: 'center'
-                valign: 'middle'
-            Label:
-                id: timer_label # This is the Main Game Timer
-                text: 'Timer: 00:00:00'
-                size_hint_x: 0.5 
-                halign: 'center'
+                width: self.height + dp(60) # icon width + text guess
+                spacing: dp(10) # From CSS .logo gap
+                Image:
+                    source: 'assets/icon_48.png' # Path from HTML
+                    size_hint_x: None
+                    width: dp(48) # Assuming square from name
+                    height: dp(48)
+                InterBlack:
+                    text: 'Scorer'
+                    font_size: '18sp' # From CSS .header font-size
+                    valign: 'middle'
+
+            # Round Label (Kivy: Label for Round)
+            InterBlack:
+                id: header_round_label_id
+                text: 'Round 1' # Placeholder
+                font_size: '18sp' # From CSS .header font-size
+                size_hint_x: 1 # Take available space to push time to right
+                halign: 'center' # Center the round text
                 valign: 'middle'
 
-        BoxLayout: # Main Horizontal Layout for Player Areas
-            orientation: 'horizontal'
-            spacing: dp(10)
+            # Total Time Label (Kivy: Label for Total Time)
+            InterBlack:
+                id: header_total_time_label_id
+                text: 'Total Time: 00:00:00' # Placeholder
+                font_size: '18sp' # From CSS .header font-size
+                size_hint_x: None # Take its own width
+                width: dp(200) # Estimate to fit text
+                halign: 'right' # Align to the right (padding_right was on .total_time in CSS)
+                valign: 'middle'
 
-            # Player 1 Area
+        # Players Area (Kivy: Main content for players. CSS suggests: GridLayout, cols: 2.)
+        GridLayout:
+            cols: 2
+            # spacing: dp(0) # No spacing between red/blue panels as background image handles the split
+
+            # Red Player Panel Area (Grid cell 1)
+            # (Kivy: Inner Red Player Panel. CSS suggests: BoxLayout, orientation: 'vertical', children aligned to start (left), with padding and spacing.)
             BoxLayout:
+                id: p1_panel_id
                 orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.2, 0.2, 0.2, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p1_name_label 
-                    text: 'Player 1' 
-                    font_size: '20sp'
-                Label:
-                    id: p1_score_label
-                    text: 'Score: 0'
-                Label:
-                    id: p1_cp_label
-                    text: 'CP: 0'
-                Label: # Player 1 Individual Timer
-                    id: p1_player_timer_id
-                    text: 'P1 Time: 00:00:00'
-                    font_size: '16sp'
-                Button:
-                    text: 'Set Score'
-                    on_press: root.open_score_numpad(1)
+                padding: dp(20) # From CSS .player_red_panel padding
+                spacing: dp(10) # From CSS .player_red_panel gap
+                # Background is handled by the main screen image
+
+                InterBlack:
+                    id: p1_name_label_id
+                    text: 'Player 1 - Active' # Placeholder
+                    font_size: '24sp' # From CSS .player_name
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p1_score_label_id
+                    text: '0' # Placeholder
+                    font_size: '96sp' # From CSS .player_score
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p1_cp_label_id
+                    text: 'Command Points: 0' # Placeholder
+                    font_size: '18sp' # From CSS .player_cp
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p1_player_timer_label_id # Matched to Python ObjectProperty
+                    text: '00:00:00' # Placeholder
+                    font_size: '18sp' # From CSS .player_time
+                    halign: 'left'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                Widget: # Spacer to push UI to bottom
+                    size_hint_y: 1
+
+                # UI controls container (Kivy: BoxLayout, orientation: 'vertical', children aligned center horizontally)
                 BoxLayout:
-                    orientation: 'horizontal'
+                    id: p1_ui_controls_id
+                    orientation: 'vertical'
+                    spacing: dp(20) # From CSS .ui gap
                     size_hint_y: None
-                    height: dp(40)
-                    spacing: dp(5)
-                    Button:
-                        text: '-1 CP'
-                        on_press: root.remove_cp(1)
-                    Button:
-                        text: '+1 CP'
-                        on_press: root.add_cp(1)
-                BoxLayout: # Player 1 Action Area
-                    id: p1_action_area_id
-                    orientation: 'vertical' 
-                    size_hint_y: None
-                    height: dp(45) 
-                    padding: [dp(0), dp(5), dp(0), dp(0)]
+                    height: self.minimum_height # Adjust to content
 
-            # Player 2 Area
+                    # End Turn button container
+                    BoxLayout: # To center the button if ScoreboardButton itself doesn't fill width
+                        size_hint_y: None
+                        height: dp(35)
+                        ScoreboardButton:
+                            id: p1_end_turn_button_id
+                            text: 'End Turn'
+                            on_press: root.end_turn() # Assuming player 1 is ID 1
+                            size_hint_x: 0.6 # Centered
+                            pos_hint: {'center_x': 0.5}
+
+
+                    # Settings group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution)
+                    BoxLayout:
+                        id: p1_settings_id
+                        orientation: 'horizontal'
+                        spacing: dp(20) # From CSS .settings gap
+                        size_hint_y: None
+                        height: dp(35) # Match button height
+
+                        ScoreboardButton:
+                            id: p1_set_score_button_id
+                            text: 'Set Score'
+                            on_press: root.open_score_numpad(1)
+                            size_hint_x: 1 # Takes up proportional space
+
+                        # Set CP group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution)
+                        BoxLayout:
+                            id: p1_set_cp_id
+                            orientation: 'horizontal'
+                            spacing: dp(10) # From CSS .set_cp gap
+                            size_hint_x: 1 # Takes up proportional space
+                            ScoreboardButton:
+                                text: '-1'
+                                on_press: root.remove_cp(1)
+                            InterBlack:
+                                text: 'CP'
+                                font_size: '18sp' # From CSS .set_cp font-size
+                                size_hint_x: None
+                                width: dp(30)
+                                halign: 'center'
+                                valign: 'middle'
+                            ScoreboardButton:
+                                text: '+1'
+                                on_press: root.add_cp(1)
+
+            # Blue Player Panel Area (Grid cell 2)
+            # (Kivy: Inner Blue Player Panel. CSS suggests: BoxLayout, orientation: 'vertical', children aligned to end (right), with padding and spacing.)
             BoxLayout:
+                id: p2_panel_id
                 orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.2, 0.2, 0.2, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p2_name_label 
-                    text: 'Player 2' 
-                    font_size: '20sp'
-                Label:
-                    id: p2_score_label
-                    text: 'Score: 0'
-                Label:
-                    id: p2_cp_label
-                    text: 'CP: 0'
-                Label: # Player 2 Individual Timer
-                    id: p2_player_timer_id
-                    text: 'P2 Time: 00:00:00'
-                    font_size: '16sp'
-                Button: 
-                    text: 'Set Score'
-                    on_press: root.open_score_numpad(2)
-                BoxLayout: 
-                    orientation: 'horizontal'
-                    size_hint_y: None
-                    height: dp(40)
-                    spacing: dp(5)
-                    Button:
-                        text: '-1 CP'
-                        on_press: root.remove_cp(2)
-                    Button:
-                        text: '+1 CP'
-                        on_press: root.add_cp(2)
-                BoxLayout: # Player 2 Action Area
-                    id: p2_action_area_id
-                    orientation: 'vertical' 
-                    size_hint_y: None
-                    height: dp(45)
-                    padding: [dp(0), dp(5), dp(0), dp(0)]
+                padding: dp(20) # From CSS .player_blue_panel padding
+                spacing: dp(10) # From CSS .player_blue_panel gap
+                # Background is handled by the main screen image
 
-        Label:
-            id: status_label
-            text: 'Status: Awaiting Setup...' 
-            size_hint_y: None
-            height: dp(30)
+                InterBlack:
+                    id: p2_name_label_id
+                    text: 'Player 2' # Placeholder
+                    font_size: '24sp' # From CSS .player_name
+                    halign: 'right' # Aligned to end (right)
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p2_score_label_id
+                    text: '0' # Placeholder
+                    font_size: '96sp' # From CSS .player_score
+                    halign: 'right'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p2_cp_label_id
+                    text: 'Command Points: 0' # Placeholder
+                    font_size: '18sp' # From CSS .player_cp
+                    halign: 'right'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                InterBlack:
+                    id: p2_player_timer_label_id # Matched to Python ObjectProperty
+                    text: '00:00:00' # Placeholder
+                    font_size: '18sp' # From CSS .player_time
+                    halign: 'right'
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+
+                Widget: # Spacer to push UI to bottom
+                    size_hint_y: 1
+
+                # UI controls container (Kivy: BoxLayout, orientation: 'vertical', children aligned center horizontally)
+                BoxLayout:
+                    id: p2_ui_controls_id
+                    orientation: 'vertical'
+                    spacing: dp(20) # From CSS .ui gap (same as p1)
+                    size_hint_y: None
+                    height: self.minimum_height # Adjust to content
+                    # Note: No 'end_turn' for P2 in the provided HTML structure
+
+                    # End Turn button container for P2 (NEW)
+                    BoxLayout: # To center the button
+                        size_hint_y: None
+                        height: dp(35)
+                        ScoreboardButton:
+                            id: p2_end_turn_button_id # New ID for P2's button
+                            text: 'End Turn'
+                            on_press: root.end_turn() # Python method handles active player
+                            size_hint_x: 0.6 # Centered
+                            pos_hint: {'center_x': 0.5}
+                            opacity: 0 # Initially hidden, Python will control
+                            disabled: True # Initially disabled
+
+                    # Settings group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, space-between distribution)
+                    BoxLayout:
+                        id: p2_settings_id
+                        orientation: 'horizontal'
+                        spacing: dp(20) # From CSS .settings gap
+                        size_hint_y: None
+                        height: dp(35)
+
+                        ScoreboardButton:
+                            id: p2_set_score_button_id
+                            text: 'Set Score'
+                            on_press: root.open_score_numpad(2)
+                            size_hint_x: 1
+
+                        # Set CP group (Kivy: BoxLayout, orientation: 'horizontal', children aligned vertically center, centered distribution)
+                        BoxLayout:
+                            id: p2_set_cp_id
+                            orientation: 'horizontal'
+                            spacing: dp(10) # From CSS .set_cp gap
+                            size_hint_x: 1
+                            ScoreboardButton:
+                                text: '-1'
+                                on_press: root.remove_cp(2)
+                            InterBlack:
+                                text: 'CP'
+                                font_size: '18sp'
+                                size_hint_x: None
+                                width: dp(30)
+                                halign: 'center'
+                                valign: 'middle'
+                            ScoreboardButton:
+                                text: '+1'
+                                on_press: root.add_cp(2)
+
 
 <GameOverScreen>:
     name: 'game_over'
@@ -702,5 +868,48 @@ ScreenManager:
                 size: self.size
         Image:
             source: 'assets/logo-original.png'
-            allow_stretch: True
-            keep_ratio: True 
+            # allow_stretch: True  # Deprecated
+            # keep_ratio: True     # Deprecated
+            fit_mode: 'contain' # Use fit_mode instead 
+
+<ResumeOrNewScreen>:
+    name: 'resume_or_new'
+    resume_info_label: resume_info_lbl
+    resume_button: resume_btn
+    new_game_button: new_game_btn_resume_screen
+
+    BoxLayout:
+        orientation: 'vertical'
+        HeaderLayout:
+            title_text: 'Game Found'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(40)
+            spacing: dp(20)
+            Label:
+                id: resume_info_lbl
+                text: "Saved game data found. What would you like to do?"
+                font_size: '20sp'
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.width - dp(20), None # Allow text wrapping
+                size_hint_y: 0.4
+
+            Button:
+                id: resume_btn
+                text: 'Resume Saved Game'
+                font_size: '22sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.resume_game_action()
+            
+            Button:
+                id: new_game_btn_resume_screen
+                text: 'Start New Game'
+                font_size: '22sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.start_new_game_from_resume_screen_action()
+            
+            Widget:
+                size_hint_y: 0.2 # Some spacing at the bottom 

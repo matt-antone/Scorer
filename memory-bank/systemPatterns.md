@@ -80,4 +80,11 @@ graph TD
   - If implementing self-updates: Simple +/- buttons or input fields for a player to adjust _their own_ score/CPs.
   - Minimalistic, with a primary focus on clear data presentation.
 
+## 4. Global Visual Theme
+
+- **Core Aesthetic**: The application will adopt a consistent "Red vs. Blue" two-column visual theme across all screens, with the exception of the `SplashScreen` which may have its own distinct design.
+- **Background**: For applicable screens, this will often be achieved using a common background image (e.g., `assets/background.png` which is split vertically red on the left, blue on the right) or by ensuring a two-column layout where the left half has a red background and the right half has a blue background.
+- **Content Organization**: On themed screens, content, especially player-specific information or actions, should be organized to align with these two columns (e.g., Player 1 on the red side, Player 2 on the blue side).
+- **Font**: The primary font for important labels and headers will be "InterBlack", to match the design specifications provided in `designs/scoreboard/`.
+
 This provides a high-level view. Specific implementation details of the Kivy UI layouts, Flask endpoints, and data structures will evolve during development.

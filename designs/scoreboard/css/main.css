@@ -48,13 +48,13 @@ body {
 .red_panel {
   width: 400px;
   height: 438px;
-  background: linear-gradient(rgba(255, 0, 0, 1), rgba(68, 0, 0, 1));
+  background: rgba(68, 0, 0, 1);
   position: relative;
 }
 .blue_panel {
   width: 400px;
   height: 438px;
-  background: linear-gradient(rgba(0, 89, 255, 1), rgba(0, 4, 68, 1));
+  background: rgba(0, 4, 68, 1);
   position: relative;
 }
 

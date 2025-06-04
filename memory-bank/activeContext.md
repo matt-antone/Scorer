@@ -20,6 +20,7 @@ This document outlines the current work focus, recent changes, next steps, and a
   - Implementing game state persistence using `game_state.json`.
   - Redesigning the UI based on SVG/CSS mockups, including font and color scheme updates.
   - Extensive troubleshooting of Kivy `ObjectProperty` bindings and KV language intricacies.
+- **Global UI Theme Adopted**: A "Red vs. Blue" two-column visual theme will be applied to all screens, except for the `SplashScreen`. This will typically involve using `assets/background.png` and organizing content into left (red) and right (blue) areas. The "InterBlack" font will be used for key text elements to match the design.
 
 ## 3. Next Steps
 

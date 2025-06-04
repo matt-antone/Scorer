@@ -57,6 +57,14 @@ from kivy.core.text import LabelBase # For registering fonts by name
 #     fn_regular=os.path.join(_noto_emoji_font_path, 'NotoColorEmoji-Regular.ttf') # Removed
 # ) # Removed
 
+# Register Inter Black specifically for the new design
+_inter_black_font_path = "assets/fonts/Inter/static/Inter_18pt-Black.ttf"
+if os.path.exists(_inter_black_font_path):
+    LabelBase.register(name='InterBlack', fn_regular=_inter_black_font_path)
+    print(f"Registered font: InterBlack from {_inter_black_font_path}")
+else:
+    print(f"Warning: Font file not found at {_inter_black_font_path}. InterBlack will not be available.")
+
 # Configure the window to be a fixed size, simulating the Pi screen for now
 # We can make this more dynamic or fullscreen later.
 Config.set('graphics', 'width', '800') # Typical 5-inch screen resolution might be 800x480
@@ -442,54 +450,143 @@ class FirstTurnSetupScreen(Screen):
 
 
 class ScorerRootWidget(Screen):
-    p1_action_area = ObjectProperty(None)
-    p2_action_area = ObjectProperty(None)
-    p1_player_timer_label = ObjectProperty(None)
-    p2_player_timer_label = ObjectProperty(None)
+    # Header elements from KV
+    header_round_label = ObjectProperty(None)
+    header_total_time_label = ObjectProperty(None)
+
+    # Player 1 elements from KV
+    p1_name_label = ObjectProperty(None)
+    p1_score_label = ObjectProperty(None)
+    p1_cp_label = ObjectProperty(None)
+    p1_player_timer_label = ObjectProperty(None) # Was already here, KV id matches now
+    p1_end_turn_button = ObjectProperty(None)
+
+    # Player 2 elements from KV
+    p2_name_label = ObjectProperty(None)
+    p2_score_label = ObjectProperty(None)
+    p2_cp_label = ObjectProperty(None)
+    p2_player_timer_label = ObjectProperty(None) # Was already here, KV id matches now
+    p2_end_turn_button = ObjectProperty(None) # NEW: ObjectProperty for Player 2's end turn button
+    # Note: No p2_end_turn_button in KV based on HTML design
+
+    # Obsolete properties (p1_action_area, p2_action_area) are removed.
+    # status_label is also removed as it's not in the new KV design for this screen.
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.numpad_popup = None
 
     def on_pre_enter(self, *args):
-        self.update_ui_from_state()
-        self.update_timer_display(0) 
+        self.update_ui_from_state() # Call first to try and set up UI elements
+        self.update_timer_display(0) # Initial call to set timer text based on current state
+        
+        gs = App.get_running_app().game_state
+        if gs['game_phase'] == 'playing':
+            if gs['game_timer']['status'] == 'running':
+                # Timer should be running. Ensure Clock.schedule_interval is active.
+                is_scheduled = False
+                for event in Clock.get_events(): # Check events scheduled for this widget (self)
+                    if event.callback == self.update_timer_display:
+                        is_scheduled = True
+                        break
+                if not is_scheduled:
+                    print("ScorerRootWidget.on_pre_enter: Timer status is 'running' but not scheduled. Re-scheduling.")
+                    Clock.schedule_interval(self.update_timer_display, 1)
+                # self.update_timer_display(0) # Already called above
+            elif gs['game_timer']['status'] == 'stopped' and gs['game_timer']['start_time'] == 0:
+                 print("ScorerRootWidget.on_pre_enter: Game playing, timer stopped & never started. Calling start_timer().")
+                 self.start_timer() # This will set status to 'running' and schedule
+        # Ensure UI is updated once more in case properties weren't ready on first call
+        Clock.schedule_once(lambda dt: self.update_ui_from_state(), 0.05) 
 
     def update_ui_from_state(self):
-        if not self.ids: 
-            return
+        print("ScorerRootWidget: Attempting update_ui_from_state")
         gs = App.get_running_app().game_state
 
-        self.ids.p1_name_label.text = gs['player1']['name']
-        self.ids.p2_name_label.text = gs['player2']['name']
-        self.ids.p1_score_label.text = f"Score: {gs['player1']['total_score']}"
-        self.ids.p1_cp_label.text = f"CP: {gs['player1']['cp']}"
-        self.ids.p2_score_label.text = f"Score: {gs['player2']['total_score']}"
-        self.ids.p2_cp_label.text = f"CP: {gs['player2']['cp']}"
-
-        if self.p1_action_area: self.p1_action_area.clear_widgets()
-        if self.p2_action_area: self.p2_action_area.clear_widgets()
+        # Enhanced widget readiness check
+        required_widgets = {
+            "header_round_label": self.header_round_label,
+            "p1_name_label": self.p1_name_label,
+            "p1_score_label": self.p1_score_label,
+            "p1_cp_label": self.p1_cp_label,
+            "p2_name_label": self.p2_name_label,
+            "p2_score_label": self.p2_score_label,
+            "p2_cp_label": self.p2_cp_label,
+            "p1_end_turn_button": self.p1_end_turn_button,
+            "p2_end_turn_button": self.p2_end_turn_button, # NEW: Add to required_widgets check
+            "header_total_time_label": self.header_total_time_label,
+            "p1_player_timer_label": self.p1_player_timer_label,
+            "p2_player_timer_label": self.p2_player_timer_label
+        }
+        all_ready = True
+        for name, widget_ref in required_widgets.items():
+            if not widget_ref:
+                print(f"ScorerRootWidget: Widget '{name}' not ready yet.")
+                all_ready = False
         
+        if not all_ready:
+            Clock.schedule_once(lambda dt: self.update_ui_from_state(), 0.05) # Increased delay slightly
+            print("ScorerRootWidget: Rescheduling update_ui_from_state due to missing widgets.")
+            return
+        
+        print(f"ScorerRootWidget: game_phase = {gs.get('game_phase')}, active_player_id = {gs.get('active_player_id')}")
+
+        # Updated player name logic
+        p1_base_name = gs['player1']['name']
+        p2_base_name = gs['player2']['name']
+
         if gs['game_phase'] == "playing":
-            self.ids.game_round_label.text = f"Round: {gs['current_round']}"
-            if gs.get("active_player_id"):
-                active_player_name = gs[f'player{gs["active_player_id"]}']['name']
-                self.ids.status_label.text = f"Status: {active_player_name}'s Turn"
-                
-                end_turn_button = Button(text="End Turn", on_press=self.end_turn, size_hint_y=None, height=dp(40))
-                if gs["active_player_id"] == 1 and self.p1_action_area:
-                    self.p1_action_area.add_widget(end_turn_button)
-                elif gs["active_player_id"] == 2 and self.p2_action_area:
-                    self.p2_action_area.add_widget(end_turn_button)
-            else:
-                 self.ids.status_label.text = "Status: Initializing..."
+            if gs["active_player_id"] == 1:
+                self.p1_name_label.text = f"{p1_base_name} - Active"
+                self.p2_name_label.text = p2_base_name
+            elif gs["active_player_id"] == 2:
+                self.p1_name_label.text = p1_base_name
+                self.p2_name_label.text = f"{p2_base_name} - Active"
+            else: # Should not happen often if game is playing, but for robustness
+                self.p1_name_label.text = p1_base_name
+                self.p2_name_label.text = p2_base_name
+        else: # Not playing (e.g. game over, setup)
+            self.p1_name_label.text = p1_base_name
+            self.p2_name_label.text = p2_base_name
+        
+        self.p1_score_label.text = str(gs['player1']['total_score'])
+        self.p1_cp_label.text = f"Command Points: {gs['player1']['cp']}"
+        self.p2_score_label.text = str(gs['player2']['total_score'])
+        self.p2_cp_label.text = f"Command Points: {gs['player2']['cp']}"
+
+        # Manage End Turn button visibility and state
+        current_gs_active_id = gs.get("active_player_id") # Capture it for this specific decision block
+        print(f"ScorerRootWidget.update_ui_from_state: ButtonLogic using active_player_id = {current_gs_active_id} for button visibility.")
+
+        is_playing = gs['game_phase'] == "playing"
+        
+        # Player 1 Button
+        if is_playing and current_gs_active_id == 1:
+            self.p1_end_turn_button.opacity = 1
+            self.p1_end_turn_button.disabled = False
+        else:
+            self.p1_end_turn_button.opacity = 0
+            self.p1_end_turn_button.disabled = True
+        
+        # Player 2 Button
+        if is_playing and current_gs_active_id == 2:
+            self.p2_end_turn_button.opacity = 1
+            self.p2_end_turn_button.disabled = False
+        else:
+            self.p2_end_turn_button.opacity = 0
+            self.p2_end_turn_button.disabled = True
+        
+        print(f"ScorerRootWidget: p1_end_turn_button.opacity={self.p1_end_turn_button.opacity}, .disabled={self.p1_end_turn_button.disabled}")
+        print(f"ScorerRootWidget: p2_end_turn_button.opacity={self.p2_end_turn_button.opacity}, .disabled={self.p2_end_turn_button.disabled}")
+
+        if gs['game_phase'] == "playing":
+            self.header_round_label.text = f"Round {gs['current_round']}"
         elif gs['game_phase'] == "game_over":
             final_round = gs.get('last_round_played', 5)
-            self.ids.game_round_label.text = f"Round: {final_round} (Game Over)"
-            self.ids.status_label.text = f"Status: Game Over - Round {final_round} complete"
+            self.header_round_label.text = f"Round {final_round} (Game Over)"
         else: 
-            self.ids.game_round_label.text = "Round: -"
-            self.ids.status_label.text = f"Status: {gs['status_message']}"
+            self.header_round_label.text = "Round: -"
+        print("ScorerRootWidget: update_ui_from_state completed.")
 
     def start_timer(self):
         gs = App.get_running_app().game_state
@@ -519,51 +616,63 @@ class ScorerRootWidget(Screen):
     def update_timer_display(self, dt): 
         gs = App.get_running_app().game_state
         time_now = time.time()
+        active_player_id = gs.get("active_player_id")
+        game_status = gs['game_timer']['status']
+        game_phase = gs['game_phase']
 
-        if gs['game_timer']['status'] == 'running':
+        # print(f"update_timer_display: active_id={active_player_id}, timer_status={game_status}, game_phase={game_phase}") # Basic log
+
+        if game_status == 'running':
             elapsed_seconds = time_now - gs['game_timer']['start_time']
             gs['game_timer']['elapsed_display'] = self._format_seconds_to_hms(elapsed_seconds)
         
-        if self.ids.get('timer_label'):
-            self.ids.timer_label.text = f"Timer: {gs['game_timer']['elapsed_display']}"
+        if self.header_total_time_label: # Check if property is bound
+            self.header_total_time_label.text = f"Total Time: {gs['game_timer']['elapsed_display']}"
 
-        active_player_id = gs.get("active_player_id")
+        current_segment_duration = 0
+        if game_status == 'running' and game_phase == 'playing':
+             current_segment_duration = time_now - gs['game_timer']['turn_segment_start_time']
 
         # Player 1 Timer Update
         p1_key = "player1"
         p1_total_seconds = gs[p1_key]['player_elapsed_time_seconds']
-        if active_player_id == 1 and gs['game_timer']['status'] == 'running' and gs['game_phase'] == 'playing':
-            current_segment_duration = time_now - gs['game_timer']['turn_segment_start_time']
+        if active_player_id == 1 and game_status == 'running' and game_phase == 'playing':
             live_total_seconds_p1 = p1_total_seconds + current_segment_duration
             gs[p1_key]['player_time_display'] = self._format_seconds_to_hms(live_total_seconds_p1)
+            # print(f"  P1 (Active) timer: base={p1_total_seconds:.2f}, seg_dur={current_segment_duration:.2f}, live_total={live_total_seconds_p1:.2f}")
         else:
             gs[p1_key]['player_time_display'] = self._format_seconds_to_hms(p1_total_seconds)
+            # if game_phase == 'playing': print(f"  P1 (Inactive) timer: base={p1_total_seconds:.2f}")
 
-        if self.p1_player_timer_label: # Use direct ObjectProperty
-            p1_name_short = gs[p1_key]['name'].split(' ')[0]
-            self.p1_player_timer_label.text = f"{p1_name_short} Time: {gs[p1_key]['player_time_display']}"
+        if self.p1_player_timer_label: 
+            self.p1_player_timer_label.text = f"{gs[p1_key]['player_time_display']}"
 
         # Player 2 Timer Update
         p2_key = "player2"
         p2_total_seconds = gs[p2_key]['player_elapsed_time_seconds']
-        if active_player_id == 2 and gs['game_timer']['status'] == 'running' and gs['game_phase'] == 'playing':
-            current_segment_duration = time_now - gs['game_timer']['turn_segment_start_time']
+        if active_player_id == 2 and game_status == 'running' and game_phase == 'playing':
             live_total_seconds_p2 = p2_total_seconds + current_segment_duration
             gs[p2_key]['player_time_display'] = self._format_seconds_to_hms(live_total_seconds_p2)
+            # print(f"  P2 (Active) timer: base={p2_total_seconds:.2f}, seg_dur={current_segment_duration:.2f}, live_total={live_total_seconds_p2:.2f}")
         else:
             gs[p2_key]['player_time_display'] = self._format_seconds_to_hms(p2_total_seconds)
+            # if game_phase == 'playing': print(f"  P2 (Inactive) timer: base={p2_total_seconds:.2f}")
             
-        if self.p2_player_timer_label: # Use direct ObjectProperty
-            p2_name_short = gs[p2_key]['name'].split(' ')[0]
-            self.p2_player_timer_label.text = f"{p2_name_short} Time: {gs[p2_key]['player_time_display']}"
+        if self.p2_player_timer_label: 
+            self.p2_player_timer_label.text = f"{gs[p2_key]['player_time_display']}"
 
-    def end_turn(self, instance=None):
+    def end_turn(self): # Removed player_id argument
         gs = App.get_running_app().game_state
+        print(f"--- End Turn Button Pressed ---")
+        print(f"Initial state: active_player_id={gs.get('active_player_id')}, game_phase={gs.get('game_phase')}, round={gs.get('current_round')}")
+
         if gs["game_phase"] != "playing":
+            print("End Turn: Game not in 'playing' phase. No action.")
             return
 
         time_now = time.time()
         outgoing_player_id = gs["active_player_id"]
+        print(f"End Turn: Outgoing player_id = {outgoing_player_id}")
         
         if gs['game_timer']['status'] == 'running':
             turn_duration = time_now - gs['game_timer']['turn_segment_start_time']
@@ -571,34 +680,41 @@ class ScorerRootWidget(Screen):
             gs[f'player{outgoing_player_id}']['player_time_display'] = self._format_seconds_to_hms(
                 gs[f'player{outgoing_player_id}']['player_elapsed_time_seconds']
             )
+            print(f"End Turn: Player {outgoing_player_id} turn_duration={turn_duration:.2f}s, total_elapsed={gs[f'player{outgoing_player_id}']['player_elapsed_time_seconds']:.2f}s")
 
         next_player_id = 2 if outgoing_player_id == 1 else 1
         gs["active_player_id"] = next_player_id
-        newly_active_player_name = gs[f'player{gs["active_player_id"]}']['name']
+        print(f"End Turn: Active player_id changed to {gs['active_player_id']}")
+        newly_active_player_name = gs[f'player{gs["active_player_id"]}']["name"]
 
         round_advanced_or_game_ended = False
         first_player_of_game_id = gs.get("first_player_of_game_id")
+        # Round advances if the outgoing player was NOT the first player of the game (meaning both players have had a turn in this round number)
         if first_player_of_game_id is not None and outgoing_player_id != first_player_of_game_id:
             gs["current_round"] += 1
             round_advanced_or_game_ended = True
+            print(f"End Turn: Round advanced to {gs['current_round']}")
         
         if gs["current_round"] > 5: 
             gs["game_phase"] = "game_over"
             gs["last_round_played"] = 5 
             gs["status_message"] = f"Game Over - Round 5 complete" 
+            print(f"End Turn: Game Over. Last round was {gs['last_round_played']}. Transitioning to game_over screen.")
             self.stop_timer()
-            # Transition to GameOverScreen
             self.manager.current = 'game_over' 
-            # No need to call update_ui_from_state() here for ScorerRootWidget as we are leaving it.
-            # GameOverScreen's on_pre_enter will handle its own UI.
-            return # Important to return here to skip further UI updates for ScorerRootWidget
+            return
         else:
             gs["status_message"] = f"Round {gs['current_round']} - {newly_active_player_name}'s Turn"
             gs['game_timer']['turn_segment_start_time'] = time_now 
+            print(f"End Turn: New turn segment start_time = {time_now:.2f}")
+            print(f"End Turn: Status message = {gs['status_message']}")
             
+        print("End Turn: Calling self.update_ui_from_state()")
         self.update_ui_from_state()
-        if not round_advanced_or_game_ended or gs["game_phase"] == "playing":
+        if not round_advanced_or_game_ended or gs["game_phase"] == "playing": # Ensure timer display updates if game still playing
+             print("End Turn: Calling self.update_timer_display(0)")
              self.update_timer_display(0)
+        print(f"--- End Turn Processing Complete. Active player: {gs['active_player_id']} ---")
 
     def open_score_numpad(self, player_id_to_score):
         gs = App.get_running_app().game_state
@@ -674,6 +790,7 @@ class ScorerRootWidget(Screen):
                     )
         self.stop_timer() 
         App.get_running_app().stop()
+
 
 class NumberPadPopup(Popup):
     def __init__(self, caller_widget, **kwargs):
@@ -779,6 +896,52 @@ class GameOverScreen(Screen):
         App.get_running_app().stop()
 
 
+class ResumeOrNewScreen(Screen):
+    resume_info_label = ObjectProperty(None)
+    resume_button = ObjectProperty(None)
+    new_game_button = ObjectProperty(None)
+
+    def on_pre_enter(self, *args):
+        # Optionally, update the label text if needed, though it can be static
+        if self.resume_info_label:
+            self.resume_info_label.text = "Saved game data found. Resume or Start New Game?"
+
+    def resume_game_action(self):
+        app = App.get_running_app()
+        gs = app.game_state
+        
+        # Determine target screen based on loaded game_phase
+        target_screen = app._determine_screen_from_gamestate()
+        print(f"ResumeOrNewScreen: Resuming game. Transitioning to '{target_screen}' based on game_phase: {gs.get('game_phase')}")
+        
+        # Special handling if resuming directly to scorer_root for timer
+        if target_screen == 'scorer_root':
+            scorer_screen = app.screen_manager.get_screen('scorer_root')
+            if scorer_screen:
+                # Logic similar to transition_from_splash for scorer_root
+                if gs.get('game_phase') == 'playing':
+                    if gs.get('game_timer', {}).get('status') == 'running':
+                        is_scheduled = False
+                        for event in Clock.get_events():
+                            if event.callback == scorer_screen.update_timer_display:
+                                is_scheduled = True
+                                break
+                        if not is_scheduled:
+                            print("ResumeOrNewScreen: Timer status 'running', re-scheduling for scorer_root.")
+                            Clock.schedule_interval(scorer_screen.update_timer_display, 1)
+                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
+                        print("ResumeOrNewScreen: Game playing, timer stopped & never started. Calling start_timer for scorer_root.")
+                        scorer_screen.start_timer()
+                # Ensure UI is updated after transition
+                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
+        
+        app.screen_manager.current = target_screen
+
+    def start_new_game_from_resume_screen_action(self):
+        print("ResumeOrNewScreen: Starting new game.")
+        App.get_running_app().start_new_game_flow() # This resets state and goes to name_entry
+
+
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
     SPLASH_DURATION = 5 # Duration in seconds for the splash screen
@@ -814,14 +977,13 @@ class ScorerApp(App):
 
     def start_new_game_flow(self):
         print("Starting new game flow...")
-        # Stop timer on current game screen if it exists and is active
         if self.root and self.root.current == 'scorer_root':
             scorer_screen = self.root.get_screen('scorer_root')
             if scorer_screen:
                 scorer_screen.stop_timer()
         
         self.reset_game_state_to_default()
-        self.save_game_state() # Save the fresh state immediately
+        self.save_game_state() 
         if self.root:
             self.root.current = 'name_entry'
 
@@ -846,79 +1008,99 @@ class ScorerApp(App):
             try:
                 with open(load_path, 'r') as f:
                     loaded_state = json.load(f)
-                    if isinstance(loaded_state, dict) and 'player1' in loaded_state and 'game_phase' in loaded_state:
+                    if isinstance(loaded_state, dict) and \
+                       'player1' in loaded_state and \
+                       'game_phase' in loaded_state and \
+                       loaded_state.get('game_phase') != self._get_default_game_state().get('game_phase'):
                         self.game_state.update(loaded_state)
                         print(f"Game state loaded from {load_path}")
+                        return True
                     else:
-                        print(f"Invalid game state format in {load_path}")
+                        print(f"Save file at {load_path} does not appear to be a valid in-progress game. Starting fresh.")
+                        self.game_state = self._get_default_game_state()
+                        return False
             except Exception as e:
-                print(f"Error loading game state from {load_path}: {e}")
+                print(f"Error loading game state from {load_path}: {e}. Starting with default state.")
+                self.game_state = self._get_default_game_state()
+                return False
         else:
             print(f"No save file found at {load_path}. Starting with default state.")
+            self.game_state = self._get_default_game_state()
+            return False
+
+    def _determine_screen_from_gamestate(self):
+        gs = self.game_state
+        if gs.get('game_phase') == 'name_entry' or not gs.get('player1', {}).get('name') or gs.get('game_phase') == 'setup':
+            return 'name_entry'
+        elif gs.get('game_phase') == 'deployment_setup':
+            return 'deployment_setup'
+        elif gs.get('game_phase') == 'first_turn_setup':
+            return 'first_turn_setup'
+        elif gs.get('game_phase') == 'playing':
+            if gs.get('current_round', 0) > 5:
+                return 'game_over' 
+            else:
+                return 'scorer_root'
+        elif gs.get('game_phase') == 'game_over':
+            return 'game_over'
+        else:
+            print(f"Warning: Unknown game_phase '{gs.get('game_phase')}' in _determine_screen_from_gamestate. Defaulting to name_entry.")
+            return 'name_entry'
 
     def build(self):
-        self.game_state = self._get_default_game_state() # Initialize with defaults first
+        self.game_state = self._get_default_game_state() 
         self.screen_manager = ScreenManager()
 
-        # Add all screens
-        self.screen_manager.add_widget(SplashScreen(name='splash_screen')) # Add Splash Screen
+        self.screen_manager.add_widget(SplashScreen(name='splash_screen'))
+        self.screen_manager.add_widget(ResumeOrNewScreen(name='resume_or_new'))
         self.screen_manager.add_widget(NameEntryScreen(name='name_entry'))
         self.screen_manager.add_widget(DeploymentSetupScreen(name='deployment_setup'))
         self.screen_manager.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
         self.screen_manager.add_widget(ScorerRootWidget(name='scorer_root'))
         self.screen_manager.add_widget(GameOverScreen(name='game_over'))
 
-        # Determine the actual screen to go to after splash
-        loaded_state = self.load_game_state()
-        actual_initial_screen = 'name_entry' # Default if no save or new game
+        has_meaningful_save = self.load_game_state()
 
-        if loaded_state:
-            self.game_state.update(loaded_state)
-            # Logic to determine screen based on loaded state
-            if self.game_state.get('game_phase') == 'name_entry' or not self.game_state.get('player1', {}).get('name'):
-                actual_initial_screen = 'name_entry'
-            elif self.game_state.get('game_phase') == 'deployment_setup':
-                actual_initial_screen = 'deployment_setup'
-            elif self.game_state.get('game_phase') == 'first_turn_setup':
-                actual_initial_screen = 'first_turn_setup'
-            elif self.game_state.get('game_phase') == 'game_active':
-                 # Check if game might have ended prematurely (e.g. round > 5)
-                if self.game_state.get('current_round', 0) > self.game_state.get('max_rounds', 5):
-                    actual_initial_screen = 'game_over' # Or handle game conclusion logic
-                else:
-                    actual_initial_screen = 'scorer_root'
-            elif self.game_state.get('game_phase') == 'game_over':
-                actual_initial_screen = 'game_over'
-            else: # Default to name entry if phase is unknown or first time
-                actual_initial_screen = 'name_entry'
-        else: # No save file, or error loading it, treat as new game
-            self.initialize_game_state() # Sets up default state and phase 'name_entry'
-            actual_initial_screen = 'name_entry'
+        if has_meaningful_save:
+            actual_initial_screen_after_splash = 'resume_or_new'
+            print(f"Build: Meaningful save detected. Initial screen will be 'resume_or_new'.")
+        else:
+            actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
+            print(f"Build: No meaningful save. Initial screen will be '{actual_initial_screen_after_splash}'.")
             
-        print(f"After load, determined actual initial screen: {actual_initial_screen}")
-
         self.screen_manager.current = 'splash_screen'
-        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen, dt), self.SPLASH_DURATION)
+        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen_after_splash, dt), self.SPLASH_DURATION)
         
         return self.screen_manager
 
     def transition_from_splash(self, target_screen_name, dt):
         """Transitions from splash screen to the target screen."""
         print(f"Transitioning from splash to {target_screen_name}")
-        if target_screen_name == 'scorer_root' and self.game_state.get('current_round', 0) == 0:
-            # This ensures if we are going to scorer_root but it's effectively a new game setup state
-            # (e.g. loaded a game that was saved right at the start of round 1 before first turn action)
-            # we properly initialize the ScorerRootWidget's UI elements from game_state
-            # It might be better handled inside ScorerRootWidget.on_pre_enter
-            print("Transitioning to scorer_root, ensuring game_state is applied.")
-            # The on_pre_enter of ScorerRootWidget should handle UI updates.
-            pass
-
         self.screen_manager.current = target_screen_name
 
+        if target_screen_name == 'scorer_root':
+            scorer_screen = self.screen_manager.get_screen('scorer_root')
+            if scorer_screen:
+                gs = self.game_state
+                if gs.get('game_phase') == 'playing':
+                    if gs.get('game_timer', {}).get('status') == 'running':
+                        is_scheduled = False
+                        for event in Clock.get_events(): 
+                            if event.callback == scorer_screen.update_timer_display:
+                                is_scheduled = True
+                                break
+                        if not is_scheduled:
+                            print("ScorerApp.transition_from_splash: Timer status 'running', re-scheduling for scorer_root.")
+                            Clock.schedule_interval(scorer_screen.update_timer_display, 1)
+                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
+                        print("ScorerApp.transition_from_splash: Game playing, timer stopped & never started. Calling start_timer for scorer_root.")
+                        scorer_screen.start_timer()
+                # Ensure UI is updated after transition
+                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
+
     def initialize_game_state(self): 
-        self.game_state = self._get_default_game_state() # Start with defaults
-        self.load_game_state() # Then attempt to load and override
+        self.game_state = self._get_default_game_state() 
+        self.load_game_state()
 
     def on_stop(self):
         print("Application stopping. Saving game state...")

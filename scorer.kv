@@ -2,93 +2,133 @@
 #:import TextInput kivy.uix.textinput.TextInput
 #:import Factory kivy.factory.Factory
 
+<HeaderLayout@BoxLayout>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(55) # Adjusted height slightly
+    padding: dp(5)
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.15, 1 # Slightly different header background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Image:
+        source: 'assets/icon_64.png'
+        size_hint_x: None
+        width: self.height # Keep it square based on header height
+    Label:
+        id: header_title
+        text: 'Screen Title' # Default text, will be overridden
+        font_size: '22sp'
+        bold: True
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.width, None
+
+ScreenManager:
+    SplashScreen: # Added SplashScreen
+    NameEntryScreen:
+    DeploymentSetupScreen:
+    FirstTurnSetupScreen:
+    ScorerRootWidget:
+    GameOverScreen:
+
 <NameEntryScreen>:
     name: 'name_entry'
     player1_name_input: p1_name_entry_input
     player2_name_input: p2_name_entry_input
     continue_button: name_entry_continue_btn
 
-    BoxLayout: # Root vertical layout
+    BoxLayout: # New Main Root for NameEntryScreen
         orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(15)
-
-        Label:
-            text: 'Enter Player Names'
-            font_size: '28sp'
-            size_hint_y: None
-            height: dp(40)
-            bold: True
-            halign: 'center'
-
-        BoxLayout: # Two-column layout for name inputs
-            orientation: 'horizontal'
+        HeaderLayout:
+            header_title.text: 'Player Name Entry'
+        # Original Root BoxLayout for NameEntryScreen content
+        BoxLayout: 
+            orientation: 'vertical'
+            padding: dp(20)
             spacing: dp(15)
-            size_hint_y: 0.3 # Give some proportional height
+            # Label for 'Enter Player Names' is now in HeaderLayout
+            # Remove the old title Label from here if it exists directly
+            # The old title Label:
+            # Label:
+            #     text: 'Enter Player Names'
+            #     font_size: '28sp'
+            #     size_hint_y: None
+            #     height: dp(40)
+            #     bold: True
+            #     halign: 'center'
 
-            # Player 1 Column
-            BoxLayout:
-                orientation: 'vertical'
-                padding: dp(10)
-                spacing: dp(8)
-                canvas.before:
-                    Color:
-                        rgba: 0.1, 0.1, 0.1, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    text: "Player 1 Name"
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                TextInput:
-                    id: p1_name_entry_input
-                    text: 'Player 1'
-                    font_size: '20sp'
-                    multiline: False
-                    on_text_validate: root.on_text_validate_p1(self)
-                    on_text: root.on_name_input(self, self.text)
-                    size_hint_y: None
-                    height: dp(40)
+            BoxLayout: # Two-column layout for name inputs
+                orientation: 'horizontal'
+                spacing: dp(15)
+                size_hint_y: 0.3 # Give some proportional height
 
-            # Player 2 Column
-            BoxLayout:
-                orientation: 'vertical'
-                padding: dp(10)
-                spacing: dp(8)
-                canvas.before:
-                    Color:
-                        rgba: 0.1, 0.1, 0.1, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    text: "Player 2 Name"
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                TextInput:
-                    id: p2_name_entry_input
-                    text: 'Player 2'
-                    font_size: '20sp'
-                    multiline: False
-                    on_text_validate: root.on_text_validate_p2(self)
-                    on_text: root.on_name_input(self, self.text)
-                    size_hint_y: None
-                    height: dp(40)
+                # Player 1 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: dp(10)
+                    spacing: dp(8)
+                    canvas.before:
+                        Color:
+                            rgba: 0.1, 0.1, 0.1, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        text: "Player 1 Name"
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    TextInput:
+                        id: p1_name_entry_input
+                        text: 'Player 1'
+                        font_size: '20sp'
+                        multiline: False
+                        on_text_validate: root.on_text_validate_p1(self)
+                        on_text: root.on_name_input(self, self.text)
+                        size_hint_y: None
+                        height: dp(40)
 
-        Widget: # Spacer to push button to bottom
-            size_hint_y: 0.7 # Adjust as needed
-        
-        Button:
-            id: name_entry_continue_btn
-            text: 'Continue to Deployment Setup'
-            font_size: '22sp'
-            size_hint_y: None
-            height: dp(50)
-            on_press: root.save_names_and_proceed()
-            disabled: True
+                # Player 2 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    padding: dp(10)
+                    spacing: dp(8)
+                    canvas.before:
+                        Color:
+                            rgba: 0.1, 0.1, 0.1, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        text: "Player 2 Name"
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    TextInput:
+                        id: p2_name_entry_input
+                        text: 'Player 2'
+                        font_size: '20sp'
+                        multiline: False
+                        on_text_validate: root.on_text_validate_p2(self)
+                        on_text: root.on_name_input(self, self.text)
+                        size_hint_y: None
+                        height: dp(40)
+
+            Widget: # Spacer to push button to bottom
+                size_hint_y: 0.7 # Adjust as needed
+            
+            Button:
+                id: name_entry_continue_btn
+                text: 'Continue to Deployment Setup'
+                font_size: '22sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.save_names_and_proceed()
+                disabled: True
 
 <DeploymentSetupScreen>:
     name: 'deployment_setup'
@@ -105,127 +145,126 @@
     deployment_status_label: deployment_status_dsp_lbl
     continue_to_first_turn_button: continue_to_ft_btn
 
-    BoxLayout:
+    BoxLayout: # New Main Root
         orientation: 'vertical'
-        padding: dp(10)
-        spacing: dp(10)
-
-        Label:
-            text: 'Deployment Setup'
-            font_size: '26sp'
-            size_hint_y: None
-            height: dp(40)
-            bold: True
-
-        Label: # Central Status Label
-            id: deployment_status_dsp_lbl
-            text: 'Roll for Deployment Attacker/Defender'
-            font_size: '18sp'
-            size_hint_y: None
-            height: dp(30)
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.width, None
-
-        BoxLayout: # Player Columns
-            orientation: 'horizontal'
+        HeaderLayout:
+            header_title.text: 'Deployment Setup'
+        # Original Root BoxLayout for DeploymentSetupScreen content
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(10)
             spacing: dp(10)
-            # Player 1 Area
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.15, 0.15, 0.15, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p1_name_dsp_lbl
-                    text: 'Player 1'
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                Button:
-                    id: p1_roll_dsp_btn
-                    text: 'Roll P1 Deploy'
-                    on_press: root.roll_deployment_initiative(1)
-                    size_hint_y: None
-                    height: dp(40)
-                Label:
-                    id: p1_roll_dsp_lbl
-                    text: 'P1 Deploy: -'
-                    size_hint_y: None
-                    height: dp(30)
-                BoxLayout: # P1 Choice Box (for Attacker/Defender buttons)
-                    id: p1_choice_dsp_box
+            # Old title Label removed from here
+
+            Label: # Central Status Label
+                id: deployment_status_dsp_lbl
+                text: 'Roll for Deployment Attacker/Defender'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.width, None
+
+            BoxLayout: # Player Columns
+                orientation: 'horizontal'
+                spacing: dp(10)
+                # Player 1 Area
+                BoxLayout:
                     orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(80) # Space for two buttons
+                    size_hint_x: 0.5
+                    padding: dp(5)
                     spacing: dp(5)
-                    opacity: 0 # Hidden initially
+                    canvas.before:
+                        Color:
+                            rgba: 0.15, 0.15, 0.15, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        id: p1_name_dsp_lbl
+                        text: 'Player 1'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    Button:
+                        id: p1_roll_dsp_btn
+                        text: 'Roll P1 Deploy'
+                        on_press: root.roll_deployment_initiative(1)
+                        size_hint_y: None
+                        height: dp(40)
+                    Label:
+                        id: p1_roll_dsp_lbl
+                        text: 'P1 Deploy: -'
+                        size_hint_y: None
+                        height: dp(30)
+                    BoxLayout: # P1 Choice Box (for Attacker/Defender buttons)
+                        id: p1_choice_dsp_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80) # Space for two buttons
+                        spacing: dp(5)
+                        opacity: 0 # Hidden initially
 
-            # Player 2 Area
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.15, 0.15, 0.15, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p2_name_dsp_lbl
-                    text: 'Player 2'
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                Button:
-                    id: p2_roll_dsp_btn
-                    text: 'Roll P2 Deploy'
-                    on_press: root.roll_deployment_initiative(2)
-                    size_hint_y: None
-                    height: dp(40)
-                Label:
-                    id: p2_roll_dsp_lbl
-                    text: 'P2 Deploy: -'
-                    size_hint_y: None
-                    height: dp(30)
-                BoxLayout: # P2 Choice Box
-                    id: p2_choice_dsp_box
+                # Player 2 Area
+                BoxLayout:
                     orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(80)
+                    size_hint_x: 0.5
+                    padding: dp(5)
                     spacing: dp(5)
-                    opacity: 0
-        
-        Widget: # Spacer
-            size_hint_y: 0.1
+                    canvas.before:
+                        Color:
+                            rgba: 0.15, 0.15, 0.15, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        id: p2_name_dsp_lbl
+                        text: 'Player 2'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    Button:
+                        id: p2_roll_dsp_btn
+                        text: 'Roll P2 Deploy'
+                        on_press: root.roll_deployment_initiative(2)
+                        size_hint_y: None
+                        height: dp(40)
+                    Label:
+                        id: p2_roll_dsp_lbl
+                        text: 'P2 Deploy: -'
+                        size_hint_y: None
+                        height: dp(30)
+                    BoxLayout: # P2 Choice Box
+                        id: p2_choice_dsp_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80)
+                        spacing: dp(5)
+                        opacity: 0
+            
+            Widget: # Spacer
+                size_hint_y: 0.1
 
-        Label:
-            text: "(After Attacker/Defender is chosen, deploy your armies on the tabletop.)"
-            font_size: '14sp'
-            italic: True
-            size_hint_y: None
-            height: dp(25)
-            halign: 'center'
+            Label:
+                text: "(After Attacker/Defender is chosen, deploy your armies on the tabletop.)"
+                font_size: '14sp'
+                italic: True
+                size_hint_y: None
+                height: dp(25)
+                halign: 'center'
 
-        Widget: # Spacer
-            size_hint_y: 1
+            Widget: # Spacer
+                size_hint_y: 1
 
-        Button:
-            id: continue_to_ft_btn
-            text: 'Units Deployed - Continue to First Turn Roll'
-            font_size: '20sp'
-            size_hint_y: None
-            height: dp(50)
-            on_press: root.proceed_to_first_turn_setup()
-            disabled: True
+            Button:
+                id: continue_to_ft_btn
+                text: 'Units Deployed - Continue to First Turn Roll'
+                font_size: '20sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.proceed_to_first_turn_setup()
+                disabled: True
 
 
 <FirstTurnSetupScreen>:
@@ -243,151 +282,161 @@
     first_turn_status_label: first_turn_status_ft_lbl
     start_game_button: start_game_ft_btn
 
-    BoxLayout:
+    BoxLayout: # New Main Root
         orientation: 'vertical'
-        padding: dp(10)
-        spacing: dp(10)
-
-        Label:
-            text: 'First Turn Setup'
-            font_size: '26sp'
-            size_hint_y: None
-            height: dp(40)
-            bold: True
-
-        Label: # Central Status Label
-            id: first_turn_status_ft_lbl
-            text: 'Roll for First Turn!'
-            font_size: '18sp'
-            size_hint_y: None
-            height: dp(30)
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.width, None
-
-        BoxLayout: # Player Columns
-            orientation: 'horizontal'
+        HeaderLayout:
+            header_title.text: 'First Turn Setup'
+        # Original Root BoxLayout for FirstTurnSetupScreen content
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(10)
             spacing: dp(10)
-            # Player 1 Area
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.15, 0.15, 0.15, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p1_name_ft_lbl
-                    text: 'Player 1'
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                Button:
-                    id: p1_roll_ft_btn
-                    text: 'Roll P1 First Turn'
-                    on_press: root.roll_first_turn_initiative(1)
-                    size_hint_y: None
-                    height: dp(40)
-                Label:
-                    id: p1_roll_ft_lbl
-                    text: 'P1 First Turn: -'
-                    size_hint_y: None
-                    height: dp(30)
-                BoxLayout: # P1 First Turn Choice Box
-                    id: p1_choice_ft_box
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(80) # Space for two buttons
-                    spacing: dp(5)
-                    opacity: 0 # Hidden initially
+            # Old title Label removed from here
 
-            # Player 2 Area
-            BoxLayout:
-                orientation: 'vertical'
-                size_hint_x: 0.5
-                padding: dp(5)
-                spacing: dp(5)
-                canvas.before:
-                    Color:
-                        rgba: 0.15, 0.15, 0.15, 1
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
-                Label:
-                    id: p2_name_ft_lbl
-                    text: 'Player 2'
-                    font_size: '20sp'
-                    size_hint_y: None
-                    height: dp(30)
-                Button:
-                    id: p2_roll_ft_btn
-                    text: 'Roll P2 First Turn'
-                    on_press: root.roll_first_turn_initiative(2)
-                    size_hint_y: None
-                    height: dp(40)
-                Label:
-                    id: p2_roll_ft_lbl
-                    text: 'P2 First Turn: -'
-                    size_hint_y: None
-                    height: dp(30)
-                BoxLayout: # P2 First Turn Choice Box
-                    id: p2_choice_ft_box
-                    orientation: 'vertical'
-                    size_hint_y: None
-                    height: dp(80)
-                    spacing: dp(5)
-                    opacity: 0
-        
-        Widget: # Spacer
-            size_hint_y: 1
+            Label: # Central Status Label
+                id: first_turn_status_ft_lbl
+                text: 'Roll for First Turn!'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.width, None
 
-        Button:
-            id: start_game_ft_btn
-            text: 'Start Game'
-            font_size: '22sp'
-            size_hint_y: None
-            height: dp(50)
-            on_press: root.start_game_action()
-            disabled: True
+            BoxLayout: # Player Columns
+                orientation: 'horizontal'
+                spacing: dp(10)
+                # Player 1 Area
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_x: 0.5
+                    padding: dp(5)
+                    spacing: dp(5)
+                    canvas.before:
+                        Color:
+                            rgba: 0.15, 0.15, 0.15, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        id: p1_name_ft_lbl
+                        text: 'Player 1'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    Button:
+                        id: p1_roll_ft_btn
+                        text: 'Roll P1 First Turn'
+                        on_press: root.roll_first_turn_initiative(1)
+                        size_hint_y: None
+                        height: dp(40)
+                    Label:
+                        id: p1_roll_ft_lbl
+                        text: 'P1 First Turn: -'
+                        size_hint_y: None
+                        height: dp(30)
+                    BoxLayout: # P1 First Turn Choice Box
+                        id: p1_choice_ft_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80) # Space for two buttons
+                        spacing: dp(5)
+                        opacity: 0 # Hidden initially
+
+                # Player 2 Area
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_x: 0.5
+                    padding: dp(5)
+                    spacing: dp(5)
+                    canvas.before:
+                        Color:
+                            rgba: 0.15, 0.15, 0.15, 1
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+                    Label:
+                        id: p2_name_ft_lbl
+                        text: 'Player 2'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(30)
+                    Button:
+                        id: p2_roll_ft_btn
+                        text: 'Roll P2 First Turn'
+                        on_press: root.roll_first_turn_initiative(2)
+                        size_hint_y: None
+                        height: dp(40)
+                    Label:
+                        id: p2_roll_ft_lbl
+                        text: 'P2 First Turn: -'
+                        size_hint_y: None
+                        height: dp(30)
+                    BoxLayout: # P2 First Turn Choice Box
+                        id: p2_choice_ft_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80)
+                        spacing: dp(5)
+                        opacity: 0
+            
+            Widget: # Spacer
+                size_hint_y: 1
+
+            Button:
+                id: start_game_ft_btn
+                text: 'Start Game'
+                font_size: '22sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.start_game_action()
+                disabled: True
 
 
 <ScorerRootWidget>:
+    name: 'scorer_root'
     p1_action_area: p1_action_area_id
     p2_action_area: p2_action_area_id
     p1_player_timer_label: p1_player_timer_id
     p2_player_timer_label: p2_player_timer_id
 
-    BoxLayout:
+    BoxLayout: # Main vertical layout for ScorerRootWidget
         orientation: 'vertical'
-        padding: dp(10)
-        spacing: dp(10)
+        #padding: dp(5) # Keep or adjust padding as needed
+        #spacing: dp(5)
 
-        BoxLayout: # Title Bar Layout
+        # Top section: Game Info (Round, Timer)
+        BoxLayout:
+            id: game_info_area # Make sure this ID is unique or remove if not used in .py
+            orientation: 'horizontal'
             size_hint_y: None
-            height: dp(40)
+            height: dp(55) # Match header height
+            padding: dp(5)
+            spacing: dp(10)
+            canvas.before:
+                Color:
+                    rgba: 0.1, 0.1, 0.15, 1 # Match header background
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Image:
+                source: 'assets/icon_64.png'
+                size_hint_x: None
+                width: self.height - dp(5) # Slightly smaller than height to fit padding
+                allow_stretch: True
+                keep_ratio: True
             Label:
-                text: 'Scorer App - Warhammer 40k 10th Ed.'
-                font_size: '24sp'
-                halign: 'left'
+                id: game_round_label
+                text: 'Round: 0'
+                size_hint_x: 0.5 
+                halign: 'center'
                 valign: 'middle'
-                text_size: self.width, None
-                size_hint_x: 0.8
-            Button:
-                text: "New Game"
-                font_size: '16sp'
-                size_hint_x: None
-                width: dp(90)
-                on_press: root.request_new_game()
-            Button:
-                text: "X"
-                font_size: '20sp'
-                size_hint_x: None
-                width: dp(40)
-                on_press: root.exit_app()
+            Label:
+                id: timer_label # This is the Main Game Timer
+                text: 'Timer: 00:00:00'
+                size_hint_x: 0.5 
+                halign: 'center'
+                valign: 'middle'
 
         BoxLayout: # Main Horizontal Layout for Player Areas
             orientation: 'horizontal'
@@ -487,24 +536,6 @@
                     height: dp(45)
                     padding: [dp(0), dp(5), dp(0), dp(0)]
 
-        BoxLayout: # Bottom Bar for Round and Timer
-            size_hint_y: None
-            height: dp(50)
-            orientation: 'horizontal'
-            spacing: dp(10)
-            Label:
-                id: round_label
-                text: 'Round: 0'
-                size_hint_x: 0.5 
-                halign: 'center'
-                valign: 'middle'
-            Label:
-                id: timer_label # This is the Main Game Timer
-                text: 'Timer: 00:00:00'
-                size_hint_x: 0.5 
-                halign: 'center'
-                valign: 'middle'
-
         Label:
             id: status_label
             text: 'Status: Awaiting Setup...' 
@@ -512,7 +543,7 @@
             height: dp(30)
 
 <GameOverScreen>:
-    name: 'game_over_screen'
+    name: 'game_over'
     result_status_label: result_status_lbl
     p1_final_name_label: p1_name_final_lbl
     p1_final_score_label: p1_score_final_lbl
@@ -524,127 +555,142 @@
     p2_final_time_label: p2_time_final_lbl
     total_game_time_label: total_time_final_lbl
     rounds_played_label: rounds_played_final_lbl
+    exit_button: exit_btn_gos
 
+    BoxLayout: # New Main Root
+        orientation: 'vertical'
+        HeaderLayout:
+            header_title.text: 'Game Over'
+        # Original Root BoxLayout for GameOverScreen content
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(20)
+            spacing: dp(10)
+            # Old title Label removed from here
+
+            Label:
+                id: result_status_lbl
+                text: "Determining winner..."
+                font_size: '26sp'
+                italic: True
+                size_hint_y: None
+                height: dp(40)
+                halign: 'center'
+
+            GridLayout:
+                cols: 2
+                spacing: dp(10)
+                padding: dp(10)
+                size_hint_y: 0.6 # Give it some substantial height
+
+                # Player 1 Final Stats
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(5)
+                    Label:
+                        id: p1_name_final_lbl
+                        text: 'Player 1:'
+                        font_size: '20sp'
+                        bold: True
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_score_final_lbl
+                        text: 'Score: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_cp_final_lbl
+                        text: 'CP: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_time_final_lbl
+                        text: 'Time: 00:00:00'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+
+                # Player 2 Final Stats
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(5)
+                    Label:
+                        id: p2_name_final_lbl
+                        text: 'Player 2:'
+                        font_size: '20sp'
+                        bold: True
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_score_final_lbl
+                        text: 'Score: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_cp_final_lbl
+                        text: 'CP: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_time_final_lbl
+                        text: 'Time: 00:00:00'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+            
+            Label: # Spacer to push game stats and buttons down a bit
+                size_hint_y: 0.1
+
+            # Overall Game Stats
+            Label:
+                id: total_time_final_lbl
+                text: 'Total Game Time: 00:00:00'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+            Label:
+                id: rounds_played_final_lbl
+                text: 'Rounds Played: 5'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+
+            Widget: # Spacer
+                size_hint_y: 0.3
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: dp(50)
+                spacing: dp(20)
+                Button:
+                    text: 'Start New Game'
+                    font_size: '20sp'
+                    on_press: root.start_new_game()
+                Button:
+                    text: 'Exit Application'
+                    font_size: '20sp'
+                    on_press: root.exit_app_from_game_over()
+
+<SplashScreen>: # Definition for SplashScreen
+    name: 'splash_screen'
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(20)
-        spacing: dp(15)
-
-        Label:
-            text: "Game Over!"
-            font_size: '32sp'
-            bold: True
-            size_hint_y: None
-            height: dp(50)
-            halign: 'center'
-
-        Label:
-            id: result_status_lbl
-            text: "Determining winner..."
-            font_size: '26sp'
-            italic: True
-            size_hint_y: None
-            height: dp(40)
-            halign: 'center'
-
-        GridLayout:
-            cols: 2
-            spacing: dp(10)
-            padding: dp(10)
-            size_hint_y: 0.6 # Give it some substantial height
-
-            # Player 1 Final Stats
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: dp(5)
-                Label:
-                    id: p1_name_final_lbl
-                    text: 'Player 1:'
-                    font_size: '20sp'
-                    bold: True
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p1_score_final_lbl
-                    text: 'Score: 0'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p1_cp_final_lbl
-                    text: 'CP: 0'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p1_time_final_lbl
-                    text: 'Time: 00:00:00'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-
-            # Player 2 Final Stats
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: dp(5)
-                Label:
-                    id: p2_name_final_lbl
-                    text: 'Player 2:'
-                    font_size: '20sp'
-                    bold: True
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p2_score_final_lbl
-                    text: 'Score: 0'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p2_cp_final_lbl
-                    text: 'CP: 0'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-                Label:
-                    id: p2_time_final_lbl
-                    text: 'Time: 00:00:00'
-                    font_size: '18sp'
-                    halign: 'left'
-                    text_size: self.width, None
-        
-        Label: # Spacer to push game stats and buttons down a bit
-            size_hint_y: 0.1
-
-        # Overall Game Stats
-        Label:
-            id: total_time_final_lbl
-            text: 'Total Game Time: 00:00:00'
-            font_size: '18sp'
-            size_hint_y: None
-            height: dp(30)
-            halign: 'center'
-        Label:
-            id: rounds_played_final_lbl
-            text: 'Rounds Played: 5'
-            font_size: '18sp'
-            size_hint_y: None
-            height: dp(30)
-            halign: 'center'
-
-        Widget: # Spacer
-            size_hint_y: 0.3
-
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: dp(50)
-            spacing: dp(20)
-            Button:
-                text: 'Start New Game'
-                font_size: '20sp'
-                on_press: root.start_new_game()
-            Button:
-                text: 'Exit Application'
-                font_size: '20sp'
-                on_press: root.exit_app_from_game_over() 
+        padding: dp(50) # Add some padding around the logo
+        canvas.before:
+            Color:
+                rgba: 0.05, 0.05, 0.1, 1 # Dark background for splash
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Image:
+            source: 'assets/logo-original.png'
+            allow_stretch: True
+            keep_ratio: True 

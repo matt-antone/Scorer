@@ -53,6 +53,9 @@ Config.set('graphics', 'resizable', False) # Change to True if you want to resiz
 
 # --- New Setup Screens ---
 
+class SplashScreen(Screen):
+    pass
+
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
     player2_name_input = ObjectProperty(None)
@@ -765,6 +768,7 @@ class GameOverScreen(Screen):
 
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
+    SPLASH_DURATION = 2.5 # Duration in seconds for the splash screen
 
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""
@@ -840,40 +844,63 @@ class ScorerApp(App):
             print(f"No save file found at {load_path}. Starting with default state.")
 
     def build(self):
-        self.initialize_game_state() 
-        sm = ScreenManager()
-        sm.add_widget(NameEntryScreen(name='name_entry'))
-        sm.add_widget(DeploymentSetupScreen(name='deployment_setup'))
-        sm.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
-        sm.add_widget(ScorerRootWidget(name='scorer'))
-        sm.add_widget(GameOverScreen(name='game_over_screen')) # Add new screen
-        
-        loaded_phase = self.game_state.get('game_phase', 'setup')
-        if loaded_phase == 'game_over': # Check for game_over first
-            sm.current = 'game_over_screen'
-            game_over_widget = sm.get_screen('game_over_screen')
-            # on_pre_enter should handle UI updates for GameOverScreen
-            # Clock.schedule_once(lambda dt: game_over_widget.on_pre_enter(), 0.1) # Or a specific update method
-        elif loaded_phase == 'playing': # No 'game_over' here, just 'playing'
-            sm.current = 'scorer'
-            scorer_widget = sm.get_screen('scorer')
-            Clock.schedule_once(lambda dt: scorer_widget.update_ui_from_state(), 0.1)
-            Clock.schedule_once(lambda dt: scorer_widget.update_timer_display(0), 0.1)
-            if self.game_state['game_timer']['status'] == 'running':
-                 Clock.schedule_once(lambda dt: scorer_widget.start_timer(), 0.2)
-        elif loaded_phase == 'setup':
-            if self.game_state['player1']['name'] != "Player 1" or self.game_state['player2']['name'] != "Player 2":
-                if self.game_state.get("deployment_attacker_id") is not None:
-                    sm.current = 'first_turn_setup'
-                elif self.game_state['player1']['name'] != "Player 1":
-                    sm.current = 'deployment_setup' 
+        self.game_state = self._get_default_game_state() # Initialize with defaults first
+        self.screen_manager = ScreenManager()
+
+        # Add all screens
+        self.screen_manager.add_widget(SplashScreen(name='splash_screen')) # Add Splash Screen
+        self.screen_manager.add_widget(NameEntryScreen(name='name_entry'))
+        self.screen_manager.add_widget(DeploymentSetupScreen(name='deployment_setup'))
+        self.screen_manager.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
+        self.screen_manager.add_widget(ScorerRootWidget(name='scorer_root'))
+        self.screen_manager.add_widget(GameOverScreen(name='game_over'))
+
+        # Determine the actual screen to go to after splash
+        loaded_state = self.load_game_state()
+        actual_initial_screen = 'name_entry' # Default if no save or new game
+
+        if loaded_state:
+            self.game_state.update(loaded_state)
+            # Logic to determine screen based on loaded state
+            if self.game_state.get('game_phase') == 'name_entry' or not self.game_state.get('player1', {}).get('name'):
+                actual_initial_screen = 'name_entry'
+            elif self.game_state.get('game_phase') == 'deployment_setup':
+                actual_initial_screen = 'deployment_setup'
+            elif self.game_state.get('game_phase') == 'first_turn_setup':
+                actual_initial_screen = 'first_turn_setup'
+            elif self.game_state.get('game_phase') == 'game_active':
+                 # Check if game might have ended prematurely (e.g. round > 5)
+                if self.game_state.get('current_round', 0) > self.game_state.get('max_rounds', 5):
+                    actual_initial_screen = 'game_over' # Or handle game conclusion logic
                 else:
-                    sm.current = 'name_entry' 
-            else:
-                sm.current = 'name_entry'
-        else:
-            sm.current = 'name_entry'
-        return sm
+                    actual_initial_screen = 'scorer_root'
+            elif self.game_state.get('game_phase') == 'game_over':
+                actual_initial_screen = 'game_over'
+            else: # Default to name entry if phase is unknown or first time
+                actual_initial_screen = 'name_entry'
+        else: # No save file, or error loading it, treat as new game
+            self.initialize_game_state() # Sets up default state and phase 'name_entry'
+            actual_initial_screen = 'name_entry'
+            
+        print(f"After load, determined actual initial screen: {actual_initial_screen}")
+
+        self.screen_manager.current = 'splash_screen'
+        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen), self.SPLASH_DURATION)
+        
+        return self.screen_manager
+
+    def transition_from_splash(self, target_screen_name, dt):
+        print(f"Transitioning from splash to {target_screen_name}")
+        if target_screen_name == 'scorer_root' and self.game_state.get('current_round', 0) == 0:
+            # This ensures if we are going to scorer_root but it's effectively a new game setup state
+            # (e.g. loaded a game that was saved right at the start of round 1 before first turn action)
+            # we properly initialize the ScorerRootWidget's UI elements from game_state
+            # It might be better handled inside ScorerRootWidget.on_pre_enter
+            print("Transitioning to scorer_root, ensuring game_state is applied.")
+            # The on_pre_enter of ScorerRootWidget should handle UI updates.
+            pass
+
+        self.screen_manager.current = target_screen_name
 
     def initialize_game_state(self): 
         self.game_state = self._get_default_game_state() # Start with defaults

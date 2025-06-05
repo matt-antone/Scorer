@@ -10,6 +10,8 @@
 - Touchscreen input on Raspberry Pi
 - Auto-start via systemd service
 - CLI boot with auto-login
+- Database reset functionality is now fully tested and working with both SQLAlchemy and direct SQLite access.
+- The test runner sets the DATABASE_URL environment variable to use SQLite, ensuring both the test and SQLAlchemy operate on the same database file.
 
 ## What's Left to Build
 
@@ -22,6 +24,9 @@
   - New API layer for game management
   - Web interface for remote score management
   - Data migration tools
+- Consider adding more tests for edge cases.
+- Update documentation and the Memory Bank as needed.
+- Proceed with integration or deployment.
 
 ## Current Status
 
@@ -29,6 +34,8 @@
 - Core functionality is complete
 - Both development and production environments are configured
 - Planning phase for database implementation
+- The database reset logic successfully clears all records from turns, players, and games.
+- The test runner is configured to use SQLite for local testing.
 
 ## Known Issues
 

@@ -10,6 +10,8 @@
   - Screen transition timing
   - Timer synchronization
   - Game state management consistency
+- Database reset functionality is now fully tested and working with both SQLAlchemy and direct SQLite access.
+- The test runner sets the DATABASE_URL environment variable to use SQLite, ensuring both the test and SQLAlchemy operate on the same database file.
 
 ## Recent Changes
 
@@ -17,6 +19,9 @@
 - Improved systemd service configuration
 - Ensured proper display and touchscreen configuration on Raspberry Pi
 - Identified several platform-specific timing and synchronization issues
+- Updated the test runner to set DATABASE_URL to sqlite+aiosqlite:///db/game.db before running tests.
+- Added creation of the 'games' table in the test database setup to ensure the reset_for_new_game() function works correctly.
+- Verified that the database reset logic successfully clears all records from turns, players, and games.
 
 ## Next Steps
 
@@ -36,6 +41,9 @@
   - Verify timer accuracy and synchronization
   - Consolidate game state management code
   - Document platform-specific timing requirements
+- Consider adding more tests for edge cases.
+- Update documentation and the Memory Bank as needed.
+- Proceed with integration or deployment.
 
 ## Active Decisions
 
@@ -47,6 +55,8 @@
   - Platform-specific screen transition timing
   - Timer synchronization strategy
   - Game state management standardization
+- Ensure that the DATABASE_URL environment variable is set correctly in all environments to avoid connection issues.
+- Maintain consistency between SQLAlchemy and direct SQLite access in tests.
 
 ## Database Implementation Plan
 

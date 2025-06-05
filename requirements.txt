@@ -3,6 +3,14 @@ Flask-SocketIO
 eventlet
 Kivy
 Pillow
+sqlalchemy
+alembic
+python-dotenv
+asyncpg
+
+# Testing libraries - can be kept separate or installed as needed
+# pytest
+# pytest-asyncio
 
 Kivy-Garden==0.1.5
 python-engineio==4.8.0

@@ -134,6 +134,13 @@ else
     echo "No requirements.txt found. Skipping."
 fi
 
+echo "Initializing or upgrading the database..."
+cd "$APP_WORKING_DIR/db"
+sudo -H -u "$APP_USER" "$VENV_DIR/bin/alembic" upgrade head
+if [ $? -ne 0 ]; then echo "Error initializing/upgrading database. Exiting."; exit 1; fi
+cd "$APP_WORKING_DIR" # Return to the original directory
+echo "Database setup complete."
+
 # --- 5. Create and enable systemd service ---
 echo ""
 echo "--- Creating and enabling systemd service: $SERVICE_FILE_NAME ---"

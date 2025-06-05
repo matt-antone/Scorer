@@ -108,30 +108,34 @@ class NameEntryScreen(Screen):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._keyboard_added = False
         self.vkeyboard = None
 
     def set_active_input(self, text_input):
         if text_input.focus:
             self.active_input = text_input
+            if platform.system() == "Linux" and not self.vkeyboard:
+                self.vkeyboard = VKeyboard(size_hint_y=None)
+                self.ids.main_layout.add_widget(self.vkeyboard)
             if self.vkeyboard:
                 self.vkeyboard.target = text_input
         else:
-            # If the input that just lost focus is the active one, clear it
             if self.active_input == text_input:
                 self.active_input = None
                 if self.vkeyboard:
-                    self.vkeyboard.target = None
+                    self.ids.main_layout.remove_widget(self.vkeyboard)
+                    self.vkeyboard = None
 
     def on_enter(self, *args):
         # Defer the field initialization to the next frame to ensure widgets are ready
         Clock.schedule_once(self._initialize_fields)
 
-        # Dynamically add the VKeyboard on Linux platforms
-        if platform.system() == "Linux" and not self._keyboard_added:
-            self.vkeyboard = VKeyboard(size_hint_y=None)
-            self.ids.main_layout.add_widget(self.vkeyboard)
-            self._keyboard_added = True
+    def on_touch_down(self, touch):
+        # If a touch occurs outside the active text input, unfocus it
+        if self.active_input and not self.active_input.collide_point(*touch.pos):
+            # Also check if the touch is outside the keyboard itself
+            if not self.vkeyboard or not self.vkeyboard.collide_point(*touch.pos):
+                self.active_input.focus = False
+        return super().on_touch_down(touch)
 
     def _initialize_fields(self, dt):
         """Initializes the text input fields with names from the game state."""

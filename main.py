@@ -2,24 +2,24 @@ import platform # For OS detection
 import os # Import os
 
 if platform.system() == "Linux":
-    print("Main.py: Linux detected. Setting Kivy environment variables for framebuffer.")
+    print("Main.py: Linux detected. Setting Kivy environment for SDL2/KMSDRM.")
     os.environ['KIVY_WINDOW'] = 'sdl2'
-    os.environ['KIVY_GRAPHICS_BACKEND'] = 'egl_rpi' # Kivy 2.0+ style for backend
     os.environ['KIVY_TEXT'] = 'sdl2'
-    # Add EGL/GLES library paths for Raspberry Pi
-    os.environ['KIVY_EGL_LIB'] = '/opt/vc/lib/libEGL.so'
-    os.environ['KIVY_GLES_LIB'] = '/opt/vc/lib/libGLESv2.so'
-    os.environ.pop('DISPLAY', None) # Still pop DISPLAY as a fallback
-    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS_BACKEND={os.environ.get('KIVY_GRAPHICS_BACKEND')}, KIVY_EGL_LIB={os.environ.get('KIVY_EGL_LIB')}, KIVY_GLES_LIB={os.environ.get('KIVY_GLES_LIB')}, DISPLAY={os.environ.get('DISPLAY')}")
+    os.environ['KIVY_LOG_LEVEL'] = 'debug'
+
+    if 'DISPLAY' in os.environ:
+        print(f"Main.py: DISPLAY was {os.environ['DISPLAY']}. Unsetting it.")
+        del os.environ['DISPLAY']
+    else:
+        print("Main.py: DISPLAY was not set.")
+    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_TEXT={os.environ.get('KIVY_TEXT')}, DISPLAY={os.environ.get('DISPLAY')}")
 
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
 
 if platform.system() == "Linux":
     print("Main.py: Linux detected. Applying Kivy Config settings.")
-    Config.set('graphics', 'backend', 'egl_rpi') 
-    Config.set('kivy', 'log_level', 'debug') # Ensure Kivy log level is debug via Config too
-    # Config.set('core', 'window_sdl2', '') # This line might be unnecessary or counterproductive if sdl2 is forced by KIVY_WINDOW
-    print(f"Main.py: Config Set -> graphics:backend={Config.get('graphics', 'backend')}, kivy:log_level={Config.get('kivy', 'log_level')}")
+    Config.set('kivy', 'log_level', 'debug')
+    print(f"Main.py: Config Set -> kivy:log_level={Config.get('kivy', 'log_level')}")
 
 from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 

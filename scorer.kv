@@ -342,6 +342,7 @@ ScreenManager:
 
     BoxLayout: # New Main Root
         orientation: 'vertical'
+        size: self.size
         HeaderLayout:
             title_text: 'First Turn Setup' # Set the property
         # Original Root BoxLayout for FirstTurnSetupScreen content
@@ -349,8 +350,8 @@ ScreenManager:
             orientation: 'vertical'
             padding: dp(10)
             spacing: dp(10)
-            # Old title Label removed from here
 
+            # Old title Label removed from here
             Label: # Central Status Label
                 id: first_turn_status_ft_lbl
                 text: 'Roll for First Turn!'
@@ -370,12 +371,6 @@ ScreenManager:
                     size_hint_x: 0.5
                     padding: dp(5)
                     spacing: dp(5)
-                    canvas.before:
-                        Color:
-                            rgba: 0.15, 0.15, 0.15, 1
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
                     Label:
                         id: p1_name_ft_lbl
                         text: 'Player 1'
@@ -407,12 +402,6 @@ ScreenManager:
                     size_hint_x: 0.5
                     padding: dp(5)
                     spacing: dp(5)
-                    canvas.before:
-                        Color:
-                            rgba: 0.15, 0.15, 0.15, 1
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
                     Label:
                         id: p2_name_ft_lbl
                         text: 'Player 2'
@@ -480,12 +469,6 @@ ScreenManager:
                 source: 'assets/background.png'
                 pos: self.pos
                 size: self.size
-        # Free-floating logo, drawn on top. do not remove or change!
-        Image:
-            source: 'static/logo-original.png'
-            size_hint: None, None
-            size: dp(128), dp(128)
-            pos_hint: {'center_x': 0.5, 'center_y': 0.85}
 
         # Main layout for header and player grid
         BoxLayout:
@@ -498,6 +481,12 @@ ScreenManager:
                 padding: [dp(20), 0, dp(20), 0]
                 spacing: 0
                 width: dp(800)
+                canvas.before:
+                    Color:
+                        rgba: 0, 0, 0, 1 # Black background
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
 
                 # Round Label
                 InterBlack:
@@ -521,14 +510,14 @@ ScreenManager:
                     halign: 'right'
                     valign: 'middle'
 
-            # Players Area
+            # Players Area is complete. don't touch this
             GridLayout:
                 cols: 2
                 BoxLayout:
                     id: p1_panel_id
                     orientation: 'vertical'
                     padding: dp(20)
-                    spacing: dp(10)
+                    spacing: dp(5)
                     InterBlack:
                         id: p1_name_label_id
                         text: 'Player 1 - Active'
@@ -626,7 +615,7 @@ ScreenManager:
                     id: p2_panel_id
                     orientation: 'vertical'
                     padding: dp(20)
-                    spacing: dp(10)
+                    spacing: dp(5)
                     InterBlack:
                         id: p2_name_label_id
                         text: 'Player 2'
@@ -721,8 +710,12 @@ ScreenManager:
                                 font_size: '14sp'
                                 on_press: root.add_cp(2)
 
-
-
+        # Free-floating logo, drawn on top. do not remove or change!
+        Image:
+            source: 'static/logo-original.png'
+            size_hint: None, None
+            size: dp(128), dp(128)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.85}
 
 <GameOverScreen>:
     name: 'game_over'

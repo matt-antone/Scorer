@@ -149,6 +149,10 @@ class NameEntryScreen(Screen):
         self.on_name_input(self.player1_name_input, p1_name)
 
     def on_name_input(self, instance, value):
+        # Guard clause: Do not proceed if widgets aren't linked yet.
+        if not all([self.player1_name_input, self.player2_name_input, self.continue_button]):
+            return
+
         # Enable continue button only if both fields have non-empty, non-whitespace text
         p1_name = self.player1_name_input.text.strip()
         p2_name = self.player2_name_input.text.strip()

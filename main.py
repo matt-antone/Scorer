@@ -4,13 +4,21 @@ import os # Import os
 if platform.system() == "Linux":
     print("Main.py: Linux detected. Setting Kivy environment variables for framebuffer.")
     os.environ['KIVY_WINDOW'] = 'sdl2'
-    os.environ['KIVY_GRAPHICS'] = 'egl_rpi' # Common for direct RPi rendering
+    os.environ['KIVY_GRAPHICS_BACKEND'] = 'egl_rpi' # Kivy 2.0+ style for backend
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ.pop('DISPLAY', None) # Still pop DISPLAY as a fallback
-    print(f"Main.py: KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS={os.environ.get('KIVY_GRAPHICS')}, DISPLAY={os.environ.get('DISPLAY')}")
+    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS_BACKEND={os.environ.get('KIVY_GRAPHICS_BACKEND')}, DISPLAY={os.environ.get('DISPLAY')}")
 
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
-from kivy.core.window import Window # Ensure Window is imported
+
+if platform.system() == "Linux":
+    print("Main.py: Linux detected. Applying Kivy Config settings.")
+    Config.set('graphics', 'backend', 'egl_rpi') 
+    Config.set('kivy', 'log_level', 'debug') # Ensure Kivy log level is debug via Config too
+    # Config.set('core', 'window_sdl2', '') # This line might be unnecessary or counterproductive if sdl2 is forced by KIVY_WINDOW
+    print(f"Main.py: Config Set -> graphics:backend={Config.get('graphics', 'backend')}, kivy:log_level={Config.get('kivy', 'log_level')}")
+
+from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 
 # OS-specific graphics configuration
 os_type = platform.system()

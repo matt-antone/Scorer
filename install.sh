@@ -141,14 +141,12 @@ sudo -u "$APP_USER" mkdir -p "$DB_DIR/models"
 sudo -u "$APP_USER" mkdir -p "$DB_DIR/migrations/versions"
 
 # Create db/alembic.ini
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/alembic.ini
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/alembic.ini" > /dev/null
 # A generic, single database configuration.
-
 [alembic]
 script_location = %(here)s/migrations
 prepend_sys_path = .
 sqlalchemy.url = sqlite+aiosqlite:///%(here)s/scorer.db
-
 [loggers]
 keys = root,sqlalchemy,alembic
 [handlers]
@@ -175,44 +173,39 @@ formatter = generic
 [formatter_generic]
 format = %(levelname)-5.5s [%(name)s] %(message)s
 datefmt = %H:%M:%S
-EOF"
+EOF
 
 # Create db/integration.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/integration.py
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/integration.py" > /dev/null
 import asyncio
 from db.models.utils import reset_for_new_game
-
 def reset_db_for_new_game_sync():
     try:
-        # Use asyncio.run() for simplicity if no loop is running
         asyncio.run(reset_for_new_game())
-        print(\"Database reset for new game.\")
+        print("Database reset for new game.")
     except Exception as e:
-        print(f\"Error resetting database for new game: {e}\")
-EOF"
+        print(f"Error resetting database for new game: {e}")
+EOF
 
 # Create db/models/base.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/base.py
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/models/base.py" > /dev/null
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 import os
-
-# Define the path for the SQLite database relative to the 'db' directory
-db_dir = os.path.dirname(__file__)
+db_dir = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(db_dir, '..', 'scorer.db')
-DATABASE_URL = f\"sqlite+aiosqlite:///{db_path}\"
-
+DATABASE_URL = f"sqlite+aiosqlite:///{db_path}"
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
 )
 Base = declarative_base()
-EOF"
+EOF
 
 # Create db/models/game.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/game.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, CheckConstraint
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/models/game.py" > /dev/null
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 from .base import Base
 import datetime
@@ -228,7 +221,7 @@ class Player(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     game_id = Column(Integer, ForeignKey('games.id'), nullable=False, default=1)
     name = Column(String(100))
-    game = relationship(\"Game\")
+    game = relationship("Game")
 
 class Turn(Base):
     __tablename__ = 'turns'
@@ -236,12 +229,12 @@ class Turn(Base):
     game_id = Column(Integer, ForeignKey('games.id'), nullable=False, default=1)
     player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
     round_number = Column(Integer, nullable=False)
-    game = relationship(\"Game\")
-    player = relationship(\"Player\")
-EOF"
+    game = relationship("Game")
+    player = relationship("Player")
+EOF
 
 # Create db/models/utils.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/utils.py
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/models/utils.py" > /dev/null
 from .base import async_session
 from .game import Game, Player, Turn
 from sqlalchemy import delete
@@ -253,18 +246,18 @@ async def reset_for_new_game():
             await session.execute(delete(Player))
             await session.execute(delete(Game))
         await session.commit()
-EOF"
+EOF
 
 # Create db/migrations/env.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/env.py
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/migrations/env.py" > /dev/null
 import asyncio
 from logging.config import fileConfig
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import pool
 from alembic import context
 import os
 import sys
 
-# Add project root to sys.path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from db.models.base import Base, DATABASE_URL
@@ -278,7 +271,7 @@ config.set_main_option('sqlalchemy.url', DATABASE_URL)
 target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
-    context.configure(url=config.get_main_option(\"sqlalchemy.url\"), target_metadata=target_metadata, literal_binds=True, dialect_opts={\"paramstyle\": \"named\"}, render_as_batch=True)
+    context.configure(url=config.get_main_option("sqlalchemy.url"), target_metadata=target_metadata, literal_binds=True, dialect_opts={"paramstyle": "named"}, render_as_batch=True)
     with context.begin_transaction():
         context.run_migrations()
 
@@ -288,7 +281,7 @@ def do_run_migrations(connection):
         context.run_migrations()
 
 async def run_migrations_online() -> None:
-    connectable = create_async_engine(config.get_main_option(\"sqlalchemy.url\"), poolclass=pool.NullPool)
+    connectable = create_async_engine(config.get_main_option("sqlalchemy.url"), poolclass=pool.NullPool)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
@@ -297,49 +290,40 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     asyncio.run(run_migrations_online())
-EOF"
+EOF
 
 # Create db/migrations/script.py.mako
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/script.py.mako
-"""\${message}
-
-Revision ID: \${up_revision}
-Revises: \${down_revision | comma,n}
-Create Date: \${create_date}
-
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/migrations/script.py.mako" > /dev/null
+"""${message}
+Revision ID: ${up_revision}
+Revises: ${down_revision | comma,n}
+Create Date: ${create_date}
 """
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
-\${imports if imports else \"\"}
-
-# revision identifiers, used by Alembic.
-revision: str = \${repr(up_revision)}
-down_revision: Union[str, None] = \${repr(down_revision)}
-branch_labels: Union[str, Sequence[str], None] = \${repr(branch_labels)}
-depends_on: Union[str, Sequence[str], None] = \${repr(depends_on)}
-
+${imports if imports else ""}
+revision: str = ${repr(up_revision)}
+down_revision: Union[str, None] = ${repr(down_revision)}
+branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
+depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
 def upgrade() -> None:
-    \${upgrades if upgrades else \"pass\"}
-
+    ${upgrades if upgrades else "pass"}
 def downgrade() -> None:
-    \${downgrades if downgrades else \"pass\"}
-EOF"
+    ${downgrades if downgrades else "pass"}
+EOF
 
 # Create db/migrations/versions/26723581b0c8_initial.py
-sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/versions/26723581b0c8_initial.py
-\"\"\"Initial migration to create tables
-
+cat <<'EOF' | sudo -u "$APP_USER" tee "$DB_DIR/migrations/versions/26723581b0c8_initial.py" > /dev/null
+"""Initial migration to create tables
 Revision ID: 26723581b0c8
 Revises:
 Create Date: 2025-06-05 12:00:00.000000
-
-\"\"\"
+"""
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-# revision identifiers, used by Alembic.
 revision: str = '26723581b0c8'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
@@ -373,7 +357,7 @@ def downgrade() -> None:
     op.drop_table('turns')
     op.drop_table('players')
     op.drop_table('games')
-EOF"
+EOF
 
 echo "Initializing or upgrading the database..."
 cd "$APP_WORKING_DIR/db"

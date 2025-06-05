@@ -1,44 +1,34 @@
-# Progress: Scorer
+# Progress
 
 ## Current Status
 
-- **Phase**: Recovery from broken state
-- **Overall Progress**: Need to restore to last working state
-- **Last Update**: Pi not booting, application untested
-- **Next Steps**: Reinstall Pi OS, restore working state
+- Debugging splash screen hang issue
+- Application is currently non-functional due to splash screen transition problems
+- Recent changes to splash screen implementation need verification
 
 ## What Works
 
-- Last known working state (commit b86e7d4):
-  - Core Kivy application functionality
-  - Game state persistence
-  - Screen transitions
-  - Score and CP tracking
-  - Timer functionality
-  - Platform-specific configurations
+- None (application is currently hanging on splash screen)
 
 ## What's Broken
 
-- Raspberry Pi not booting after SDL2/KMSDRM configuration
-- Application state untested on both platforms
-- Need to verify working configuration after restore
+- Splash screen transition
+- Application flow from splash screen to subsequent screens
+- Need to verify if recent changes resolved the issues
 
 ## Next Steps
 
-1. Reinstall Raspberry Pi OS
-2. Restore application to last working state
-3. Test on macOS first
-4. Test on Pi after reinstallation
-5. Document working configuration
+1. Verify if splash screen changes resolved the hang issue
+2. If still hanging, investigate app initialization and screen manager setup
+3. Test application flow from splash screen to subsequent screens
+4. Document any additional issues found
 
 ## Known Issues
 
-- Pi not booting after SDL2/KMSDRM configuration
-- Application state untested on both platforms
-- Need to verify working configuration after restore
+- Application hangs on splash screen
+- Need to verify if recent changes to splash screen implementation resolved the issue
 
 ## Blockers
 
-- Pi OS needs reinstallation
-- Application needs restoration to working state
-- Need to verify working configuration
+- Splash screen transition not working
+- Application cannot proceed past splash screen

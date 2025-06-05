@@ -886,17 +886,10 @@ ScreenManager:
 
 <SplashScreen>:
     name: 'splash_screen'
-    # canvas.before: # Reverted: Remove temporary background
-    #     Color:
-    #         rgba: 1, 0, 0, 1
-    #     Rectangle:
-    #         pos: self.pos
-    #         size: self.size
-    Image: # Restored Image widget
-        id: splash_image_id # Added id for Python access
+    Image:
+        id: splash_image_id
         source: 'assets/splash.jpg'
-        allow_stretch: True
-        keep_ratio: False # Fill the entire screen
+        fit_mode: 'fill'
 
 <ResumeOrNewScreen>:
     name: 'resume_or_new'

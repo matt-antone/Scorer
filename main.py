@@ -83,75 +83,18 @@ else:
 # --- New Setup Screens ---
 
 class SplashScreen(Screen):
-    _transition_scheduled_for_this_instance = False # Renamed for clarity
-
     def on_enter(self, *args):
-        super().on_enter(*args)
-        
+        print("SplashScreen: on_enter called")
         app = App.get_running_app()
         if not app or not app.root:
             print("SplashScreen: on_enter called, but app or app.root is not yet available. Ignoring this call.")
             return
 
-        print(f"SplashScreen: on_enter. Current screen in manager: {app.root.current}. Is this instance current? {app.root.current_screen == self}")
-
-        if app.root.current_screen == self and not self._transition_scheduled_for_this_instance:
-            print("SplashScreen: Confirmed as current screen and no transition yet scheduled. Proceeding with setup.")
-            self._transition_scheduled_for_this_instance = True
-            Clock.schedule_once(self._setup_splash_image_handler, 0)
-        elif app.root.current_screen != self:
-            print("SplashScreen: on_enter called, but this instance is NOT the current screen. Ignoring.")
-        elif self._transition_scheduled_for_this_instance:
-            print("SplashScreen: on_enter called, but transition ALREADY scheduled for this instance. Ignoring.")
-
-    def _setup_splash_image_handler(self, dt):
-        print("SplashScreen: _setup_splash_image_handler called.")
-        splash_image = self.ids.get('splash_image_id')
-        if splash_image:
-            if splash_image.texture:
-                print("SplashScreen: Image texture was already available.")
-                self._start_splash_timer_if_needed(splash_image, splash_image.texture)
-            else:
-                print("SplashScreen: Image texture not yet available. Binding on_texture.")
-                splash_image.bind(on_texture=self._start_splash_timer_if_needed)
-        else:
-            print("SplashScreen: Error - 'splash_image_id' not found. Scheduling fallback transition.")
-            # Even if the ID is not found, we must ensure _schedule_final_transition is called to proceed.
-            self._schedule_final_transition()
-
-
-    def _start_splash_timer_if_needed(self, instance, texture_value):
-        # This method now serves as the target for on_texture AND direct call
-        print(f"SplashScreen: _start_splash_timer_if_needed. Texture valid: {texture_value is not None}")
-        
-        if texture_value is not None: # Only proceed if texture is valid
-            if instance: # Unbind if called from on_texture
-                print("SplashScreen: Unbinding on_texture event.")
-                instance.unbind(on_texture=self._start_splash_timer_if_needed)
-            
-            self._schedule_final_transition() # Call the consolidated transition scheduler
-        else:
-            print("SplashScreen: Warning - _start_splash_timer_if_needed called but texture is None.")
-
-
-    def _schedule_final_transition(self):
-        # This is the single point where Clock.schedule_once for transition is called.
-        # The _transition_scheduled_for_this_instance flag ensures it's called only once per instance lifecycle.
-        app = App.get_running_app()
-        print(f"SplashScreen: Scheduling final transition to {app.target_screen_after_splash} in {app.VISIBLE_SPLASH_TIME}s.")
-        Clock.schedule_once(
-            lambda x: app.transition_from_splash(app.target_screen_after_splash, x),
-            app.VISIBLE_SPLASH_TIME
-        )
+        print(f"SplashScreen: Scheduling transition to {app.target_screen_after_splash} in {app.VISIBLE_SPLASH_TIME}s")
+        Clock.schedule_once(lambda dt: app.transition_from_splash(app.target_screen_after_splash, dt), app.VISIBLE_SPLASH_TIME)
 
     def on_leave(self, *args):
-        super().on_leave(*args)
-        print("SplashScreen: on_leave called.")
-        splash_image = self.ids.get('splash_image_id')
-        if splash_image:
-            splash_image.unbind(on_texture=self._start_splash_timer_if_needed)
-        # Reset the flag when leaving so it can work correctly if screen is re-entered later
-        self._transition_scheduled_for_this_instance = False
+        print("SplashScreen: on_leave called")
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
@@ -1101,6 +1044,7 @@ class ResumeOrNewScreen(Screen):
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
     VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
+    target_screen_after_splash = None  # Add this attribute
 
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""
@@ -1234,15 +1178,20 @@ class ScorerApp(App):
             return 'name_entry'
 
     def build(self):
-        build_start_time = time.time()
-        print(f"ScorerApp.build(): Method started at {build_start_time:.4f}")
-
-        self.game_state = self._get_default_game_state() 
+        print("ScorerApp.build(): Method started at", time.time())
+        # Initialize game state
+        self.initialize_game_state()
         print("ScorerApp.build(): Game state initialized.")
-        
+
+        # Create the screen manager
         self.screen_manager = ScreenManager()
         print("ScorerApp.build(): ScreenManager created.")
 
+        # Determine which screen to show after splash
+        self.target_screen_after_splash = self._determine_screen_from_gamestate()
+        print(f"ScorerApp.build(): Target screen after splash: {self.target_screen_after_splash}")
+
+        # Add the splash screen first
         self.screen_manager.add_widget(SplashScreen(name='splash_screen'))
         print("ScorerApp.build(): SplashScreen added to ScreenManager.")
         self.screen_manager.add_widget(ResumeOrNewScreen(name='resume_or_new'))
@@ -1253,13 +1202,9 @@ class ScorerApp(App):
         self.screen_manager.add_widget(GameOverScreen(name='game_over'))
         print("ScorerApp.build(): All game screens added to ScreenManager.")
 
-        actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
-        self.target_screen_after_splash = actual_initial_screen_after_splash
-        print(f"ScorerApp.build(): Target screen after splash determined: '{self.target_screen_after_splash}'.")
-
         # --- Point of setting splash screen current ---
         time_before_splash_current = time.time()
-        print(f"ScorerApp.build(): About to set 'splash_screen' as current. Time elapsed since build start: {time_before_splash_current - build_start_time:.4f}s")
+        print(f"ScorerApp.build(): About to set 'splash_screen' as current. Time elapsed since build start: {time_before_splash_current - time.time():.4f}s")
         self.screen_manager.current = 'splash_screen'
         # ---------------------------------------------
         
@@ -1269,33 +1214,23 @@ class ScorerApp(App):
             print("ScorerApp.build(): Linux detected - Window.fullscreen and Window.borderless set.")
 
         build_end_time = time.time()
-        print(f"ScorerApp.build(): Method finished. Total time in build(): {build_end_time - build_start_time:.4f}s")
+        print(f"ScorerApp.build(): Method finished. Total time in build(): {build_end_time - time.time():.4f}s")
         return self.screen_manager
 
     def transition_from_splash(self, target_screen_name, dt):
-        """Transitions from splash screen to the target screen."""
-        print(f"Transitioning from splash to {target_screen_name}")
-        self.screen_manager.current = target_screen_name
-
-        if target_screen_name == 'scorer_root':
-            scorer_screen = self.screen_manager.get_screen('scorer_root')
-            if scorer_screen:
-                gs = self.game_state
-                if gs.get('game_phase') == 'playing':
-                    if gs.get('game_timer', {}).get('status') == 'running':
-                        is_scheduled = False
-                        for event in Clock.get_events(): 
-                            if event.callback == scorer_screen.update_timer_display:
-                                is_scheduled = True
-                                break
-                        if not is_scheduled:
-                            print("ScorerApp.transition_from_splash: Timer status 'running', re-scheduling for scorer_root.")
-                            Clock.schedule_interval(scorer_screen.update_timer_display, 1)
-                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
-                        print("ScorerApp.transition_from_splash: Game playing, timer stopped & never started. Calling start_timer for scorer_root.")
-                        scorer_screen.start_timer()
-                # Ensure UI is updated after transition
-                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
+        print(f"ScorerApp.transition_from_splash(): Transitioning to {target_screen_name}")
+        if not target_screen_name:
+            print("ScorerApp.transition_from_splash(): No target screen specified, defaulting to 'resume_or_new'")
+            target_screen_name = 'resume_or_new'
+        
+        try:
+            self.screen_manager.transition.direction = 'left'
+            self.screen_manager.current = target_screen_name
+            print(f"ScorerApp.transition_from_splash(): Successfully transitioned to {target_screen_name}")
+        except Exception as e:
+            print(f"ScorerApp.transition_from_splash(): Error during transition: {str(e)}")
+            # Fallback to resume_or_new screen if transition fails
+            self.screen_manager.current = 'resume_or_new'
 
     def initialize_game_state(self): 
         self.game_state = self._get_default_game_state() 

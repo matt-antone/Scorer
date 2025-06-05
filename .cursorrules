@@ -178,3 +178,75 @@
 - **Game State Persistence**: The `game_state.json` file is critical for game resumption. Ensure its integrity and robust load/save operations.
 - **Font**: "InterBlack" is the preferred font for headers and important labels, registered via `LabelBase`.
 - **Global Theme**: A "Red vs. Blue" two-column theme is standard for most screens, with Player 1 on the left (red) and Player 2 on the right (blue).
+
+## Commit Message Requirements
+
+1. **Format**:
+
+   ```
+   type: concise description (max 72 chars)
+
+   - Bullet points for specific changes
+   - One change per line
+   - Empty line between description and details
+
+   Working features at this commit:
+   - List of features that are known to work
+   - Include platform-specific functionality
+
+   Known issues at this commit:
+   - List of known issues or limitations
+   - Include platform-specific issues
+   ```
+
+2. **GitHub Limits**:
+
+   - Title line: max 72 characters
+   - Body: max 72 characters per line
+   - Total message: max 1000 characters
+
+3. **Types**:
+
+   - `feat`: New feature
+   - `fix`: Bug fix
+   - `docs`: Documentation changes
+   - `style`: Code style changes (formatting, etc.)
+   - `refactor`: Code changes that neither fix bugs nor add features
+   - `test`: Adding or modifying tests
+   - `chore`: Changes to build process or auxiliary tools
+
+4. **Content Requirements**:
+
+   - First line must be a concise summary
+   - Must include bullet points of specific changes
+   - Must document working features
+   - Must document known issues
+   - Must specify platform-specific behavior
+   - Must reference previous working states if restoring
+
+5. **Examples**:
+
+   ```
+   fix: restore working state from b86e7d4
+
+   - Revert main.py, scorer.kv, and launch_scorer.sh to last known working state
+   - Remove tc358762 overlay from config.txt
+   - Restore original installation script
+
+   Working features at this commit:
+   - Full Kivy application functionality
+   - Game state persistence
+   - Screen transitions
+   - Score and CP tracking
+   - Timer functionality
+   - Platform-specific configurations
+
+   Known issues at this commit:
+   - None (this is our baseline working state)
+   ```
+
+6. **Commit Authorization**:
+   - I am authorized to commit when explicitly asked
+   - I must write commit messages following this format
+   - I must verify the commit message is complete before committing
+   - I must reference the commit message in my responses when relevant

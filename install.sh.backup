@@ -73,40 +73,111 @@ if [ $? -ne 0 ]; then echo "Error during apt update. Exiting."; exit 1; fi
 # This list is comprehensive and might include some already installed.
 echo ""
 echo "--- Installing system-level dependencies for Kivy ---"
-sudo apt install -y \\
-    build-essential \\
-    git \\
-    libsdl2-dev \\
-    libsdl2-image-dev \\
-    libsdl2-mixer-dev \\
-    libsdl2-ttf-dev \\
-    pkg-config \\
-    libgl1-mesa-dev \\
-    libgles2-mesa-dev \\
-    python3-setuptools \\
-    libgstreamer1.0-dev \\
-    gst-plugins-base \\
-    gst-plugins-good \\
-    gst-plugins-bad \\
-    gst-plugins-ugly \\
-    gstreamer1.0-tools \\
-    gstreamer1.0-alsa \\
-    gstreamer1.0-plugins-base \\
-    gstreamer1.0-plugins-good \\
-    gstreamer1.0-omx-rpi \\
-    gstreamer1.0-omx-rpi-config \\
-    python3-dev \\
-    libmtdev-dev \\
-    libjpeg-dev \\
-    libpng-dev \\
-    libtiff5-dev \\
-    libwebp-dev \\
-    libffi-dev \\
-    librsvg2-bin # For SVG support if needed by Pillow or Kivy
+sudo apt install -y build-essential git libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev pkg-config libgl1-mesa-dev libgles2-mesa-dev python3-setuptools libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-tools gstreamer1.0-alsa gstreamer1.0-libav python3-dev libmtdev-dev libjpeg-dev libpng-dev libtiff5-dev libwebp-dev libffi-dev librsvg2-bin
     # xclip xsel # Only if you need clipboard on X11, not typical for kiosk
 
 if [ $? -ne 0 ]; then echo "Error installing system dependencies. Exiting."; exit 1; fi
 echo "System dependencies installed."
+
+# --- 2.1 Install SDL2 build dependencies ---
+echo ""
+echo "--- Installing SDL2 build dependencies ---"
+sudo apt install -y build-essential git autoconf automake libtool pkg-config \
+    libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
+    libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
+    libxss-dev libgl1-mesa-dev libdbus-1-dev libudev-dev \
+    libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
+    libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
+
+if [ $? -ne 0 ]; then echo "Error installing SDL2 build dependencies. Exiting."; exit 1; fi
+echo "SDL2 build dependencies installed."
+
+# --- 2.2 Build and install SDL2 with KMSDRM support ---
+echo ""
+echo "--- Building SDL2 with KMSDRM support ---"
+echo "This may take several minutes..."
+
+# Create a temporary directory for the build
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
+
+# Function to clean up on exit
+cleanup() {
+    cd "$SCRIPT_DIR"
+    rm -rf "$TEMP_DIR"
+}
+
+# Set up trap to clean up on exit
+trap cleanup EXIT
+
+# Clone SDL2 repository
+echo "Cloning SDL2 repository..."
+git clone https://github.com/libsdl-org/SDL.git
+if [ $? -ne 0 ]; then 
+    echo "Error cloning SDL2 repository. Exiting."
+    exit 1
+fi
+
+cd SDL
+
+# Configure SDL2 with KMSDRM support
+echo "Configuring SDL2..."
+./configure --enable-video-kmsdrm \
+    --enable-video-opengl \
+    --enable-video-opengles \
+    --enable-video-opengles2 \
+    --enable-video-egl \
+    --enable-video-gbm \
+    --enable-video-dummy \
+    --enable-video-x11 \
+    --enable-video-wayland \
+    --enable-video-rpi \
+    --enable-video-vivante \
+    --enable-video-cocoa \
+    --enable-video-metal \
+    --enable-video-vulkan \
+    --enable-video-offscreen
+
+if [ $? -ne 0 ]; then 
+    echo "Error configuring SDL2. Exiting."
+    exit 1
+fi
+
+# Build SDL2
+echo "Building SDL2..."
+make -j4
+if [ $? -ne 0 ]; then 
+    echo "Error building SDL2. Exiting."
+    exit 1
+fi
+
+# Install SDL2
+echo "Installing SDL2..."
+sudo make install
+if [ $? -ne 0 ]; then 
+    echo "Error installing SDL2. Exiting."
+    exit 1
+fi
+
+# Update shared library cache
+echo "Updating shared library cache..."
+sudo ldconfig
+if [ $? -ne 0 ]; then 
+    echo "Error updating shared library cache. Exiting."
+    exit 1
+fi
+
+# Verify KMSDRM support
+echo "Verifying KMSDRM support..."
+if ! sdl2-config --static-libs | grep -q kmsdrm; then
+    echo "Error: SDL2 was built but KMSDRM support is not available."
+    echo "Please check the build logs for any errors."
+    exit 1
+fi
+
+echo "SDL2 with KMSDRM support installed successfully."
+
+# Clean up is handled by the trap
 
 # --- 3. Create Python virtual environment ---
 echo ""
@@ -179,25 +250,19 @@ After=network.target multi-user.target
 [Service]
 Type=simple
 User=$APP_USER
-Group=$(id -g -n "$APP_USER") # Get the primary group of the user
 WorkingDirectory=$APP_WORKING_DIR
 ExecStart=$VENV_PYTHON_EXECUTABLE $MAIN_SCRIPT_PATH
 
 # Environment variables for Kivy on Raspberry Pi (headless/CLI boot)
-Environment="DISPLAY=:0"
-Environment="KIVY_BCM_DISPMANX_ID=4" # HDMI0. Use 5 for official DSI.
-# Environment="KIVY_WINDOW=sdl2" # Optional: force SDL2 window provider
-# Environment="KIVY_GRAPHICS=gles" # Optional: force GLES graphics
-# Environment="KIVY_TEXT=sdl2" # Optional: force SDL2 text provider
-# Environment="KIVY_LOG_LEVEL=debug" # For troubleshooting startup issues
+# Environment="DISPLAY=:0" # REMOVED - to avoid X11 attempts if not present/intended
+# Environment="KIVY_BCM_DISPMANX_ID=4" # REMOVED - for older Pi display manager
+Environment="KIVY_LOG_LEVEL=debug"   # For troubleshooting startup issues. Can be changed to 'info' or 'warning' in production.
+# KIVY_WINDOW=sdl2 and KIVY_GRAPHICS=gles are often defaults but can be set if auto-detection fails.
+# Forcing specific KMS/DRM settings might be needed if problems persist, e.g.:
+# Environment="KIVY_GRAPHICS_BACKEND=drm" # Or similar depending on Kivy version & RPi setup
+# Environment="KIVY_WINDOW_SYSTEM=egl"   # If EGL is the target
 
 # Access to input devices is crucial for touchscreens
-# The 'input' group gives access to /dev/input/event*
-# The 'video' group might be needed for direct framebuffer access by some drivers.
-# The 'render' group for DRM/KMS rendering.
-# Ensure $APP_USER is a member of these groups (sudo usermod -a -G input,video,render $APP_USER)
-# This is usually handled by default on Pi OS for the 'pi' user with desktop.
-# For CLI-only, these might need explicit adding if not the 'pi' user or if permissions are tight.
 SupplementaryGroups=input video render tty
 
 StandardOutput=journal

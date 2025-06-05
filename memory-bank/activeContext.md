@@ -48,35 +48,36 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## Current Focus
 
-- Recovering from broken Raspberry Pi state
-- Restoring working application state
-- Reinstalling Raspberry Pi OS
+- Debugging splash screen hang issue
+- Attempting to restore application functionality on local machine
+- Recent changes to splash screen transition logic
 
 ## Recent Changes
 
-- Attempted SDL2/KMSDRM configuration broke Pi boot
-- Application state is untested on both macOS and Pi
-- Need to reinstall Pi OS from scratch
+- Modified splash screen image source from splash.png to splash.jpg
+- Simplified splash screen transition logic in main.py
+- Removed complex image loading checks that were causing issues
+- Made transition timing more robust
 
 ## Next Steps
 
-1. Reinstall Raspberry Pi OS
-2. Restore application to last known working state
-3. Test on macOS first
-4. Test on Pi after reinstallation
-5. Document working configuration
+- Verify if splash screen changes resolved the hang issue
+- If still hanging, investigate app initialization and screen manager setup
+- Test application flow from splash screen to subsequent screens
+- Document any additional issues found
 
 ## Active Decisions
 
-- Will reinstall Pi OS rather than try to fix current state
-- Will restore to last known working commit (b86e7d4)
-- Will test thoroughly on macOS before Pi deployment
+- Simplified splash screen transition to be more reliable
+- Removed dependency on image loading for screen transition
+- Using splash.jpg instead of splash.png for splash screen
 
 ## Current Environment
 
-- Development: macOS (untested)
-- Target: Raspberry Pi 5 (needs reinstallation)
-- Display: 5-inch DSI touchscreen
+- Development on macOS
+- Application is hanging on splash screen
+- Recent changes to splash screen implementation
+- Need to verify if changes resolved the issue
 
 ## Known Issues
 

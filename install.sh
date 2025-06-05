@@ -110,29 +110,29 @@ echo "--- Installing Kivy and Python dependencies into virtual environment ---"
 # Activate venv for the current user for pip install (might need sudo -u $APP_USER for pip if permissions are an issue)
 # Using direct path to pip executable is safer in scripts
 echo "Installing Kivy (this may take a while)..."
-sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install kivy # Use stable Kivy from PyPI
-# Consider \`kivy[base,media,full]\` or \`kivy_examples\` if you need more
-# For specific Pi wheels if standard install fails:
-# sudo "$VENV_PIP_EXECUTABLE" install https://github.com/kivy-garden/kivy-garden/archive/master.zip
-# sudo "$VENV_PIP_EXECUTABLE" install https://github.com/kivy/kivy/archive/master.zip # Bleeding edge Kivy
-
-if [ $? -ne 0 ]; then echo "Error installing Kivy. Check logs and dependencies. Exiting."; exit 1; fi
-echo "Kivy installed."
-
-echo "Installing Pillow (for image handling)..."
-sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install Pillow
-if [ $? -ne 0 ]; then echo "Error installing Pillow. Exiting."; exit 1; fi
-echo "Pillow installed."
+# sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install kivy # Use stable Kivy from PyPI
+# # Consider \`kivy[base,media,full]\` or \`kivy_examples\` if you need more
+# # For specific Pi wheels if standard install fails:
+# # sudo "$VENV_PIP_EXECUTABLE" install https://github.com/kivy-garden/kivy-garden/archive/master.zip
+# # sudo "$VENV_PIP_EXECUTABLE" install https://github.com/kivy/kivy/archive/master.zip # Bleeding edge Kivy
+# 
+# if [ $? -ne 0 ]; then echo "Error installing Kivy. Check logs and dependencies. Exiting."; exit 1; fi
+# echo "Kivy installed."
+# 
+# echo "Installing Pillow (for image handling)..."
+# sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install Pillow
+# if [ $? -ne 0 ]; then echo "Error installing Pillow. Exiting."; exit 1; fi
+# echo "Pillow installed."
 
 # Add any other Python dependencies your Scorer app needs here.
 # For example, if you had a requirements.txt:
-# if [ -f "$APP_WORKING_DIR/requirements.txt" ]; then
-#     echo "Installing dependencies from requirements.txt..."
-#     sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install -r "$APP_WORKING_DIR/requirements.txt"
-#     if [ $? -ne 0 ]; then echo "Error installing from requirements.txt. Exiting."; exit 1; fi
-# else
-#     echo "No requirements.txt found. Skipping."
-# fi
+if [ -f "$APP_WORKING_DIR/requirements.txt" ]; then
+    echo "Installing dependencies from requirements.txt..."
+    sudo -H -u "$APP_USER" "$VENV_PIP_EXECUTABLE" install -r "$APP_WORKING_DIR/requirements.txt"
+    if [ $? -ne 0 ]; then echo "Error installing from requirements.txt. Exiting."; exit 1; fi
+else
+    echo "No requirements.txt found. Skipping."
+fi
 
 # --- 5. Create and enable systemd service ---
 echo ""

@@ -1,18 +1,31 @@
 // WebSocket connection and event handlers
 import { setGameState } from "./gameState.js";
 
+let connectionState = "disconnected";
+
 // Connect to WebSocket server
 const socket = io("http://localhost:6969");
+
+function dispatchConnectionStatusEvent() {
+  const event = new CustomEvent("connectionStatusChanged", {
+    detail: { status: connectionState },
+  });
+  document.dispatchEvent(event);
+}
 
 // Connection event handlers
 socket.on("connect", () => {
   console.log("Connected to server");
+  connectionState = "connected";
+  dispatchConnectionStatusEvent();
   // Request initial game state when connected
   socket.emit("request_game_state");
 });
 
 socket.on("disconnect", () => {
   console.log("Disconnected from server");
+  connectionState = "disconnected";
+  dispatchConnectionStatusEvent();
   // The main controller will handle showing the splash screen
 });
 

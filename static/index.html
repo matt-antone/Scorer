@@ -1,68 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scorer</title>
-    <link rel="stylesheet" href="./css/main.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap"
       rel="stylesheet"
     />
+    <link href="./css/main.css" rel="stylesheet" />
+    <title>Game Screen</title>
   </head>
   <body>
-    <!-- Splash Screen -->
+    <!-- Splash Screen. this is exactly the html we want. do not change it-->
     <div id="splash_screen" class="splash_screen">
       <div class="splash_content">
-        <div class="splash_logo">Scorer</div>
-        <div id="splash_status" class="splash_status">
-          Waiting for game to start...
-        </div>
-        <!-- Game Over Data -->
-        <div id="game_over_data" class="game_over_data" style="display: none">
-          <div class="game_over_round"></div>
-          <div class="game_over_players">
-            <div class="game_over_player red">
-              <div class="game_over_name"></div>
-              <div class="game_over_score"></div>
-              <div class="game_over_time"></div>
-            </div>
-            <div class="game_over_player blue">
-              <div class="game_over_name"></div>
-              <div class="game_over_score"></div>
-              <div class="game_over_time"></div>
-            </div>
-          </div>
-          <div class="game_over_total_time"></div>
-        </div>
+        <img src="./logo-original.png" alt="logo" class="splash_logo" />
+        <p id="splash_status">Waiting for game to start...</p>
       </div>
     </div>
 
-    <!-- Game Screen -->
+    <!-- Game Screen. this is exactly the html we want. do not change it-->
     <div id="game_screen" class="screen" style="display: none">
       <div class="header">
-        <div id="round" class="round">Round 0</div>
-        <div id="total_time" class="total_time">Total Time: 00:00:00</div>
+        <div class="logo"><img src="./logo-original.png" alt="logo" /></div>
+        <div id="round">Round 1</div>
+        <div class="total_time" id="total_time">Total Time: 10:00</div>
       </div>
-      <div class="player_panels">
-        <div class="player_red_panel">
-          <div id="player1_name" class="player_name">Player 1</div>
-          <div id="player1_score" class="player_score">0</div>
-          <div id="player1_cp" class="player_cp">Command Points: 0</div>
-          <div id="player1_time" class="player_time">00:00:00</div>
+      <div class="players">
+        <div class="red_panel">
+          <div class="player_red_panel">
+            <div class="player_name" id="player1_name">Player 1</div>
+            <div class="player_score" id="player1_score">90</div>
+            <div class="player_cp" id="player1_cp">Command Points: 2</div>
+            <div class="player_time" id="player1_time">00:00:00</div>
+          </div>
         </div>
-        <div class="player_blue_panel">
-          <div id="player2_name" class="player_name">Player 2</div>
-          <div id="player2_score" class="player_score">0</div>
-          <div id="player2_cp" class="player_cp">Command Points: 0</div>
-          <div id="player2_time" class="player_time">00:00:00</div>
+        <div class="blue_panel">
+          <div class="player_blue_panel">
+            <div class="player_name" id="player2_name">Player 2</div>
+            <div class="player_score" id="player2_score">90</div>
+            <div class="player_cp" id="player2_cp">Command Points: 2</div>
+            <div class="player_time" id="player2_time">00:00:00</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
-    <script src="./js/main.js"></script>
+    <!-- Game Over Screen. add game over screen html here-->
+    <div id="game_over_screen" class="screen" style="display: none">
+      <div class="header">
+        <div class="logo"><img src="./logo-original.png" alt="logo" /></div>
+        <div id="game_over_round">Round Complete</div>
+        <div class="total_time" id="game_over_total_time">
+          Total Time: 00:00:00
+        </div>
+      </div>
+      <div class="players">
+        <div class="red_panel">
+          <div class="player_red_panel">
+            <div class="player_name" id="game_over_player1_name">Player 1</div>
+            <div class="player_score" id="game_over_player1_score">0</div>
+            <div class="player_time" id="game_over_player1_time">00:00:00</div>
+          </div>
+        </div>
+        <div class="blue_panel">
+          <div class="player_blue_panel">
+            <div class="player_name" id="game_over_player2_name">Player 2</div>
+            <div class="player_score" id="game_over_player2_score">0</div>
+            <div class="player_time" id="game_over_player2_time">00:00:00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script type="module" src="./js/main.js"></script>
   </body>
 </html>

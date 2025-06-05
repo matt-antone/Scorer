@@ -117,10 +117,6 @@ body {
   height: 128px;
 }
 
-.total_time {
-  padding-right: 20px;
-}
-
 .players {
   display: grid;
   grid-template-columns: 400px 400px;
@@ -316,4 +312,5 @@ body {
   font-size: 18px;
   color: rgba(255, 255, 255, 1);
   margin-top: 1rem;
+  text-align: right;
 }

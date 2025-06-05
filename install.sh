@@ -134,6 +134,247 @@ else
     echo "No requirements.txt found. Skipping."
 fi
 
+# --- 4b. Create database source files and structure ---
+echo "--- Ensuring database source directory structure and files exist ---"
+DB_DIR="$APP_WORKING_DIR/db"
+sudo -u "$APP_USER" mkdir -p "$DB_DIR/models"
+sudo -u "$APP_USER" mkdir -p "$DB_DIR/migrations/versions"
+
+# Create db/alembic.ini
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/alembic.ini
+# A generic, single database configuration.
+
+[alembic]
+script_location = %(here)s/migrations
+prepend_sys_path = .
+sqlalchemy.url = sqlite+aiosqlite:///%(here)s/scorer.db
+
+[loggers]
+keys = root,sqlalchemy,alembic
+[handlers]
+keys = console
+[formatters]
+keys = generic
+[logger_root]
+level = WARNING
+handlers = console
+qualname =
+[logger_sqlalchemy]
+level = WARNING
+handlers =
+qualname = sqlalchemy.engine
+[logger_alembic]
+level = INFO
+handlers =
+qualname = alembic
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+[formatter_generic]
+format = %(levelname)-5.5s [%(name)s] %(message)s
+datefmt = %H:%M:%S
+EOF"
+
+# Create db/integration.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/integration.py
+import asyncio
+from db.models.utils import reset_for_new_game
+
+def reset_db_for_new_game_sync():
+    try:
+        # Use asyncio.run() for simplicity if no loop is running
+        asyncio.run(reset_for_new_game())
+        print(\"Database reset for new game.\")
+    except Exception as e:
+        print(f\"Error resetting database for new game: {e}\")
+EOF"
+
+# Create db/models/base.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/base.py
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+import os
+
+# Define the path for the SQLite database relative to the 'db' directory
+db_dir = os.path.dirname(__file__)
+db_path = os.path.join(db_dir, '..', 'scorer.db')
+DATABASE_URL = f\"sqlite+aiosqlite:///{db_path}\"
+
+engine = create_async_engine(DATABASE_URL, echo=False)
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
+Base = declarative_base()
+EOF"
+
+# Create db/models/game.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/game.py
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, CheckConstraint
+from sqlalchemy.orm import relationship
+from .base import Base
+import datetime
+
+class Game(Base):
+    __tablename__ = 'games'
+    id = Column(Integer, primary_key=True, default=1)
+    start_time = Column(DateTime, default=datetime.datetime.utcnow)
+    __table_args__ = (CheckConstraint('id = 1'),)
+
+class Player(Base):
+    __tablename__ = 'players'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    game_id = Column(Integer, ForeignKey('games.id'), nullable=False, default=1)
+    name = Column(String(100))
+    game = relationship(\"Game\")
+
+class Turn(Base):
+    __tablename__ = 'turns'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    game_id = Column(Integer, ForeignKey('games.id'), nullable=False, default=1)
+    player_id = Column(Integer, ForeignKey('players.id'), nullable=False)
+    round_number = Column(Integer, nullable=False)
+    game = relationship(\"Game\")
+    player = relationship(\"Player\")
+EOF"
+
+# Create db/models/utils.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/models/utils.py
+from .base import async_session
+from .game import Game, Player, Turn
+from sqlalchemy import delete
+
+async def reset_for_new_game():
+    async with async_session() as session:
+        async with session.begin():
+            await session.execute(delete(Turn))
+            await session.execute(delete(Player))
+            await session.execute(delete(Game))
+        await session.commit()
+EOF"
+
+# Create db/migrations/env.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/env.py
+import asyncio
+from logging.config import fileConfig
+from sqlalchemy import pool
+from alembic import context
+import os
+import sys
+
+# Add project root to sys.path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from db.models.base import Base, DATABASE_URL
+from db.models import game
+
+config = context.config
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+    
+config.set_main_option('sqlalchemy.url', DATABASE_URL)
+target_metadata = Base.metadata
+
+def run_migrations_offline() -> None:
+    context.configure(url=config.get_main_option(\"sqlalchemy.url\"), target_metadata=target_metadata, literal_binds=True, dialect_opts={\"paramstyle\": \"named\"}, render_as_batch=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+def do_run_migrations(connection):
+    context.configure(connection=connection, target_metadata=target_metadata, render_as_batch=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+async def run_migrations_online() -> None:
+    connectable = create_async_engine(config.get_main_option(\"sqlalchemy.url\"), poolclass=pool.NullPool)
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    asyncio.run(run_migrations_online())
+EOF"
+
+# Create db/migrations/script.py.mako
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/script.py.mako
+"""\${message}
+
+Revision ID: \${up_revision}
+Revises: \${down_revision | comma,n}
+Create Date: \${create_date}
+
+"""
+from typing import Sequence, Union
+from alembic import op
+import sqlalchemy as sa
+\${imports if imports else \"\"}
+
+# revision identifiers, used by Alembic.
+revision: str = \${repr(up_revision)}
+down_revision: Union[str, None] = \${repr(down_revision)}
+branch_labels: Union[str, Sequence[str], None] = \${repr(branch_labels)}
+depends_on: Union[str, Sequence[str], None] = \${repr(depends_on)}
+
+def upgrade() -> None:
+    \${upgrades if upgrades else \"pass\"}
+
+def downgrade() -> None:
+    \${downgrades if downgrades else \"pass\"}
+EOF"
+
+# Create db/migrations/versions/26723581b0c8_initial.py
+sudo -u "$APP_USER" bash -c "cat <<'EOF' > $DB_DIR/migrations/versions/26723581b0c8_initial.py
+\"\"\"Initial migration to create tables
+
+Revision ID: 26723581b0c8
+Revises:
+Create Date: 2025-06-05 12:00:00.000000
+
+\"\"\"
+from typing import Sequence, Union
+from alembic import op
+import sqlalchemy as sa
+
+# revision identifiers, used by Alembic.
+revision: str = '26723581b0c8'
+down_revision: Union[str, None] = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+def upgrade() -> None:
+    op.create_table('games',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('start_time', sa.DateTime(), nullable=True),
+        sa.CheckConstraint('id = 1', name='only_one_game'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('players',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('game_id', sa.Integer(), nullable=False),
+        sa.Column('name', sa.String(length=100), nullable=True),
+        sa.ForeignKeyConstraint(['game_id'], ['games.id'],),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('turns',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('game_id', sa.Integer(), nullable=False),
+        sa.Column('player_id', sa.Integer(), nullable=False),
+        sa.Column('round_number', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['game_id'], ['games.id'],),
+        sa.ForeignKeyConstraint(['player_id'], ['players.id'],),
+        sa.PrimaryKeyConstraint('id')
+    )
+
+def downgrade() -> None:
+    op.drop_table('turns')
+    op.drop_table('players')
+    op.drop_table('games')
+EOF"
+
 echo "Initializing or upgrading the database..."
 cd "$APP_WORKING_DIR/db"
 sudo -H -u "$APP_USER" "$VENV_DIR/bin/alembic" upgrade head

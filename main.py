@@ -104,7 +104,7 @@ class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
     player2_name_input = ObjectProperty(None)
     continue_button = ObjectProperty(None)
-    active_input = ObjectProperty(None)
+    active_input = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

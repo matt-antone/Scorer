@@ -171,21 +171,14 @@ class NameEntryScreen(Screen):
         return super().on_touch_down(touch)
 
     def on_name_input(self, instance, value):
-        print(f"on_name_input called. _is_initialized={self._is_initialized}")
         # Guard clause: Do not proceed if widgets aren't linked yet.
         if not self._is_initialized:
-            print("  -> Bailing out, not initialized.")
             return
 
         # Enable continue button only if both fields have non-empty, non-whitespace text
         p1_name = self.player1_name_input.text.strip()
         p2_name = self.player2_name_input.text.strip()
-        is_disabled = not (p1_name and p2_name)
-        
-        print(f"  -> P1 Name: '{p1_name}', P2 Name: '{p2_name}'")
-        print(f"  -> Button disabled state will be set to: {is_disabled}")
-        
-        self.continue_button.disabled = is_disabled
+        self.continue_button.disabled = not (p1_name and p2_name)
 
     def on_text_validate_p1(self):
         self.player2_name_input.focus = True

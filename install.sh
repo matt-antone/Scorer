@@ -150,25 +150,19 @@ After=network.target multi-user.target
 [Service]
 Type=simple
 User=$APP_USER
-Group=$(id -g -n "$APP_USER") # Get the primary group of the user
 WorkingDirectory=$APP_WORKING_DIR
 ExecStart=$VENV_PYTHON_EXECUTABLE $MAIN_SCRIPT_PATH
 
 # Environment variables for Kivy on Raspberry Pi (headless/CLI boot)
 Environment="DISPLAY=:0"
-Environment="KIVY_BCM_DISPMANX_ID=4" # HDMI0. Use 5 for official DSI.
-# Environment="KIVY_WINDOW=sdl2" # Optional: force SDL2 window provider
-# Environment="KIVY_GRAPHICS=gles" # Optional: force GLES graphics
-# Environment="KIVY_TEXT=sdl2" # Optional: force SDL2 text provider
-# Environment="KIVY_LOG_LEVEL=debug" # For troubleshooting startup issues
+Environment="KIVY_BCM_DISPMANX_ID=4" # Set to 4 for HDMI, 5 for official DSI. Adjust if needed.
+Environment="KIVY_LOG_LEVEL=debug"   # For troubleshooting startup issues. Can be changed to 'info' or 'warning' in production.
+# Optional Kivy environment variables (usually not needed if Kivy auto-detects correctly):
+# Environment="KIVY_WINDOW=sdl2"
+# Environment="KIVY_GRAPHICS=gles"
+# Environment="KIVY_TEXT=sdl2"
 
 # Access to input devices is crucial for touchscreens
-# The 'input' group gives access to /dev/input/event*
-# The 'video' group might be needed for direct framebuffer access by some drivers.
-# The 'render' group for DRM/KMS rendering.
-# Ensure $APP_USER is a member of these groups (sudo usermod -a -G input,video,render $APP_USER)
-# This is usually handled by default on Pi OS for the 'pi' user with desktop.
-# For CLI-only, these might need explicit adding if not the 'pi' user or if permissions are tight.
 SupplementaryGroups=input video render tty
 
 StandardOutput=journal

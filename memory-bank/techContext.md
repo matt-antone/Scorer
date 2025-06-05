@@ -5,80 +5,76 @@ This document lists the technologies, development setup, technical constraints, 
 ## 1. Core Technologies & Stack
 
 - **Programming Language**: Python 3.11+
-- **GUI Framework**: Kivy 2.2.1+
-- **Web Framework**: Flask 3.0.0+
-- **Data Persistence**: Local JSON file (`game_state.json`)
-- **WebSocket Server**: `python-socketio` and `flask-socketio` for real-time communication.
-- **QR Code Generation**: `qrcode` library with `Pillow`.
-- **Custom Fonts**: Kivy's `LabelBase` for registering and using custom fonts like "InterBlack".
+- **GUI Framework**: Kivy
+- **Web Framework**: Flask
+- **Web Sockets**: Flask-SocketIO & Eventlet
+- **Database**: SQLite (via SQLAlchemy and Alembic for migrations)
+- **Data Persistence**:
+  - `game_state.json`: For transient game state between sessions.
+  - `scorer.db`: SQLite database for persistent game records.
+- **QR Code Generation**: `qrcode` library.
 
 ## 2. Platform & Hardware
 
 ### 2.1. Target Deployment Platform
 
-- **Hardware**: Raspberry Pi 5 (8GB RAM, 32GB microSD)
+- **Hardware**: Raspberry Pi 5
 - **Operating System**: Raspberry Pi OS (64-bit)
-- **Display**: 5-inch DSI touchscreen (800x480@60Hz, using `tc358762` DSI device on socket 1)
-- **Network**: Accessible on the local network (e.g., `madlab5.local`).
+- **Display**: 5-inch DSI touchscreen.
 
 ### 2.2. Development Platform
 
 - **Operating System**: macOS
-- **Key Difference**: Uses the default SDL2 window provider instead of the custom-built KMSDRM version for the Raspberry Pi.
 
 ## 3. Environment & Dependencies
 
 ### 3.1. Python Environment
 
 - A `venv` virtual environment is used for both development and deployment.
-- Dependencies are managed in `requirements.txt`.
-- **Python Dependencies**:
-  - `Kivy==2.2.1`
-  - `Flask==3.0.0`
-  - `python-socketio`
-  - `flask-socketio`
-  - `qrcode`
-  - `Pillow`
-  - `python-dotenv==1.0.0`
-  - `requests==2.31.0`
+- All Python dependencies are managed in `requirements.txt` and installed via `pip`.
+- **Key Python Libraries**:
+  - `Kivy`: For the GUI.
+  - `Flask` & `Flask-SocketIO`: For the web server and real-time communication. -`eventlet`: Asynchronous server for Flask-SocketIO.
+  - `SQLAlchemy` & `Alembic`: For database interaction and schema migrations.
+  - `aiosqlite`: Async driver for SQLite.
+  - `ffpyplayer`: Kivy dependency for video/media.
 
 ### 3.2. System Dependencies (Raspberry Pi Only)
 
-- **SDL2**: Must be built from source to include KMSDRM support, which is critical for hardware acceleration on the Pi's DSI display. The default `apt` version is insufficient.
-- **Build Tools**: `build-essential`, `git`, `autoconf`, `automake`, `libtool`, `pkg-config`.
-- **SDL2 Dependencies**: A full list of `lib-dev` packages required to build SDL2, including those for audio, video (X11, Wayland, DRM), and input.
+- The `install.sh` script handles the installation of all required system-level dependencies. This includes:
+  - **Build Tools**: `build-essential`, `pkg-config`, etc.
+  - **FFmpeg Libraries**: `libavcodec-dev`, `libavformat-dev`, `libswscale-dev`, etc., required for building the `ffpyplayer` wheel.
+  - **Other Kivy Dependencies**: Libraries for audio, video, and input.
 
-## 4. Raspberry Pi Configuration
+## 4. Installation & Setup
 
-### 4.1. Boot Configuration (`/boot/firmware/config.txt`)
+- The project is designed to be set up automatically using a single script.
+- **`install.sh`**: This is the canonical installation script. It performs the following actions:
+  1.  Creates the Python virtual environment (`.venv`).
+  2.  Installs all required `apt` system packages.
+  3.  Installs all Python packages from `requirements.txt`.
+  4.  **Programmatically creates the entire `db/` directory and its source files**, including SQLAlchemy models, Alembic environment, and migration scripts.
+  5.  Runs `alembic upgrade head` to create and initialize the `scorer.db` SQLite database.
 
-- `dtoverlay=vc4-kms-v3d`: Enables the KMS graphics driver.
-- `max_framebuffers=2`: Required for KMS.
-- `disable_fw_kms_setup=1`: Prevents firmware from interfering with KMS.
-- `dtoverlay=tc358762,...`: Specific overlay for the DSI display.
+## 5. Raspberry Pi Configuration
 
-### 4.2. Runtime Environment Variables
+### 5.1. Runtime Environment Variables
 
-These variables are critical for launching the Kivy app correctly on the Pi.
+- The `launch_scorer.sh` script automatically detects the platform and sets the necessary environment variables for launching the Kivy app correctly on the Pi.
+- **Example Pi Variables**:
+  - `SDL_VIDEODRIVER=kmsdrm`
+  - `KIVY_BCM_DISPMANX_ID` (set based on the display)
 
-- `SDL_VIDEODRIVER=kmsdrm`: Forces SDL2 to use the KMSDRM backend.
-- `SDL_VIDEODRIVER_DEVICE=/dev/dri/card1`: Points to the DSI display's DRM device.
-- `KIVY_BCM_DISPMANX_ID=5`: Selects the correct display socket for the 5-inch screen.
-- `SDL_LOG_PRIORITY=VERBOSE`: (For debugging) Enables verbose logging from SDL2.
+### 5.2. User Permissions
 
-### 4.3. User Permissions
+- The user running the application must be a member of the `render` group to access graphics hardware. The `install.sh` script attempts to handle this.
 
-- The user running the application must be a member of the `video` and `render` groups to access the DRM hardware.
-
-## 5. Development Tools & Workflow
+## 6. Development Tools & Workflow
 
 - **Version Control**: Git & GitHub.
 - **Code Formatting**: Black.
 - **Linting**: Flake8.
-- **Installation Scripts**:
-  - `install.sh`: Full installation script for the Pi, including the complete SDL2 build process.
-  - `install_on_pi.sh`: A quicker script for development, does not build SDL2.
-- **Launcher Script**: `launch_scorer.sh` is a platform-aware script that sets the correct environment variables before running the application on either macOS or the Pi.
+- **Launcher Script**: `launch_scorer.sh` is the unified script for running the application on any platform.
 
 ## Development Environment
 

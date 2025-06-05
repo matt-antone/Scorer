@@ -1302,6 +1302,14 @@ class ScorerApp(App):
         self.save_game_state()
         self.websocket_server.broadcast_game_phase_update(phase)
 
+    def set_player_name(self, player_id, name):
+        """Update a player's name and broadcast the change."""
+        player_key = f"player{player_id}"
+        if player_key in self.game_state:
+            self.game_state[player_key]["name"] = name
+            print(f"Set {player_key} name to {name}")
+            self.save_game_state() # This will trigger a broadcast
+
     def get_game_state(self):
         """
         Returns a sanitized, deep copy of the game state suitable for clients.

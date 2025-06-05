@@ -151,10 +151,10 @@ class NameEntryScreen(Screen):
 
     def _finish_keyboard_setup(self, dt):
         """Binds the VKeyboard's height to its internal layout's minimum_height."""
-        if self.vkeyboard and self.vkeyboard.layout:
-            self.vkeyboard.layout.bind(minimum_height=self.vkeyboard.setter('height'))
+        if self.vkeyboard and self.vkeyboard.children:
+            self.vkeyboard.children[0].bind(minimum_height=self.vkeyboard.setter('height'))
         else:
-            print("ERROR: VKeyboard layout not found for binding.")
+            print("ERROR: VKeyboard layout widget not found for binding.")
 
     def on_name_input(self, instance, value):
         # Enable continue button only if both fields have non-empty, non-whitespace text

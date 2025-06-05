@@ -38,7 +38,7 @@
 - Planning phase for database implementation
 - The database reset logic successfully clears all records from turns, players, and games.
 - The test runner is configured to use SQLite for local testing.
-- Moving on to the integration phase.
+- Ready to begin integration work.
 
 ## Known Issues
 

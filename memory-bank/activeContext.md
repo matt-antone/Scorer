@@ -45,3 +45,51 @@ This document outlines the current work focus, recent changes, next steps, and a
 - Are there any other user interactions or state changes that are infrequent but critical enough to warrant an immediate save to `game_state.json`?
 - What is the intended functionality for the "Settings" button on `ScorerRootWidget` (currently exits app)? This needs to be defined for future implementation.
 - For Raspberry Pi: Will any hardware-specific interactions (e.g., physical buttons via GPIO) be needed that might affect the Kivy app structure or event handling?
+
+## Current Focus
+
+- Setting up Kivy to work properly on Raspberry Pi 5 with touchscreen
+- Resolving SDL2/KMSDRM integration issues
+- Ensuring proper library linkage between Kivy and custom SDL2
+
+## Recent Changes
+
+- Compiled SDL2 from source with KMSDRM support
+- Built SDL2 satellite libraries (image, mixer, ttf)
+- Created comprehensive documentation for SDL2/KMSDRM setup
+- Currently in process of reinstalling Kivy to link against custom SDL2
+
+## Active Decisions
+
+1. Using custom-compiled SDL2 instead of system packages
+
+   - Reason: System SDL2 lacks KMSDRM support
+   - Impact: Requires recompilation of Kivy
+
+2. Prioritizing `/usr/local/lib` for library search
+
+   - Reason: Ensure Kivy uses our custom SDL2
+   - Impact: Requires system configuration changes
+
+3. Documenting the entire process
+   - Reason: Process is complex and time-consuming
+   - Impact: Future reference and easier troubleshooting
+
+## Next Steps
+
+1. Complete Kivy reinstallation
+2. Verify library linkage
+3. Test Kivy application with KMSDRM
+4. Document any additional issues or solutions
+
+## Known Issues
+
+- Compilation process is time-consuming on Raspberry Pi
+- Library linkage can be tricky to get right
+- System updates might require repeating the process
+
+## Current Considerations
+
+- Need to maintain documentation of SDL2 versions used
+- Must track any system updates that might affect the setup
+- Consider creating a script to automate the process if needed frequently

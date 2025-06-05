@@ -1,12 +1,39 @@
 import platform
 import os
 import sys
+import subprocess
 
 print(f"Python version: {sys.version}")
 print(f"Python executable: {sys.executable}")
 
 if platform.system() == "Linux":
-    print("Minimal Test: Linux detected. Setting Kivy and SDL2 environment variables for SDL2/KMSDRM.")
+    print("\n=== DRM/KMS System Diagnostics ===")
+    
+    # Check DRM devices
+    print("\nChecking DRM devices:")
+    try:
+        drm_devices = subprocess.check_output(['ls', '-l', '/dev/dri/']).decode()
+        print(drm_devices)
+    except Exception as e:
+        print(f"Error checking DRM devices: {e}")
+
+    # Check user groups
+    print("\nChecking user groups:")
+    try:
+        groups = subprocess.check_output(['groups']).decode().strip()
+        print(f"User groups: {groups}")
+    except Exception as e:
+        print(f"Error checking groups: {e}")
+
+    # Check if KMS is enabled in kernel
+    print("\nChecking KMS status:")
+    try:
+        kms_status = subprocess.check_output(['dmesg', '|', 'grep', 'drm']).decode()
+        print(kms_status)
+    except Exception as e:
+        print(f"Error checking KMS status: {e}")
+
+    print("\n=== Setting up Kivy Environment ===")
     os.environ['SDL_LOG_PRIORITY'] = 'VERBOSE'
     os.environ['SDL_LOG_CATEGORY_APPLICATION'] = 'VERBOSE'
     os.environ['SDL_LOG_CATEGORY_ERROR'] = 'VERBOSE'
@@ -55,7 +82,7 @@ try:
             except Exception as e:
                 print(f"MinimalTestApp.build(): Error getting GL backend name: {e}")
 
-            return Label(text=f"Kivy GL Test\\nWindow: {Window.__class__.__name__}\\nGL Backend (attempt): {actual_gl_backend}")
+            return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend (attempt): {actual_gl_backend}")
 
     if __name__ == '__main__':
         print("Minimal Test: Starting Kivy app...")

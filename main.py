@@ -48,6 +48,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen # Added ScreenManager, 
 from kivy.clock import Clock # Added for timer updates
 from kivy.uix.textinput import TextInput # Added for player names
 from kivy.core.text import LabelBase # For registering fonts by name
+from db.integration import reset_db_for_new_game_sync
+from websocket_server import WebSocketServer
 
 # Register the Inter font family so it can be referred to by name 'Inter' in KV if needed.
 # This also acts as a fallback or explicit way to use it.
@@ -1046,6 +1048,14 @@ class ScorerApp(App):
     VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
     target_screen_after_splash = None  # Add this attribute
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.game_state = self._get_default_game_state()
+        self.websocket_server = WebSocketServer()
+        self.websocket_server.set_game_state_callback(self.get_game_state)
+        self.load_game_state()
+        self.websocket_server.start()
+
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""
         return {
@@ -1075,12 +1085,38 @@ class ScorerApp(App):
         self.game_state = self._get_default_game_state()
         print("Game state has been reset to default.")
 
+    def show_error_popup(self, title, message):
+        """Show an error popup with the given title and message."""
+        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
+        message_label = Label(text=message, text_size=(self.root.width * 0.8, None), size_hint_y=None, height=dp(100))
+        ok_button = Button(text='OK', size_hint_y=None, height=dp(40))
+        
+        content.add_widget(message_label)
+        content.add_widget(ok_button)
+        
+        popup = Popup(title=title, content=content, size_hint=(0.8, 0.4), auto_dismiss=False)
+        ok_button.bind(on_press=popup.dismiss)
+        popup.open()
+
     def start_new_game_flow(self):
         print("Starting new game flow...")
+        # Stop timer on current game screen if it exists and is active
         if self.root and self.root.current == 'scorer_root':
             scorer_screen = self.root.get_screen('scorer_root')
             if scorer_screen:
                 scorer_screen.stop_timer()
+        
+        # Reset the database for a new game
+        try:
+            from db.integration import reset_db_for_new_game_sync
+            reset_db_for_new_game_sync()
+            print("Database reset successful")
+        except Exception as e:
+            error_msg = f"Error resetting database: {e}\nThe game will continue, but some features may be limited."
+            print(error_msg)
+            self.show_error_popup("Database Error", error_msg)
+            # Continue with game state reset even if database reset fails
+            # This ensures the application remains functional
         
         self.reset_game_state_to_default()
         self.save_game_state() 
@@ -1091,16 +1127,14 @@ class ScorerApp(App):
         return os.path.join(self.user_data_dir, self.SAVE_FILE_NAME)
 
     def save_game_state(self):
-        save_path = self.get_save_file_path()
+        """Save the current game state to a file"""
         try:
-            if not os.path.exists(self.user_data_dir):
-                os.makedirs(self.user_data_dir)
-                print(f"Created user_data_dir: {self.user_data_dir}")
-            with open(save_path, 'w') as f:
-                json.dump(self.game_state, f, indent=4)
-            print(f"Game state saved to {save_path}")
+            with open(self.get_save_file_path(), 'w') as f:
+                json.dump(self.game_state, f)
+            # Broadcast the updated game state to all connected clients
+            self.websocket_server.broadcast_game_state(self.game_state)
         except Exception as e:
-            print(f"Error saving game state to {save_path}: {e}")
+            print(f"Error saving game state: {e}")
 
     def load_game_state(self):
         """
@@ -1236,8 +1270,47 @@ class ScorerApp(App):
         self.game_state = self._get_default_game_state() 
 
     def on_stop(self):
-        print("Application stopping. Saving game state...")
+        """Called when the application is stopping"""
+        self.websocket_server.stop()
         self.save_game_state()
+
+    def update_score(self, player_id, new_score):
+        """Update a player's score and broadcast the change"""
+        player_key = f"player{player_id}"
+        if player_key in self.game_state:
+            self.game_state[player_key]["total_score"] = new_score
+            self.save_game_state()
+            self.websocket_server.broadcast_score_update(player_id, new_score)
+
+    def update_cp(self, player_id, new_cp):
+        """Update a player's CP and broadcast the change"""
+        player_key = f"player{player_id}"
+        if player_key in self.game_state:
+            self.game_state[player_key]["cp"] = new_cp
+            self.save_game_state()
+            self.websocket_server.broadcast_cp_update(player_id, new_cp)
+
+    def update_timer(self, timer_data):
+        """Update timer data and broadcast the change"""
+        self.game_state['game_timer'].update(timer_data)
+        self.save_game_state()
+        self.websocket_server.broadcast_timer_update(timer_data)
+
+    def update_round(self, round_number):
+        """Update the current round and broadcast the change"""
+        self.game_state['current_round'] = round_number
+        self.save_game_state()
+        self.websocket_server.broadcast_round_update(round_number)
+
+    def update_game_phase(self, phase):
+        """Update the game phase and broadcast the change"""
+        self.game_state['game_phase'] = phase
+        self.save_game_state()
+        self.websocket_server.broadcast_game_phase_update(phase)
+
+    def get_game_state(self):
+        """Get the current game state for WebSocket clients"""
+        return self.game_state
 
 if __name__ == '__main__':
     # Conditionally set Window.size for non-Linux environments

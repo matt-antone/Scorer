@@ -323,3 +323,29 @@ SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
 2. Verify display configuration
 3. Test touch input
 4. Monitor performance metrics
+
+## Development Setup
+
+### Prerequisites
+
+1. Python 3.11 or higher
+2. PostgreSQL 14 or higher
+   - Installation (macOS):
+     ```bash
+     brew install postgresql@14
+     brew services start postgresql@14
+     createdb scorer
+     ```
+   - Installation (Raspberry Pi):
+     ```bash
+     sudo apt update
+     sudo apt install postgresql postgresql-contrib
+     sudo systemctl start postgresql
+     sudo -u postgres createdb scorer
+     ```
+   - Verify installation:
+     ```bash
+     psql -U postgres -d scorer
+     ```
+
+### Environment Setup

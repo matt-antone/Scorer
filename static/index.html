@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scorer Web Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .player-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .player {
+        flex: 1;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin: 0 10px;
+      }
+      .player1 {
+        background-color: #ffebee;
+      }
+      .player2 {
+        background-color: #e3f2fd;
+      }
+      .score-display {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      .cp-display {
+        font-size: 18px;
+        margin: 10px 0;
+      }
+      .timer-display {
+        font-size: 20px;
+        margin: 10px 0;
+      }
+      .round-display {
+        font-size: 20px;
+        margin: 10px 0;
+        text-align: center;
+      }
+      .game-phase {
+        font-size: 18px;
+        margin: 10px 0;
+        text-align: center;
+        font-weight: bold;
+      }
+      .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 3px;
+      }
+      .connected {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+      }
+      .disconnected {
+        background-color: #ffcdd2;
+        color: #c62828;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="connection-status" class="connection-status disconnected">
+      Disconnected
+    </div>
+
+    <div class="game-phase" id="game-phase">Game Phase: Setup</div>
+    <div class="round-display" id="round-display">Round: 0</div>
+
+    <div class="player-section">
+      <div class="player player1">
+        <h2 id="player1-name">Player 1</h2>
+        <div class="score-display">
+          Score: <span id="player1-score">0</span>
+        </div>
+        <div class="cp-display">CP: <span id="player1-cp">0</span></div>
+        <div class="timer-display">
+          Time: <span id="player1-timer">00:00:00</span>
+        </div>
+      </div>
+
+      <div class="player player2">
+        <h2 id="player2-name">Player 2</h2>
+        <div class="score-display">
+          Score: <span id="player2-score">0</span>
+        </div>
+        <div class="cp-display">CP: <span id="player2-cp">0</span></div>
+        <div class="timer-display">
+          Time: <span id="player2-timer">00:00:00</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Connect to WebSocket server
+      const socket = io("http://localhost:6969");
+      const connectionStatus = document.getElementById("connection-status");
+
+      // Connection event handlers
+      socket.on("connect", () => {
+        connectionStatus.textContent = "Connected";
+        connectionStatus.className = "connection-status connected";
+        console.log("Connected to server");
+      });
+
+      socket.on("disconnect", () => {
+        connectionStatus.textContent = "Disconnected";
+        connectionStatus.className = "connection-status disconnected";
+        console.log("Disconnected from server");
+      });
+
+      // Game state update handlers
+      socket.on("game_state_update", (gameState) => {
+        updateUI(gameState);
+      });
+
+      socket.on("score_update", (data) => {
+        document.getElementById(`player${data.player_id}-score`).textContent =
+          data.score;
+      });
+
+      socket.on("cp_update", (data) => {
+        document.getElementById(`player${data.player_id}-cp`).textContent =
+          data.cp;
+      });
+
+      socket.on("timer_update", (timerData) => {
+        document.getElementById("player1-timer").textContent =
+          timerData.player1_time;
+        document.getElementById("player2-timer").textContent =
+          timerData.player2_time;
+      });
+
+      socket.on("round_update", (data) => {
+        document.getElementById(
+          "round-display"
+        ).textContent = `Round: ${data.round}`;
+      });
+
+      socket.on("game_phase_update", (data) => {
+        document.getElementById(
+          "game-phase"
+        ).textContent = `Game Phase: ${data.phase}`;
+      });
+
+      // Helper function to update the entire UI
+      function updateUI(gameState) {
+        // Update player names
+        document.getElementById("player1-name").textContent =
+          gameState.player1.name;
+        document.getElementById("player2-name").textContent =
+          gameState.player2.name;
+
+        // Update scores
+        document.getElementById("player1-score").textContent =
+          gameState.player1.total_score;
+        document.getElementById("player2-score").textContent =
+          gameState.player2.total_score;
+
+        // Update CPs
+        document.getElementById("player1-cp").textContent =
+          gameState.player1.cp;
+        document.getElementById("player2-cp").textContent =
+          gameState.player2.cp;
+
+        // Update timers
+        document.getElementById("player1-timer").textContent =
+          gameState.player1.player_time_display;
+        document.getElementById("player2-timer").textContent =
+          gameState.player2.player_time_display;
+
+        // Update round
+        document.getElementById(
+          "round-display"
+        ).textContent = `Round: ${gameState.current_round}`;
+
+        // Update game phase
+        document.getElementById(
+          "game-phase"
+        ).textContent = `Game Phase: ${gameState.game_phase}`;
+      }
+
+      // Request initial game state when connected
+      socket.on("connect", () => {
+        socket.emit("request_game_state");
+      });
+    </script>
+  </body>
+</html>

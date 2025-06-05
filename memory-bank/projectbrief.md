@@ -51,3 +51,15 @@ The application must fulfill the following core functionalities:
   - User accounts or persistent player profiles beyond a single game session.
   - Online multiplayer (beyond local network web access).
   - Integration with external Warhammer 40k APIs or databases.
+
+## Game Structure Constraints
+
+- There will only ever be one game in the database at a time.
+- There will only ever be two players per game.
+- There will only ever be 5 turns per player per game (10 turns total per game).
+
+## Database Constraints
+
+- Only one game row exists (enforced by a check constraint)
+- Only two players per game (enforced by application logic: a new game will delete all existing records)
+- Only 5 turns per player (enforced by unique constraint on game_id, player_id, round_number)

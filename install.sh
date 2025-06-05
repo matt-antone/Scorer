@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# executable
 # Script to install Scorer Kivy application dependencies and set it up as a systemd service for kiosk mode.
 
 echo "--- Scorer Full Kiosk Installation Script ---"

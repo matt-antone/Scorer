@@ -38,16 +38,22 @@ def setup_environment():
 
     # Set up environment
     os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
-    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card2'
+    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card1'  # DSI display
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
     
     # Additional SDL environment variables for KMSDRM
-    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card2'
-    os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '0'  # Try first CRTC
-    os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '0'  # Try first connector
-    os.environ['SDL_VIDEO_KMSDRM_MODE'] = '0'  # Try first mode
+    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card1'
+    os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '0'
+    os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '0'
+    os.environ['SDL_VIDEO_KMSDRM_MODE'] = '0'
+    
+    # Force specific display mode based on DSI configuration
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_MODE'] = '1'
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_WIDTH'] = '800'  # Common DSI display width
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_HEIGHT'] = '480'  # Common DSI display height
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_REFRESH'] = '60'
     
     # Debug logging
     os.environ['SDL_LOG_PRIORITY'] = 'VERBOSE'
@@ -72,6 +78,10 @@ def setup_environment():
     print(f"SDL_VIDEO_KMSDRM_CRTC={os.environ.get('SDL_VIDEO_KMSDRM_CRTC')}")
     print(f"SDL_VIDEO_KMSDRM_CONNECTOR={os.environ.get('SDL_VIDEO_KMSDRM_CONNECTOR')}")
     print(f"SDL_VIDEO_KMSDRM_MODE={os.environ.get('SDL_VIDEO_KMSDRM_MODE')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_MODE={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_MODE')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_WIDTH={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_WIDTH')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_HEIGHT={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_HEIGHT')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_REFRESH={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_REFRESH')}")
     print(f"KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}")
     print(f"KIVY_TEXT={os.environ.get('KIVY_TEXT')}")
     print(f"DISPLAY={os.environ.get('DISPLAY')}")
@@ -89,7 +99,7 @@ def main():
     check_user_groups()
     check_kms_status()
 
-    print("\n=== Testing DRM card: card2 ===")
+    print("\n=== Testing DRM card: card1 ===")  # Updated message
     setup_environment()
 
     try:
@@ -116,7 +126,7 @@ def main():
                 except Exception as e:
                     print(f"Error getting GL backend name: {e}")
 
-                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card2")
+                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card1")  # Updated card name
 
         print("Starting Kivy app...")
         MinimalTestApp().run()

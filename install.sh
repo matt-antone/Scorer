@@ -184,6 +184,17 @@ sudo systemctl enable "$SERVICE_FILE_NAME"
 if [ $? -ne 0 ]; then echo "Error enabling service. Exiting."; exit 1; fi
 echo "Service enabled."
 
+# --- Configure boot to CLI ---
+echo ""
+echo "--- Configuring boot to CLI ---"
+# Disable desktop autostart
+sudo raspi-config nonint do_boot_behaviour B1
+if [ $? -ne 0 ]; then echo "Error configuring boot behavior. Exiting."; exit 1; fi
+
+# Disable splash screen
+sudo raspi-config nonint do_boot_splash 1
+if [ $? -ne 0 ]; then echo "Error disabling splash screen. Exiting."; exit 1; fi
+
 # --- Final Instructions ---
 echo ""
 echo "--- Installation Successfully Completed ---"

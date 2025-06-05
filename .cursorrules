@@ -1,6 +1,27 @@
 # .cursorrules - Project Intelligence for Scorer
 
-This file captures important patterns, preferences, and project intelligence that help the AI assistant work more effectively on the Scorer project.
+## ABSOLUTE RULES
+
+1. **Memory Bank Review (MANDATORY)**
+
+   - MUST read ALL Memory Bank files before ANY changes or suggestions
+   - Files to read in order:
+     1. `projectbrief.md` - Core requirements and goals
+     2. `productContext.md` - Why this project exists
+     3. `systemPatterns.md` - System architecture
+     4. `techContext.md` - Technologies and setup
+     5. `activeContext.md` - Current work focus
+     6. `progress.md` - Current status
+   - NO EXCEPTIONS - even for small changes
+   - If Memory Bank is missing any files, MUST create them first
+   - After reading, MUST verify understanding before proceeding
+   - If unsure about any aspect, MUST ask for clarification
+
+2. **Documentation Updates**
+   - After ANY changes, MUST update relevant Memory Bank files
+   - Focus on `activeContext.md` and `progress.md` for immediate updates
+   - Update `techContext.md` for technical changes
+   - Update `systemPatterns.md` for architectural changes
 
 ## Kivy Development Patterns
 
@@ -27,6 +48,7 @@ This file captures important patterns, preferences, and project intelligence tha
 
     - **Pattern**: When UI updates depend on widget properties or widget readiness that might not be guaranteed immediately after a screen transition or initial KV rule application (due to Kivy's widget instantiation lifecycle), use `Clock.schedule_once(update_method, small_delay)`.
     - **Example**:
+
       ```python
       # In Python (e.g., main.py)
       class MyComplexScreen(Screen):
@@ -41,6 +63,7 @@ This file captures important patterns, preferences, and project intelligence tha
               # ... proceed with UI updates now that widgets are likely ready ...
               self.ids.some_critical_widget.text = "Updated"
       ```
+
     - **Reasoning**: This pattern helps avoid errors caused by trying to access or modify widgets before Kivy has fully initialized them and made them available through `ids` or `ObjectProperty` bindings. A small delay (e.g., 0.05 seconds) is usually sufficient.
 
 3.  **Application Structure: `App` Class vs. `Screen` Subclasses:**

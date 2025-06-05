@@ -48,77 +48,74 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## Current Focus
 
-- Investigating KMSDRM support for Kivy on Raspberry Pi
-- Debugging "kmsdrm not available" error
-- Verifying DRM/KMS system configuration
+- Resolving SDL2 KMSDRM support issue for Raspberry Pi 5 display
+- Ensuring proper display configuration for DSI display
 
 ## Recent Changes
 
-- Created comprehensive diagnostic test script (`kivy_backend_test.py`)
-- Verified DRM device presence and permissions
-- Confirmed multiple DRM cards present (card0, card1, card2)
-- Added detailed system diagnostics to test script
-
-## Current Status
-
-- DRM subsystem appears properly configured
-- Multiple DRM cards detected (card0, card1, card2)
-- Permissions set correctly (video and render groups)
-- KMSDRM support still not working despite proper setup
-
-## Next Steps
-
-1. Run updated diagnostic test script
-2. Verify user group memberships
-3. Check kernel DRM/KMS status
-4. Consider specifying DRM card via SDL_VIDEODRIVER_DEVICE
-5. Review SDL2 configuration logs for KMSDRM support
+- Identified that SDL2 needs to be built from source with KMSDRM support
+- Documented required build dependencies and configuration steps
+- Added detailed display configuration parameters to techContext.md
 
 ## Active Decisions
 
-- Using SDL2 with KMSDRM for direct framebuffer access
-- Implementing comprehensive diagnostics before proceeding
-- Maintaining verbose logging for debugging
+1. SDL2 Build:
 
-## Current Considerations
+   - Must build SDL2 from source with KMSDRM support
+   - Default apt package lacks required KMSDRM support
+   - Need to install specific build dependencies
 
-- Multiple DRM cards may require explicit device selection
-- Need to verify kernel-level KMS support
-- May need to adjust SDL2 configuration for KMSDRM
-- User permissions and group memberships critical for DRM access
+2. Display Configuration:
+   - Using DSI display (card1) with specific parameters
+   - CRTC ID: 34
+   - Connector ID: 36
+   - Display mode: 800x480@60Hz
 
-## Open Questions
+## Next Steps
 
-1. Which DRM card should be used for the display?
-2. Is KMS properly enabled in the kernel?
-3. Are there any SDL2 configuration issues preventing KMSDRM support?
-4. Do we need to modify the SDL2 build configuration?
+1. Build SDL2 from source with KMSDRM support:
 
-## Recent Findings
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y build-essential git autoconf automake libtool pkg-config \
+     libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
+     libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
+     libxss-dev libgl1-mesa-dev libesd0-dev libdbus-1-dev libudev-dev \
+     libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
+     libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
 
-- DRM devices present and properly configured
-- Permissions set correctly for video and render groups
-- Multiple DRM cards available (card0, card1, card2)
-- Need to verify kernel-level KMS support
+   git clone https://github.com/libsdl-org/SDL.git
+   cd SDL
+   ./configure --enable-video-kmsdrm --enable-video-opengl --enable-video-opengles \
+     --enable-video-opengles2 --enable-video-egl --enable-video-gbm \
+     --enable-video-dummy --enable-video-x11 --enable-video-wayland \
+     --enable-video-rpi --enable-video-vivante --enable-video-cocoa \
+     --enable-video-metal --enable-video-vulkan --enable-video-offscreen
+   make -j4
+   sudo make install
+   sudo ldconfig
+   ```
 
-## Current Challenges
+2. After SDL2 rebuild:
+   - Run kivy_backend_test.py again
+   - Verify KMSDRM support is available
+   - Check display output
 
-- KMSDRM support not working despite proper setup
-- Need to identify specific cause of "kmsdrm not available" error
-- May need to adjust SDL2 configuration
-- Multiple DRM cards may require explicit selection
+## Current Issues
 
-## Immediate Tasks
+1. SDL2 KMSDRM Support:
 
-1. Run updated diagnostic test script
-2. Review diagnostic output
-3. Verify kernel KMS support
-4. Check SDL2 configuration
-5. Consider DRM card selection
+   - Error: "kmsdrm not available"
+   - Need to rebuild SDL2 from source
+   - Default package lacks KMSDRM support
 
-## Notes
+2. Display Configuration:
+   - DSI display properly initialized
+   - VC4 driver reports issues
+   - Need to ensure correct display mode settings
 
-- DRM subsystem appears properly configured
-- Permissions and groups look correct
-- Need to verify kernel-level support
-- May need to adjust SDL2 configuration
+## Environment Setup
+
+- Using specific environment variables for SDL2/KMSDRM
+- Debug logging enabled
+- DSI display configuration parameters set

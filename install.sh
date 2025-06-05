@@ -79,6 +79,76 @@ sudo apt install -y build-essential git libsdl2-dev libsdl2-image-dev libsdl2-mi
 if [ $? -ne 0 ]; then echo "Error installing system dependencies. Exiting."; exit 1; fi
 echo "System dependencies installed."
 
+# --- 2.1 Install SDL2 build dependencies ---
+echo ""
+echo "--- Installing SDL2 build dependencies ---"
+sudo apt install -y build-essential git autoconf automake libtool pkg-config \
+    libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
+    libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
+    libxss-dev libgl1-mesa-dev libesd0-dev libdbus-1-dev libudev-dev \
+    libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
+    libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
+
+if [ $? -ne 0 ]; then echo "Error installing SDL2 build dependencies. Exiting."; exit 1; fi
+echo "SDL2 build dependencies installed."
+
+# --- 2.2 Build and install SDL2 with KMSDRM support ---
+echo ""
+echo "--- Building SDL2 with KMSDRM support ---"
+echo "This may take several minutes..."
+
+# Create a temporary directory for the build
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
+
+# Clone SDL2 repository
+echo "Cloning SDL2 repository..."
+git clone https://github.com/libsdl-org/SDL.git
+if [ $? -ne 0 ]; then echo "Error cloning SDL2 repository. Exiting."; exit 1; fi
+
+cd SDL
+
+# Configure SDL2 with KMSDRM support
+echo "Configuring SDL2..."
+./configure --enable-video-kmsdrm \
+    --enable-video-opengl \
+    --enable-video-opengles \
+    --enable-video-opengles2 \
+    --enable-video-egl \
+    --enable-video-gbm \
+    --enable-video-dummy \
+    --enable-video-x11 \
+    --enable-video-wayland \
+    --enable-video-rpi \
+    --enable-video-vivante \
+    --enable-video-cocoa \
+    --enable-video-metal \
+    --enable-video-vulkan \
+    --enable-video-offscreen
+
+if [ $? -ne 0 ]; then echo "Error configuring SDL2. Exiting."; exit 1; fi
+
+# Build SDL2
+echo "Building SDL2..."
+make -j4
+if [ $? -ne 0 ]; then echo "Error building SDL2. Exiting."; exit 1; fi
+
+# Install SDL2
+echo "Installing SDL2..."
+sudo make install
+if [ $? -ne 0 ]; then echo "Error installing SDL2. Exiting."; exit 1; fi
+
+# Update shared library cache
+echo "Updating shared library cache..."
+sudo ldconfig
+if [ $? -ne 0 ]; then echo "Error updating shared library cache. Exiting."; exit 1; fi
+
+# Clean up
+cd "$SCRIPT_DIR"
+rm -rf "$TEMP_DIR"
+
+echo "SDL2 with KMSDRM support installed successfully."
+
 # --- 3. Create Python virtual environment ---
 echo ""
 echo "--- Setting up Python virtual environment at $VENV_DIR ---"

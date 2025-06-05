@@ -7,6 +7,8 @@ This document tracks what works, what's left to build, current status, and known
 - **Phase**: Kivy GUI Feature Completion, Stability & Robustness
 - **Overall Progress**: ~75-80% (Core Kivy app logic, UI for all game phases, resume/new flow, and critical data persistence are implemented and largely stable on macOS. Web server and Dicer integration are pending.)
 - **Last Update**: [Current Date] - Splash screen image implemented, macOS window sizing addressed, and critical data persistence for score/CP changes implemented for immediate saves.
+- **Identified root cause of KMSDRM issue**: Default SDL2 package lacks KMSDRM support
+- **Documented required build steps**: Added detailed configuration parameters
 
 ## 2. What Works
 
@@ -57,6 +59,8 @@ This document tracks what works, what's left to build, current status, and known
 - **DRM subsystem configuration**
 - **User permissions and group setup**
 - **Diagnostic test script for KMSDRM**
+- **Display mode detection**
+- **DSI display initialization**
 
 ## 3. What's Left to Build (High-Level)
 
@@ -81,6 +85,17 @@ This document tracks what works, what's left to build, current status, and known
 - **Optimize performance**
 - **Complete documentation**
 
+1. SDL2 with KMSDRM Support:
+
+   - Need to build SDL2 from source
+   - Enable KMSDRM support
+   - Install required dependencies
+
+2. Display Configuration:
+   - Verify DSI display settings
+   - Ensure correct CRTC and connector IDs
+   - Test display output
+
 ## 4. Known Issues
 
 - **macOS SDL2 Warnings**: `objc[...] Class SDLApplication ...` warnings persist on macOS. Not currently blocking, but noted.
@@ -100,6 +115,16 @@ This document tracks what works, what's left to build, current status, and known
   - **Impact**: High
   - **Current Focus**: Confirming KMS is properly enabled
   - **Next Steps**: Check kernel configuration, review logs
+- **SDL2 KMSDRM Support**:
+  - **Status**: Default SDL2 package lacks KMSDRM support
+  - **Impact**: High
+  - **Current Focus**: Need to rebuild from source
+  - **Next Steps**: Build SDL2 from source with KMSDRM support
+- **Display Configuration**:
+  - **Status**: VC4 driver reports issues
+  - **Impact**: High
+  - **Current Focus**: DSI display needs specific settings
+  - **Next Steps**: Verify display mode
 
 ## 5. Recent Achievements
 
@@ -127,3 +152,10 @@ This document tracks what works, what's left to build, current status, and known
 - **Permissions and groups look correct**
 - **Need to verify kernel-level support**
 - **May need to adjust SDL2 configuration**
+
+## Next Steps
+
+1. Build SDL2 from source with KMSDRM support
+2. Test display output after rebuild
+3. Verify KMSDRM functionality
+4. Document successful configuration

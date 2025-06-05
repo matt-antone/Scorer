@@ -40,3 +40,122 @@ This document lists the technologies, development setup, technical constraints, 
 - **Python Version Compatibility**: Ensure all chosen libraries are compatible with the target Python version on the Raspberry Pi.
 - **Fullscreen Mode**: Kivy will need to be configured to run in fullscreen mode, hiding any desktop elements.
 - **Platform-Specific Dependencies**: Care must be taken with dependencies that have platform-specific builds. For example, TensorFlow, planned for the future "Dicer" AI feature, has different packages for macOS (e.g., `tensorflow-macos`, `tensorflow-metal`) and ARM-based Linux on Raspberry Pi (e.g., a general `tensorflow` package). The `requirements.txt` for Pi deployment must only include packages compatible with the Pi. macOS-specific packages should be managed in the local macOS development environment if needed for features developed there but not immediately deployed or used on the Pi.
+
+## Development Environment
+
+- Target Platform: Raspberry Pi 5 with 5-inch touchscreen
+- Development OS: macOS
+- Python Version: 3.11.2
+- Kivy Version: 2.3.1
+
+## Critical Dependencies
+
+### SDL2 Requirements
+
+- SDL2 must be built from source with KMSDRM support for Raspberry Pi 5
+- The default SDL2 package from apt does not include KMSDRM support
+- Required build dependencies:
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y build-essential git autoconf automake libtool pkg-config \
+    libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
+    libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
+    libxss-dev libgl1-mesa-dev libesd0-dev libdbus-1-dev libudev-dev \
+    libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
+    libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
+  ```
+- Build SDL2 with KMSDRM support:
+  ```bash
+  git clone https://github.com/libsdl-org/SDL.git
+  cd SDL
+  ./configure --enable-video-kmsdrm --enable-video-opengl --enable-video-opengles \
+    --enable-video-opengles2 --enable-video-egl --enable-video-gbm \
+    --enable-video-dummy --enable-video-x11 --enable-video-wayland \
+    --enable-video-rpi --enable-video-vivante --enable-video-cocoa \
+    --enable-video-metal --enable-video-vulkan --enable-video-offscreen \
+    --enable-video-kmsdrm --enable-video-opengl --enable-video-opengles \
+    --enable-video-opengles2 --enable-video-egl --enable-video-gbm \
+    --enable-video-dummy --enable-video-x11 --enable-video-wayland \
+    --enable-video-rpi --enable-video-vivante --enable-video-cocoa \
+    --enable-video-metal --enable-video-vulkan --enable-video-offscreen
+  make -j4
+  sudo make install
+  sudo ldconfig
+  ```
+
+## Display Configuration
+
+- DSI Display: 800x480@60Hz
+- DSI Device: tc358762
+- DSI Configuration:
+  - Channel: 0
+  - Lanes: 1
+  - Format: 0
+  - DPI Clock: 30000000
+  - Byte Clock: 90000000
+
+## DRM/KMS Setup
+
+- Required overlays in `/boot/firmware/config.txt`:
+  ```
+  dtoverlay=vc4-kms-v3d
+  max_framebuffers=2
+  disable_fw_kms_setup=1
+  ```
+- User must be in `video` and `render` groups
+- DRM devices:
+  - card0: V3D driver
+  - card1: DSI display (drm-rp1-dsi)
+  - card2: VC4 driver
+
+## Known Issues
+
+1. SDL2 KMSDRM Support:
+
+   - Default SDL2 package lacks KMSDRM support
+   - Must be built from source with KMSDRM enabled
+   - Affects Kivy window provider initialization
+   - Error: "kmsdrm not available"
+
+2. Display Configuration:
+   - VC4 driver reports "Cannot find any crtc or sizes"
+   - DSI display properly initialized but requires specific configuration
+   - Need to use correct CRTC (34) and connector (36) IDs
+
+## Environment Variables
+
+Critical SDL2/KMSDRM environment variables:
+
+```bash
+SDL_VIDEODRIVER=kmsdrm
+SDL_VIDEODRIVER_DEVICE=/dev/dri/card1
+SDL_VIDEO_KMSDRM_DEVICE=/dev/dri/card1
+SDL_VIDEO_KMSDRM_CRTC=34
+SDL_VIDEO_KMSDRM_CONNECTOR=36
+SDL_VIDEO_KMSDRM_MODE=0
+SDL_VIDEO_KMSDRM_FORCE_MODE=1
+SDL_VIDEO_KMSDRM_FORCE_WIDTH=800
+SDL_VIDEO_KMSDRM_FORCE_HEIGHT=480
+SDL_VIDEO_KMSDRM_FORCE_REFRESH=60
+SDL_VIDEO_KMSDRM_FORCE_DPI=30000
+SDL_VIDEO_KMSDRM_FORCE_BYTE_CLOCK=90000000
+SDL_VIDEO_KMSDRM_FORCE_DSI_CHANNEL=0
+SDL_VIDEO_KMSDRM_FORCE_DSI_LANES=1
+SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
+```
+
+## Debugging Tools
+
+- `modetest`: For checking display modes and DRM configuration
+- `dmesg`: For kernel messages related to DRM/KMS
+- SDL2 verbose logging:
+  ```bash
+  SDL_LOG_PRIORITY=VERBOSE
+  SDL_LOG_CATEGORY_APPLICATION=VERBOSE
+  SDL_LOG_CATEGORY_ERROR=VERBOSE
+  SDL_LOG_CATEGORY_SYSTEM=VERBOSE
+  SDL_LOG_CATEGORY_AUDIO=VERBOSE
+  SDL_LOG_CATEGORY_VIDEO=VERBOSE
+  SDL_LOG_CATEGORY_RENDER=VERBOSE
+  SDL_LOG_CATEGORY_INPUT=VERBOSE
+  ```

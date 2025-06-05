@@ -145,7 +145,7 @@ class NameEntryScreen(Screen):
         self.player2_name_input.bind(text=self.on_name_input)
 
         # Initial validation check to set button state
-        self.on_name_input(None, None)
+        self.continue_button.disabled = False
 
     def set_active_input(self, text_input):
         if text_input.focus:
@@ -178,7 +178,6 @@ class NameEntryScreen(Screen):
         # Enable continue button only if both fields have non-empty, non-whitespace text
         p1_name = self.player1_name_input.text.strip()
         p2_name = self.player2_name_input.text.strip()
-        self.continue_button.disabled = not (p1_name and p2_name)
 
     def on_text_validate_p1(self):
         self.player2_name_input.focus = True

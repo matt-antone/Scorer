@@ -4,41 +4,16 @@ This document tracks the current working state of the Scorer application, what's
 
 ## What Works
 
-- **Automated Installation & Deployment:**
-
-  - The `install.sh` script provides a fully automated setup process on a fresh Raspberry Pi OS.
-  - It correctly installs system and Python dependencies, creates the database structure and source code, and initializes the SQLite database.
-  - The application is confirmed to be fully functional on the target Raspberry Pi 5 hardware after installation.
-
-- **Kivy Application (macOS & Raspberry Pi):**
-
-  - Fully functional for all core game management: score, CP, and round tracking.
-  - Stable UI with consistent screen transitions.
-  - Game timer functions correctly.
-  - Handles saving and loading game state, including the "Resume or New Game" flow.
-  - Launches correctly on both platforms via the `launch_scorer.sh` script.
-
-- **Server & Web Client:**
-
-  - The WebSocket server runs reliably.
-  - The web client connects, receives real-time updates, and correctly follows the game state.
-  - A "No Connection" screen gracefully handles server disconnects.
-  - The client's screen flow is synchronized with the Kivy application's `game_phase`.
-
-- **Architecture & State Management:**
-  - The server-side state sanitization layer ensures client stability.
-  - The `game_phase` is managed reliably, creating a predictable state machine.
-  - The technology stack is stable, with a simplified SQLite backend.
+- **Installation**: A fully automated `install.sh` script successfully sets up the entire environment on a fresh Raspberry Pi OS, including correct Python dependencies, FFmpeg, and a custom-built SDL2 with KMS/DRM support. The script is idempotent and handles both initial setup and updates.
+- **Game State**: The application uses a robust SQLite database for game state persistence (`db/scorer.db`). The database is automatically created if it doesn't exist.
+- **Kivy Backend**: The Kivy application runs correctly on both macOS (for development) and Raspberry Pi (for production) using the appropriate display drivers.
+- **Name Entry Screen**: The "Continue" button is now always enabled, removing the validation that required users to input names. This simplifies the flow for users who accept the default names.
 
 ## What's Left to Build
 
-- **Settings Screen:** A dedicated screen for application settings (e.g., sound, display options) in the Kivy app is designed in the workflow but not yet implemented.
-- **Dicer Integration:** Future integration with the "Dicer" AI system is planned but not started.
-- **Player Client for Score Updates:** Implement a separate, mobile-first web client designed specifically for players. This client will:
-  - Allow a player to modify only their own Score and CP.
-  - Feature a minimal UI without the splash or game over screens of the main spectator client.
-  - Be accessible via player-specific QR codes generated on the Kivy app's Name Entry screen.
-- **Performance Optimization:** While performance is currently acceptable, targeted optimization has not been a focus.
+- Finalize UI elements for touch interaction on the Raspberry Pi.
+- Add "New Game" and "Exit" functionality to the Game Over screen.
+- Conduct a full regression test of all game logic paths.
 
 ## Current Status
 
@@ -47,8 +22,14 @@ This document tracks the current working state of the Scorer application, what's
 
 ## Known Issues
 
-- There are currently no known critical bugs. The application is in a known-good, working state on both macOS and Raspberry Pi.
+- **None**: All major bugs related to installation, game state, and UI initialization have been resolved.
 
 ## Blockers
 
 - There are no active blockers.
+
+## Next Steps
+
+- Perform final testing on the Raspberry Pi to ensure touch interactions are smooth.
+- Document the "New Game" and "Exit" features in `productContext.md`.
+- Update `.cursorrules` with the robust Kivy initialization pattern as a permanent reference.

@@ -124,6 +124,9 @@ class NameEntryScreen(Screen):
                     self.vkeyboard.target = None
 
     def on_enter(self, *args):
+        # Defer the field initialization to the next frame to ensure widgets are ready
+        Clock.schedule_once(self._initialize_fields)
+
         # Dynamically add the VKeyboard on Linux platforms
         if platform.system() == "Linux" and not self._keyboard_added:
             self.vkeyboard = VKeyboard(size_hint_y=None)
@@ -131,8 +134,14 @@ class NameEntryScreen(Screen):
             self._keyboard_added = True
             Clock.schedule_once(self._finish_keyboard_setup) # Defer the rest of the setup
 
-        # When entering the screen, load the latest names from game_state
+    def _initialize_fields(self, dt):
+        """Initializes the text input fields with names from the game state."""
         app = App.get_running_app()
+        if not self.player1_name_input or not self.player2_name_input:
+            print("ERROR: NameEntryScreen fields not ready, rescheduling initialization.")
+            Clock.schedule_once(self._initialize_fields, 0.05)
+            return
+
         p1_name = app.game_state.get('player1', {}).get('name', 'Player 1')
         p2_name = app.game_state.get('player2', {}).get('name', 'Player 2')
         self.player1_name_input.text = p1_name

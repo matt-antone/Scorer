@@ -26,7 +26,9 @@
   - Data migration tools
 - Consider adding more tests for edge cases.
 - Update documentation and the Memory Bank as needed.
-- Proceed with integration or deployment.
+- Proceed with integration testing.
+- Verify that all components interact correctly.
+- Address any issues that arise during integration.
 
 ## Current Status
 
@@ -36,6 +38,7 @@
 - Planning phase for database implementation
 - The database reset logic successfully clears all records from turns, players, and games.
 - The test runner is configured to use SQLite for local testing.
+- Moving on to the integration phase.
 
 ## Known Issues
 

@@ -140,27 +140,20 @@ class NameEntryScreen(Screen):
         self.player1_name_input.text = p1_name
         self.player2_name_input.text = p2_name
 
-        # Manually bind the on_text event to the validation method
-        self.player1_name_input.bind(text=self.on_name_input)
-        self.player2_name_input.bind(text=self.on_name_input)
-
-        # Initial validation check to set button state
-        self.continue_button.disabled = False
-
     def set_active_input(self, text_input):
         if text_input.focus:
             # text_input.text = '' # This was causing an infinite loop
             self.active_input = text_input
             if platform.system() == "Linux" and not self.vkeyboard:
-                self.vkeyboard = VKeyboard(size_hint_y=None)
-                self.ids.main_layout.add_widget(self.vkeyboard)
+                self.vkeyboard = VKeyboard()
+                self.add_widget(self.vkeyboard)
             if self.vkeyboard:
                 self.vkeyboard.target = text_input
         else:
             if self.active_input == text_input:
                 self.active_input = None
                 if self.vkeyboard:
-                    self.ids.main_layout.remove_widget(self.vkeyboard)
+                    self.remove_widget(self.vkeyboard)
                     self.vkeyboard = None
 
     def on_touch_down(self, touch):
@@ -169,21 +162,6 @@ class NameEntryScreen(Screen):
             if not self.vkeyboard or not self.vkeyboard.collide_point(*touch.pos):
                 self.active_input.focus = False
         return super().on_touch_down(touch)
-
-    def on_name_input(self, instance, value):
-        # Guard clause: Do not proceed if widgets aren't linked yet.
-        if not self._is_initialized:
-            return
-
-        # Enable continue button only if both fields have non-empty, non-whitespace text
-        p1_name = self.player1_name_input.text.strip()
-        p2_name = self.player2_name_input.text.strip()
-
-    def on_text_validate_p1(self):
-        self.player2_name_input.focus = True
-
-    def on_text_validate_p2(self):
-        self.continue_button.focus = True
 
     def save_names_and_proceed(self):
         app = App.get_running_app()
@@ -1371,7 +1349,6 @@ class ScorerApp(App):
         return sanitized_state
 
     def switch_screen(self, screen_name):
-        self.root.transition = FadeTransition(duration=0.2)
         self.root.current = screen_name
 
     def on_start(self):

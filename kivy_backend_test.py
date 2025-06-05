@@ -12,47 +12,50 @@ if platform.system() == "Linux":
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_EGL_LIB'] = '/opt/vc/lib/libEGL.so'
     os.environ['KIVY_GLES_LIB'] = '/opt/vc/lib/libGLESv2.so'
-    os.environ['KIVY_LOG_LEVEL'] = 'debug' # Force debug logging early
+    os.environ['KIVY_LOG_LEVEL'] = 'debug'
     
-    # Try to ensure DISPLAY is not set for headless operation
     if 'DISPLAY' in os.environ:
-        print(f"Minimal Test: DISPLAY environment variable was set to: {os.environ['DISPLAY']}. Unsetting it.")
+        print(f"Minimal Test: DISPLAY was {os.environ['DISPLAY']}. Unsetting.")
         del os.environ['DISPLAY']
     else:
-        print("Minimal Test: DISPLAY environment variable was not set.")
+        print("Minimal Test: DISPLAY was not set.")
 
     print(f"Minimal Test: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS_BACKEND={os.environ.get('KIVY_GRAPHICS_BACKEND')}, DISPLAY={os.environ.get('DISPLAY')}")
 
-# It's crucial to import Kivy *after* setting environment variables
 try:
     from kivy.config import Config
     if platform.system() == "Linux":
         print("Minimal Test: Applying Kivy Config settings.")
         Config.set('graphics', 'backend', 'egl_rpi')
-        Config.set('kivy', 'log_level', 'debug') # Redundant with env var, but safe
+        Config.set('kivy', 'log_level', 'debug')
         print(f"Minimal Test: Config Set -> graphics:backend={Config.get('graphics', 'backend')}, kivy:log_level={Config.get('kivy', 'log_level')}")
 
     from kivy.app import App
     from kivy.uix.label import Label
     from kivy.core.window import Window
+    import kivy.core.gl as KivyGL # Import Kivy GL module
 
-    print(f"Minimal Test: Kivy Window provider detected by Kivy: {Window.backend_name if hasattr(Window, 'backend_name') else 'N/A before App run'}")
-    # Note: Window.graphics_system might not be populated until the window is created.
+    # Attempt to list available GL backends (this is somewhat internal)
+    print("Minimal Test: Attempting to list Kivy GL backend providers...")
+    try:
+        # In Kivy, graphics backends are often registered and then chosen.
+        # We can inspect kivy.graphics.cgl.cgl_get_backend_name() after initialization,
+        # or look for registration functions if diving very deep.
+        # For now, we rely on Kivy's own logging of "Backend used <...>"
+        # and the success/failure of the app.
+        # However, we can check the *requested* one if available
+        # This might show what was requested by env var before it falls back
+        print(f"Minimal Test: Kivy CGL requested backend (if available from env): {KivyGL.gl_get_backend_name()}")
+    except Exception as e:
+        print(f"Minimal Test: Could not get requested CGL backend name: {e}")
 
     class MinimalTestApp(App):
         def build(self):
-            print(f"MinimalTestApp.build(): Kivy Window provider: {Window.backend_name}")
-            # Attempt to get more detailed graphics system info if available
-            gl_backend_used = "N/A"
-            try:
-                from kivy.graphics import gl_init_symbols
-                gl_backend_used = Window.graphics_system
-            except Exception as e:
-                print(f"MinimalTestApp.build(): Error getting graphics_system: {e}")
-                
-            print(f"MinimalTestApp.build(): Kivy GL Backend reported: {gl_backend_used}")
+            # The most reliable info comes from Kivy's own startup logs for "Backend used"
+            # This print is more for confirming Window object properties after init.
+            print(f"MinimalTestApp.build(): Kivy Window provider: {Window.__class__.__name__}") # Use class name to avoid missing attribute
             print(f"MinimalTestApp.build(): Window size: {Window.size}")
-            return Label(text=f"Kivy Backend Test\nWindow: {Window.backend_name}\nGL: {gl_backend_used}")
+            return Label(text=f"Kivy GL Backend Test\nWindow System: {Window.__class__.__name__}")
 
     if __name__ == '__main__':
         print("Minimal Test: Starting Kivy app...")

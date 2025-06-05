@@ -2,13 +2,14 @@ import platform # For OS detection
 import os # Import os
 
 if platform.system() == "Linux":
-    # Attempt to ensure Kivy doesn't try to use X11 if we're running headless/framebuffer
-    print("Main.py: Linux detected, attempting to pop DISPLAY env var.")
-    os.environ.pop('DISPLAY', None)
-    # To see if it worked:
-    # print(f"Main.py: DISPLAY env var is now: {os.environ.get('DISPLAY')}")
+    print("Main.py: Linux detected. Setting Kivy environment variables for framebuffer.")
+    os.environ['KIVY_WINDOW'] = 'sdl2'
+    os.environ['KIVY_GRAPHICS'] = 'egl_rpi' # Common for direct RPi rendering
+    os.environ['KIVY_TEXT'] = 'sdl2'
+    os.environ.pop('DISPLAY', None) # Still pop DISPLAY as a fallback
+    print(f"Main.py: KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS={os.environ.get('KIVY_GRAPHICS')}, DISPLAY={os.environ.get('DISPLAY')}")
 
-from kivy.config import Config # Ensure Config is imported first for this change
+from kivy.config import Config # Ensure Config is imported AFTER env vars are set
 from kivy.core.window import Window # Ensure Window is imported
 
 # OS-specific graphics configuration

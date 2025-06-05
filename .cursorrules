@@ -46,7 +46,7 @@ This file captures important patterns, preferences, and project intelligence tha
     *   **Reasoning**: This separation of concerns improves code organization and clarity. It ensures that `self` refers to the correct context (the `App` instance for global operations, the `Screen` instance for screen-specific operations), preventing `AttributeError`s and making the application flow more logical and maintainable.
 
 ## General Project Notes
-
+*   **No sassy comments.** when I ask you to look for help, do not refuse. I can see you are strugging. I do not just ask for no reason. just look for help.
 *   **Target Platform Focus**: While development happens on macOS, the primary target is a Raspberry Pi 5 with a 5-inch touchscreen. UI elements should be designed for touch-friendliness.
 *   **Game State Persistence**: The `game_state.json` file is critical for game resumption. Ensure its integrity and robust load/save operations.
 *   **Font**: "InterBlack" is the preferred font for headers and important labels, registered via `LabelBase`.

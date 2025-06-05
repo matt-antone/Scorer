@@ -191,6 +191,15 @@ echo "--- Configuring boot to CLI with auto-login ---"
 sudo raspi-config nonint do_boot_behaviour B2
 if [ $? -ne 0 ]; then echo "Error configuring boot behavior. Exiting."; exit 1; fi
 
+# Enable SSH
+echo "Enabling SSH..."
+sudo raspi-config nonint do_ssh 0
+if [ $? -ne 0 ]; then echo "Error enabling SSH. Exiting."; exit 1; fi
+
+# Ensure SSH starts on boot
+sudo systemctl enable ssh
+if [ $? -ne 0 ]; then echo "Error enabling SSH service. Exiting."; exit 1; fi
+
 # Disable splash screen
 sudo raspi-config nonint do_boot_splash 1
 if [ $? -ne 0 ]; then echo "Error disabling splash screen. Exiting."; exit 1; fi

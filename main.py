@@ -1222,31 +1222,42 @@ class ScorerApp(App):
             return 'name_entry'
 
     def build(self):
+        build_start_time = time.time()
+        print(f"ScorerApp.build(): Method started at {build_start_time:.4f}")
+
         self.game_state = self._get_default_game_state() 
+        print("ScorerApp.build(): Game state initialized.")
+        
         self.screen_manager = ScreenManager()
+        print("ScorerApp.build(): ScreenManager created.")
 
         self.screen_manager.add_widget(SplashScreen(name='splash_screen'))
+        print("ScorerApp.build(): SplashScreen added to ScreenManager.")
         self.screen_manager.add_widget(ResumeOrNewScreen(name='resume_or_new'))
         self.screen_manager.add_widget(NameEntryScreen(name='name_entry'))
         self.screen_manager.add_widget(DeploymentSetupScreen(name='deployment_setup'))
         self.screen_manager.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
         self.screen_manager.add_widget(ScorerRootWidget(name='scorer_root'))
         self.screen_manager.add_widget(GameOverScreen(name='game_over'))
+        print("ScorerApp.build(): All game screens added to ScreenManager.")
 
-        # Directly determine the target screen after splash.
-        # _determine_screen_from_gamestate now handles loading and deciding.
         actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
-        self.target_screen_after_splash = actual_initial_screen_after_splash # Store for SplashScreen to use
-        print(f"Build: Initial screen after splash will be '{self.target_screen_after_splash}'.")
-            
+        self.target_screen_after_splash = actual_initial_screen_after_splash
+        print(f"ScorerApp.build(): Target screen after splash determined: '{self.target_screen_after_splash}'.")
+
+        # --- Point of setting splash screen current ---
+        time_before_splash_current = time.time()
+        print(f"ScorerApp.build(): About to set 'splash_screen' as current. Time elapsed since build start: {time_before_splash_current - build_start_time:.4f}s")
         self.screen_manager.current = 'splash_screen'
+        # ---------------------------------------------
         
-        # Explicitly set fullscreen and borderless for Linux just before returning screen_manager
         if platform.system() == "Linux":
             Window.fullscreen = True
             Window.borderless = True
-            print("Linux detected in build(): Set Window.fullscreen=True and Window.borderless=True")
+            print("ScorerApp.build(): Linux detected - Window.fullscreen and Window.borderless set.")
 
+        build_end_time = time.time()
+        print(f"ScorerApp.build(): Method finished. Total time in build(): {build_end_time - build_start_time:.4f}s")
         return self.screen_manager
 
     def transition_from_splash(self, target_screen_name, dt):

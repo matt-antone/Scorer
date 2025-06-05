@@ -38,7 +38,7 @@ def setup_environment():
 
     # Set up environment
     os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
-    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card0'
+    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card1'
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
@@ -77,7 +77,7 @@ def main():
     check_user_groups()
     check_kms_status()
 
-    print("\n=== Testing DRM card: card0 ===")
+    print("\n=== Testing DRM card: card1 ===")
     setup_environment()
 
     try:
@@ -104,7 +104,7 @@ def main():
                 except Exception as e:
                     print(f"Error getting GL backend name: {e}")
 
-                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card0")
+                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card1")
 
         print("Starting Kivy app...")
         MinimalTestApp().run()

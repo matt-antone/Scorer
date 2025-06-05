@@ -48,63 +48,38 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## Current Focus
 
-- Resolving SDL2 KMSDRM support issues
-- Ensuring proper display configuration for camera/display socket 1
-- Investigating DSI display initialization through tc358762 device
-- Platform-aware script execution environment
+- Recovering from broken Raspberry Pi state
+- Restoring working application state
+- Reinstalling Raspberry Pi OS
 
 ## Recent Changes
 
-- Added platform detection to launch_scorer.sh
-- Documented DSI display configuration requirements
-- Added tc358762 overlay to /boot/firmware/config.txt
-- Updated .cursorrules with bash script execution environment requirements
-
-## Active Decisions
-
-- Using KIVY_BCM_DISPMANX_ID=5 for camera/display socket 1
-- Building SDL2 from source with KMSDRM support
-- Configuring DSI display through tc358762 device
-- Platform-specific environment variables in launch scripts
-
-## Current Challenges
-
-- KMSDRM support not available despite correct SDL2 build
-- DSI display not showing up in DRM devices
-- Need to verify tc358762 overlay configuration
-- Need to ensure proper user permissions for DRM access
+- Attempted SDL2/KMSDRM configuration broke Pi boot
+- Application state is untested on both macOS and Pi
+- Need to reinstall Pi OS from scratch
 
 ## Next Steps
 
-1. Verify tc358762 overlay parameters
-2. Check DRM device permissions
-3. Test DSI display initialization
-4. Monitor SDL2/KMSDRM debug output
+1. Reinstall Raspberry Pi OS
+2. Restore application to last known working state
+3. Test on macOS first
+4. Test on Pi after reinstallation
+5. Document working configuration
 
-## Open Questions
+## Active Decisions
 
-- Are all required DSI parameters correctly set?
-- Is the tc358762 device properly initialized?
-- Are there any missing overlays or configurations?
-- Do we need additional kernel modules loaded?
-
-## Recent Discoveries
-
-- Display is connected through camera/display socket 1
-- tc358762 device requires specific DSI configuration
-- KIVY_BCM_DISPMANX_ID=5 is required for camera/display socket
-- Platform detection is needed for environment variables
+- Will reinstall Pi OS rather than try to fix current state
+- Will restore to last known working commit (b86e7d4)
+- Will test thoroughly on macOS before Pi deployment
 
 ## Current Environment
 
-- Development: macOS
-- Target: Raspberry Pi 5 with 5-inch DSI touchscreen
-- Display Interface: Camera/Display Socket 1
-- DSI Device: tc358762
+- Development: macOS (untested)
+- Target: Raspberry Pi 5 (needs reinstallation)
+- Display: 5-inch DSI touchscreen
 
-## Active Considerations
+## Known Issues
 
-- Need to maintain separate configurations for macOS and Raspberry Pi
-- Must ensure proper display initialization on Raspberry Pi
-- Need to verify hardware acceleration support
-- Must document all platform-specific requirements
+- Pi not booting after SDL2/KMSDRM configuration
+- Application state untested on both platforms
+- Need to verify working configuration after restore

@@ -886,8 +886,14 @@ ScreenManager:
 
 <SplashScreen>:
     name: 'splash_screen'
-    Image:
-        source: 'assets/splash.png'
+    # canvas.before: # Reverted: Remove temporary background
+    #     Color:
+    #         rgba: 1, 0, 0, 1
+    #     Rectangle:
+    #         pos: self.pos
+    #         size: self.size
+    Image: # Restored Image widget
+        source: 'assets/splash.jpg'
         allow_stretch: True
         keep_ratio: False # Fill the entire screen
 

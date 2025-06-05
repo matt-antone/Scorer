@@ -106,49 +106,58 @@ ScreenManager:
         HeaderLayout:
             title_text: 'Player Name Entry'
 
-        GridLayout:
-            cols: 2
-            padding: dp(20)
-            spacing: dp(20)
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                cols: 2
+                padding: dp(20)
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
 
-            # Player 1 Column
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: dp(8)
-                Label:
-                    text: "Player 1 Name"
-                    font_name: 'InterBlack'
-                    font_size: '20sp'
+                # Player 1 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(8)
                     size_hint_y: None
-                    height: self.texture_size[1]
-                TextInput:
-                    id: player1_name_input
-                    text: 'Player 1'
-                    font_size: '20sp'
-                    multiline: False
-                    on_focus: root.set_active_input(self)
-                    on_text_validate: root.on_text_validate_p1()
+                    height: self.minimum_height
+                    Label:
+                        text: "Player 1 Name"
+                        font_name: 'InterBlack'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                    TextInput:
+                        id: player1_name_input
+                        text: 'Player 1'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(40)
+                        multiline: False
+                        on_focus: root.set_active_input(self)
+                        on_text_validate: root.on_text_validate_p1()
 
-            # Player 2 Column
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: dp(8)
-                Label:
-                    text: "Player 2 Name"
-                    font_name: 'InterBlack'
-                    font_size: '20sp'
+                # Player 2 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(8)
                     size_hint_y: None
-                    height: self.texture_size[1]
-                TextInput:
-                    id: player2_name_input
-                    text: 'Player 2'
-                    font_size: '20sp'
-                    multiline: False
-                    on_focus: root.set_active_input(self)
-                    on_text_validate: root.on_text_validate_p2()
-
-        Widget: # Spacer
-            size_hint_y: 1 # Pushes the button to the bottom
+                    height: self.minimum_height
+                    Label:
+                        text: "Player 2 Name"
+                        font_name: 'InterBlack'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                    TextInput:
+                        id: player2_name_input
+                        text: 'Player 2'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(40)
+                        multiline: False
+                        on_focus: root.set_active_input(self)
+                        on_text_validate: root.on_text_validate_p2()
 
         BoxLayout:
             size_hint_y: None

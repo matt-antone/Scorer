@@ -80,7 +80,9 @@ else:
 # --- New Setup Screens ---
 
 class SplashScreen(Screen):
-    pass
+    def on_enter(self, *args):
+        app = App.get_running_app()
+        Clock.schedule_once(lambda dt: app.transition_from_splash(app.target_screen_after_splash, dt), app.VISIBLE_SPLASH_TIME)
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
@@ -1029,7 +1031,7 @@ class ResumeOrNewScreen(Screen):
 
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
-    SPLASH_DURATION = 10 # Duration in seconds for the splash screen
+    VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
 
     def _get_default_game_state(self):
         """Helper method to return a pristine default game state dictionary."""
@@ -1177,10 +1179,10 @@ class ScorerApp(App):
         # Directly determine the target screen after splash.
         # _determine_screen_from_gamestate now handles loading and deciding.
         actual_initial_screen_after_splash = self._determine_screen_from_gamestate()
-        print(f"Build: Initial screen after splash will be '{actual_initial_screen_after_splash}'.")
+        self.target_screen_after_splash = actual_initial_screen_after_splash # Store for SplashScreen to use
+        print(f"Build: Initial screen after splash will be '{self.target_screen_after_splash}'.")
             
         self.screen_manager.current = 'splash_screen'
-        Clock.schedule_once(lambda dt: self.transition_from_splash(actual_initial_screen_after_splash, dt), self.SPLASH_DURATION)
         
         # Explicitly set fullscreen and borderless for Linux just before returning screen_manager
         if platform.system() == "Linux":

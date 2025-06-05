@@ -19,11 +19,12 @@ Scorer will be a Python application with two main components running concurrentl
   - If a meaningful save exists, the `ResumeOrNewScreen` is displayed, offering to "Resume Game" or "Start New Game".
   - If no meaningful save exists, the application proceeds directly to the standard new game flow (e.g., `NameEntryScreen`).
 - **Web API Interaction**: (Future Implementation)
-  - The Flask web app will serve a simple HTML/JavaScript frontend to players' browsers.
-  - When a player interacts with the web interface (e.g., to increase their score), the JavaScript frontend will make an API call (e.g., POST request) to a Flask endpoint.
-  - The Flask endpoint will then need to communicate this update to the Kivy application. This could be achieved through inter-thread communication mechanisms (e.g., a Queue, or custom events if Kivy/Flask are in the same process and Kivy's event loop can be used).
-  - The Kivy application, upon receiving an update from the Flask backend, will validate it, update its central game state, and refresh its UI. The updated state will then also be available for subsequent GET requests from any connected web clients.
-- **QR Code**: The Kivy application will generate a QR code pointing to the local IP address and port of the Flask server, displayed on the touchscreen for easy connection.
+  - The Flask web app, running in a background thread, provides API endpoints.
+  - Player clients (on mobile devices) send HTTP requests (e.g., GET to read state, POST to update score) to the Flask API.
+  - For writes, the `FlaskAPI` submits the player's updates to the `KivyLogic`.
+  - For reads, the `FlaskAPI` requests the current game state from the `KivyLogic`.
+  - The `KivyLogic` remains the single source of truth, validating all incoming updates and providing the state for all read requests.
+- **QR Code**: The Kivy application will generate QR codes pointing to the `FlaskAPI`'s address, allowing player and spectator clients to connect easily.
 
 ```mermaid
 graph TD
@@ -40,18 +41,18 @@ graph TD
 
         subgraph "Flask Web Application (Thread/Subprocess - Future)"
             direction LR
-            FlaskAPI["Web API Endpoints"] --> WebFrontend["HTML/JS Player Interface"]
+            FlaskAPI["Web API Endpoints"]
         end
 
-        KivyLogic -- "Update Requests / State Sync (Future)" --> FlaskAPI
-        FlaskAPI -- "Read Game State (Future)" --> KivyLogic
+        FlaskAPI -- "Submit Player Updates (Future)" --> KivyLogic
+        FlaskAPI -- "Request Game State (Future)" --> KivyLogic
     end
 
-    MobileDevice1["Player 1 Mobile Device"] -- "HTTP Requests (Future)" --> WebFrontend
-    MobileDevice2["Player 2 Mobile Device"] -- "HTTP Requests (Future)" --> WebFrontend
+    MobileDevice1["Player 1 Mobile Device"] -- "HTTP POST/GET (Future)" --> FlaskAPI
+    MobileDevice2["Player 2 Mobile Device"] -- "HTTP POST/GET (Future)" --> FlaskAPI
 
     ActiveScreen -- "Displays (Future)" --> QRCodeGen
-    QRCodeGen -- "URL for (Future)" --> FlaskWebApp
+    QRCodeGen -- "URL for (Future)" --> FlaskAPI
 ```
 
 ## 2. Key Design Patterns & Considerations

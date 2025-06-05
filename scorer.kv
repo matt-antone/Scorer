@@ -99,101 +99,100 @@ ScreenManager:
             source: 'assets/background.png'
             pos: self.pos
             size: self.size
-    player1_name_input: p1_name_entry_input
-    player2_name_input: p2_name_entry_input
-    continue_button: name_entry_continue_btn
 
-    BoxLayout: # New Main Root for NameEntryScreen
+    BoxLayout: # Main Root for NameEntryScreen
+        id: main_layout
         orientation: 'vertical'
         HeaderLayout:
-            title_text: 'Player Name Entry' # Set the property of HeaderLayout
-        # Original Root BoxLayout for NameEntryScreen content
-        BoxLayout: 
-            orientation: 'vertical'
-            padding: dp(20)
-            spacing: dp(15)
-            # Label for 'Enter Player Names' is now in HeaderLayout
-            # Remove the old title Label from here if it exists directly
-            # The old title Label:
-            # Label:
-            #     text: 'Enter Player Names'
-            #     font_size: '28sp'
-            #     size_hint_y: None
-            #     height: dp(40)
-            #     bold: True
-            #     halign: 'center'
+            title_text: 'Player Name Entry'
 
-            BoxLayout: # Two-column layout for name inputs
-                orientation: 'horizontal'
+        # This ScrollView will contain the inputs and button
+        ScrollView:
+            size_hint: (1, 1)
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(20)
                 spacing: dp(15)
-                size_hint_y: 0.3 # Give some proportional height
-
-                # Player 1 Column
-                BoxLayout:
-                    orientation: 'vertical'
-                    padding: dp(10)
-                    spacing: dp(8)
-                    canvas.before:
-                        Color:
-                            rgba: 0.1, 0.1, 0.1, 1
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
-                    Label:
-                        text: "Player 1 Name"
-                        font_size: '20sp'
-                        size_hint_y: None
-                        height: dp(30)
-                        width: dp(400)
-                        text_size: self.size
-                        halign: 'left'
-                    TextInput:
-                        id: p1_name_entry_input
-                        text: 'Player 1'
-                        font_size: '20sp'
-                        multiline: False
-                        on_text_validate: root.on_text_validate_p1(self)
-                        on_text: root.on_name_input(self, self.text)
-                        size_hint_y: None
-                        height: dp(40)
-
-                # Player 2 Column
-                BoxLayout:
-                    orientation: 'vertical'
-                    padding: dp(10)
-                    spacing: dp(8)
-                    canvas.before:
-                        Color:
-                            rgba: 0.1, 0.1, 0.1, 1
-                        Rectangle:
-                            pos: self.pos
-                            size: self.size
-                    Label:
-                        text: "Player 2 Name"
-                        font_size: '20sp'
-                        size_hint_y: None
-                        height: dp(30)
-                    TextInput:
-                        id: p2_name_entry_input
-                        text: 'Player 2'
-                        font_size: '20sp'
-                        multiline: False
-                        on_text_validate: root.on_text_validate_p2(self)
-                        on_text: root.on_name_input(self, self.text)
-                        size_hint_y: None
-                        height: dp(40)
-
-            Widget: # Spacer to push button to bottom
-                size_hint_y: 0.7 # Adjust as needed
-            
-            Button:
-                id: name_entry_continue_btn
-                text: 'Continue to Deployment Setup'
-                font_size: '22sp'
                 size_hint_y: None
-                height: dp(50)
-                on_press: root.save_names_and_proceed()
-                disabled: True
+                height: self.minimum_height
+
+                BoxLayout: # Two-column layout for name inputs
+                    orientation: 'horizontal'
+                    spacing: dp(15)
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    # Player 1 Column
+                    BoxLayout:
+                        orientation: 'vertical'
+                        padding: dp(10)
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        canvas.before:
+                            Color:
+                                rgba: 0.1, 0.1, 0.1, 1
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+                        Label:
+                            text: "Player 1 Name"
+                            font_size: '20sp'
+                            size_hint_y: None
+                            height: dp(30)
+                        TextInput:
+                            id: player1_name_input
+                            text: 'Player 1'
+                            font_size: '20sp'
+                            multiline: False
+                            on_focus: root.set_active_input(self)
+                            on_text_validate: root.on_text_validate_p1(self)
+                            on_text: root.on_name_input(self, self.text)
+                            size_hint_y: None
+                            height: dp(40)
+
+                    # Player 2 Column
+                    BoxLayout:
+                        orientation: 'vertical'
+                        padding: dp(10)
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        canvas.before:
+                            Color:
+                                rgba: 0.1, 0.1, 0.1, 1
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+                        Label:
+                            text: "Player 2 Name"
+                            font_size: '20sp'
+                            size_hint_y: None
+                            height: dp(30)
+                        TextInput:
+                            id: player2_name_input
+                            text: 'Player 2'
+                            font_size: '20sp'
+                            multiline: False
+                            on_focus: root.set_active_input(self)
+                            on_text_validate: root.on_text_validate_p2(self)
+                            on_text: root.on_name_input(self, self.text)
+                            size_hint_y: None
+                            height: dp(40)
+
+                Widget: # Spacer
+                    size_hint_y: None
+                    height: dp(20)
+
+                Button:
+                    id: continue_button
+                    text: 'Continue to Deployment Setup'
+                    font_size: '22sp'
+                    size_hint_y: None
+                    height: dp(50)
+                    on_press: root.save_names_and_proceed()
+                    disabled: True
 
 <DeploymentSetupScreen>:
     name: 'deployment_setup'

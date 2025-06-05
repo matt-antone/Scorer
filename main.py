@@ -10,6 +10,7 @@ if os_type == "Linux":  # Assuming Raspberry Pi OS reports as Linux
     Config.set('graphics', 'show_cursor', '0') # Hide cursor for kiosk on Pi
     Config.set('graphics', 'borderless', '1') # Attempt to set borderless early for Pi
     Config.set('graphics', 'window_state', 'maximized') # Add attempt to maximize window state
+    Config.set('kivy', 'keyboard_mode', 'dock') # Enable docked keyboard for Pi
 else:  # Default to development mode (e.g., macOS, Windows)
     Config.set('graphics', 'fullscreen', '0') # Ensure not fullscreen
     Config.set('graphics', 'show_cursor', '1') # Show cursor for dev
@@ -47,6 +48,7 @@ from kivy.metrics import dp # Import dp from kivy.metrics
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition # Added ScreenManager, Screen, FadeTransition
 from kivy.clock import Clock # Added for timer updates
 from kivy.uix.textinput import TextInput # Added for player names
+from kivy.uix.vkeyboard import VKeyboard # Import VKeyboard
 from kivy.core.text import LabelBase # For registering fonts by name
 from db.integration import reset_db_for_new_game_sync
 from websocket_server import WebSocketServer
@@ -102,8 +104,33 @@ class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
     player2_name_input = ObjectProperty(None)
     continue_button = ObjectProperty(None)
+    active_input = ObjectProperty(None)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._keyboard_added = False
+        self.vkeyboard = None
+
+    def set_active_input(self, text_input):
+        if text_input.focus:
+            self.active_input = text_input
+            if self.vkeyboard:
+                self.vkeyboard.target = text_input
+        else:
+            # If the input that just lost focus is the active one, clear it
+            if self.active_input == text_input:
+                self.active_input = None
+                if self.vkeyboard:
+                    self.vkeyboard.target = None
 
     def on_enter(self, *args):
+        # Dynamically add the VKeyboard on Linux platforms
+        if platform.system() == "Linux" and not self._keyboard_added:
+            self.vkeyboard = VKeyboard(size_hint_y=None)
+            self.vkeyboard.bind(minimum_height=self.vkeyboard.setter('height'))
+            self.ids.main_layout.add_widget(self.vkeyboard)
+            self._keyboard_added = True
+
         # When entering the screen, load the latest names from game_state
         app = App.get_running_app()
         p1_name = app.game_state.get('player1', {}).get('name', 'Player 1')

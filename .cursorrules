@@ -129,27 +129,37 @@
       ```
     - **Reasoning**: This explicit mapping is essential for the Python code to correctly reference and interact with widgets defined in KV. Failure to do so often results in `NoneType` errors (e.g., "Widget 'my_label' not ready yet" or attribute errors when trying to access `self.my_label.text`) because the Python property remains `None` instead of pointing to the widget instance.
 
-2.  **Deferred UI Updates with `Clock.schedule_once`:**
+2.  **Robust Widget Initialization (NO `Clock.schedule_once` for init):**
 
-    - **Pattern**: When UI updates depend on widget properties or widget readiness that might not be guaranteed immediately after a screen transition or initial KV rule application (due to Kivy's widget instantiation lifecycle), use `Clock.schedule_once(update_method, small_delay)`.
+    - **Pattern**: To avoid race conditions, NEVER access widgets from `__init__` or `on_enter`. Instead, use Kivy's event-driven system. Bind to the `ObjectProperty` events themselves in the `__init__` method. Create an initializer method that only runs once all required widgets are confirmed to be available.
     - **Example**:
 
       ```python
       # In Python (e.g., main.py)
-      class MyComplexScreen(Screen):
-          def on_pre_enter(self, *args):
-              # Call the main update logic, which might re-schedule itself if widgets aren't ready
-              self.update_ui_elements()
+      class MyRobustScreen(Screen):
+          widget_a = ObjectProperty(None)
+          widget_b = ObjectProperty(None)
+          _is_initialized = False
 
-          def update_ui_elements(self):
-              if not self.ids.get('some_critical_widget'): # Check if a widget is accessible
-                  Clock.schedule_once(self.update_ui_elements, 0.05) # Reschedule if not ready
-                  return
-              # ... proceed with UI updates now that widgets are likely ready ...
-              self.ids.some_critical_widget.text = "Updated"
+          def __init__(self, **kwargs):
+              super().__init__(**kwargs)
+              # Bind to the properties themselves. This is the key.
+              self.bind(widget_a=self._check_init, widget_b=self._check_init)
+
+          def _check_init(self, *args):
+              # This method is called when widget_a or widget_b are populated.
+              # It checks if ALL widgets are ready before running the real initializer.
+              if self.widget_a and self.widget_b and not self._is_initialized:
+                  self._is_initialized = True
+                  self.real_initializer()
+
+          def real_initializer(self):
+              # It is now 100% safe to access self.widget_a and self.widget_b
+              self.widget_a.text = "Initialized Safely"
+              self.widget_b.disabled = False
       ```
 
-    - **Reasoning**: This pattern helps avoid errors caused by trying to access or modify widgets before Kivy has fully initialized them and made them available through `ids` or `ObjectProperty` bindings. A small delay (e.g., 0.05 seconds) is usually sufficient.
+    - **Reasoning**: This pattern guarantees that widget-dependent code only runs _after_ Kivy has parsed the `.kv` file and linked the `id`s to the `ObjectProperty`s. It completely eliminates race conditions that arise from accessing widgets before they are ready, which is a common source of `AttributeError: 'NoneType' object has no attribute '...'` and other initialization bugs.
 
 3.  **Application Structure: `App` Class vs. `Screen` Subclasses:**
 

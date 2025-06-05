@@ -109,10 +109,47 @@ class NameEntryScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.vkeyboard = None
+        self._is_initialized = False
+        # Bind to the properties to know when they are available from KV
+        self.bind(
+            player1_name_input=self._check_and_initialize,
+            player2_name_input=self._check_and_initialize,
+            continue_button=self._check_and_initialize
+        )
+
+    def _check_and_initialize(self, instance, value):
+        """
+        This method is called when any of the bound properties are set.
+        It checks if all necessary widgets are available before running
+        the main initialization logic for the screen.
+        """
+        if self.player1_name_input and self.player2_name_input and self.continue_button:
+            if not self._is_initialized:
+                self._is_initialized = True
+                self._initialize_screen()
+
+    def _initialize_screen(self):
+        """
+        Runs once all widgets are confirmed to be available.
+        Populates fields and sets up bindings.
+        """
+        app = App.get_running_app()
+        p1_name = app.game_state.get('player_1', {}).get('name', 'Player 1')
+        p2_name = app.game_state.get('player_2', {}).get('name', 'Player 2')
+
+        self.player1_name_input.text = p1_name
+        self.player2_name_input.text = p2_name
+
+        # Manually bind the on_text event to the validation method
+        self.player1_name_input.bind(text=self.on_name_input)
+        self.player2_name_input.bind(text=self.on_name_input)
+
+        # Initial validation check to set button state
+        self.on_name_input(None, None)
 
     def set_active_input(self, text_input):
         if text_input.focus:
-            # text_input.text = '' # Clear the text on focus
+            # text_input.text = '' # This was causing an infinite loop
             self.active_input = text_input
             if platform.system() == "Linux" and not self.vkeyboard:
                 self.vkeyboard = VKeyboard(size_hint_y=None)
@@ -126,36 +163,16 @@ class NameEntryScreen(Screen):
                     self.ids.main_layout.remove_widget(self.vkeyboard)
                     self.vkeyboard = None
 
-    def on_enter(self, *args):
-        # Defer the field initialization to the next frame to ensure widgets are ready
-        Clock.schedule_once(self._initialize_fields)
-
     def on_touch_down(self, touch):
-        # If a touch occurs outside the active text input, unfocus it
+        # If a touch occurs outside the active text input and the keyboard, unfocus it.
         if self.active_input and not self.active_input.collide_point(*touch.pos):
-            # Also check if the touch is outside the keyboard itself
             if not self.vkeyboard or not self.vkeyboard.collide_point(*touch.pos):
                 self.active_input.focus = False
         return super().on_touch_down(touch)
 
-    def _initialize_fields(self, dt):
-        """Initializes the text input fields with names from the game state."""
-        app = App.get_running_app()
-        if not self.player1_name_input or not self.player2_name_input:
-            print("ERROR: NameEntryScreen fields not ready, rescheduling initialization.")
-            Clock.schedule_once(self._initialize_fields, 0.05)
-            return
-
-        p1_name = app.game_state.get('player1', {}).get('name', 'Player 1')
-        p2_name = app.game_state.get('player2', {}).get('name', 'Player 2')
-        self.player1_name_input.text = p1_name
-        self.player2_name_input.text = p2_name
-        # Initial validation check
-        self.on_name_input(self.player1_name_input, p1_name)
-
     def on_name_input(self, instance, value):
         # Guard clause: Do not proceed if widgets aren't linked yet.
-        if not all([self.player1_name_input, self.player2_name_input, self.continue_button]):
+        if not self._is_initialized:
             return
 
         # Enable continue button only if both fields have non-empty, non-whitespace text
@@ -163,28 +180,17 @@ class NameEntryScreen(Screen):
         p2_name = self.player2_name_input.text.strip()
         self.continue_button.disabled = not (p1_name and p2_name)
 
-    def on_text_validate_p1(self, instance):
-        # When Enter is pressed on P1 input, focus P2 input
+    def on_text_validate_p1(self):
         self.player2_name_input.focus = True
 
-    def on_text_validate_p2(self, instance):
-        # When Enter is pressed on P2 input, if valid, proceed
-        if not self.continue_button.disabled:
-            self.save_names_and_proceed()
+    def on_text_validate_p2(self):
+        self.continue_button.focus = True
 
     def save_names_and_proceed(self):
         app = App.get_running_app()
-        p1_name = self.player1_name_input.text.strip()
-        p2_name = self.player2_name_input.text.strip()
-
-        # Update game state
-        app.game_state['player1']['name'] = p1_name
-        app.game_state['player2']['name'] = p2_name
-        app.game_state['game_phase'] = 'deployment'
-        app.save_game_state()
-
-        # Switch screen
-        app.switch_screen('deployment_setup')
+        app.set_player_name(1, self.player1_name_input.text.strip())
+        app.set_player_name(2, self.player2_name_input.text.strip())
+        app.root.current = 'deployment_setup'
 
 class DeploymentSetupScreen(Screen):
     # Player 1 UI
@@ -974,6 +980,7 @@ class GameOverScreen(Screen):
     p2_final_time_label = ObjectProperty(None)
     total_game_time_label = ObjectProperty(None)
     rounds_played_label = ObjectProperty(None)
+    exit_button = ObjectProperty(None)
 
     def on_pre_enter(self, *args):
         gs = App.get_running_app().game_state

@@ -1,27 +1,7 @@
 import platform # For OS detection
 import os # Import os
 
-if platform.system() == "Linux":
-    print("Main.py: Linux detected. Setting Kivy environment for SDL2/KMSDRM.")
-    os.environ['KIVY_WINDOW'] = 'sdl2'
-    os.environ['KIVY_TEXT'] = 'sdl2'
-    os.environ['KIVY_LOG_LEVEL'] = 'debug'
-
-    if 'DISPLAY' in os.environ:
-        print(f"Main.py: DISPLAY was {os.environ['DISPLAY']}. Unsetting it.")
-        del os.environ['DISPLAY']
-    else:
-        print("Main.py: DISPLAY was not set.")
-    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_TEXT={os.environ.get('KIVY_TEXT')}, DISPLAY={os.environ.get('DISPLAY')}")
-
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
-
-if platform.system() == "Linux":
-    print("Main.py: Linux detected. Applying Kivy Config settings.")
-    Config.set('kivy', 'log_level', 'debug')
-    print(f"Main.py: Config Set -> kivy:log_level={Config.get('kivy', 'log_level')}")
-
-from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 
 # OS-specific graphics configuration
 os_type = platform.system()
@@ -37,6 +17,8 @@ else:  # Default to development mode (e.g., macOS, Windows)
     Config.set('graphics', 'width', '800')
     Config.set('graphics', 'height', '480')
     Config.set('graphics', 'resizable', False)
+
+from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 
 import random # Added for initiative roll
 import time # Added for timer

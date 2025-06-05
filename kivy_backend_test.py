@@ -6,7 +6,8 @@ print(f"Python version: {sys.version}")
 print(f"Python executable: {sys.executable}")
 
 if platform.system() == "Linux":
-    print("Minimal Test: Linux detected. Setting Kivy environment variables for SDL2/KMSDRM.")
+    print("Minimal Test: Linux detected. Setting Kivy and SDL2 environment variables for SDL2/KMSDRM.")
+    os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
@@ -17,7 +18,7 @@ if platform.system() == "Linux":
     else:
         print("Minimal Test: DISPLAY environment variable was not set.")
 
-    print(f"Minimal Test: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_TEXT={os.environ.get('KIVY_TEXT')}, DISPLAY={os.environ.get('DISPLAY')}")
+    print(f"Minimal Test: Env Vars Set -> SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}, KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_TEXT={os.environ.get('KIVY_TEXT')}, DISPLAY={os.environ.get('DISPLAY')}")
 
 try:
     from kivy.config import Config

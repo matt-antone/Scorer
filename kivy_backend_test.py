@@ -17,10 +17,19 @@ def check_sdl2_config():
         
         # Check if KMSDRM is enabled in SDL2
         try:
+            # Try to get SDL2 features
             sdl_features = subprocess.check_output(['sdl2-config', '--features']).decode().strip()
             print(f"SDL2 features: {sdl_features}")
         except:
-            print("Could not get SDL2 features")
+            # If that fails, try to check if KMSDRM is available through SDL2
+            try:
+                result = subprocess.run(['sdl2-config', '--static-libs'], capture_output=True, text=True)
+                if 'kmsdrm' in result.stdout.lower():
+                    print("KMSDRM support found in SDL2 static libs")
+                else:
+                    print("KMSDRM support not found in SDL2 static libs")
+            except:
+                print("Could not check SDL2 KMSDRM support")
             
     except Exception as e:
         print(f"Error checking SDL2 configuration: {e}")
@@ -28,6 +37,14 @@ def check_sdl2_config():
 def check_display_modes():
     print("\nChecking display modes:")
     try:
+        # First check if modetest is installed
+        try:
+            subprocess.run(['which', 'modetest'], check=True)
+        except:
+            print("modetest is not installed. Installing...")
+            subprocess.run(['sudo', 'apt-get', 'update'])
+            subprocess.run(['sudo', 'apt-get', 'install', '-y', 'libdrm-tests'])
+        
         # Check modes for DSI display
         print("\nDSI Display (drm-rp1-dsi) modes:")
         dsi_modes = subprocess.check_output(['modetest', '-M', 'drm-rp1-dsi']).decode()
@@ -42,27 +59,50 @@ def check_display_modes():
         print(f"Error checking display modes: {e}")
 
 def check_boot_config():
-    print("\nChecking /boot/config.txt:")
+    print("\nChecking boot configuration:")
     try:
-        with open('/boot/config.txt', 'r') as f:
-            config = f.read()
-            print("Current /boot/config.txt contents:")
-            print(config)
-            
-            # Check for relevant overlays
-            if 'dtoverlay=vc4-kms-v3d' in config:
-                print("Found vc4-kms-v3d overlay")
-            if 'dtoverlay=rp1-dsi' in config:
-                print("Found rp1-dsi overlay")
+        # Check both possible config file locations
+        config_files = ['/boot/config.txt', '/boot/firmware/config.txt']
+        config_found = False
+        
+        for config_file in config_files:
+            try:
+                with open(config_file, 'r') as f:
+                    config = f.read()
+                    print(f"\nCurrent {config_file} contents:")
+                    print(config)
+                    config_found = True
+                    
+                    # Check for relevant overlays
+                    if 'dtoverlay=vc4-kms-v3d' in config:
+                        print(f"Found vc4-kms-v3d overlay in {config_file}")
+                    if 'dtoverlay=rp1-dsi' in config:
+                        print(f"Found rp1-dsi overlay in {config_file}")
+            except FileNotFoundError:
+                print(f"{config_file} not found")
+                continue
+                
+        if not config_found:
+            print("No config files found in expected locations")
                 
     except Exception as e:
-        print(f"Error checking /boot/config.txt: {e}")
+        print(f"Error checking boot configuration: {e}")
 
 def check_drm_devices():
     print("\nChecking DRM devices:")
     try:
         drm_devices = subprocess.check_output(['ls', '-l', '/dev/dri/']).decode()
         print(drm_devices)
+        
+        # Check device capabilities
+        for device in ['card0', 'card1', 'card2']:
+            try:
+                caps = subprocess.check_output(['cat', f'/sys/class/drm/{device}/device/capabilities']).decode()
+                print(f"\nCapabilities for {device}:")
+                print(caps)
+            except:
+                print(f"Could not get capabilities for {device}")
+                
     except Exception as e:
         print(f"Error checking DRM devices: {e}")
 
@@ -71,6 +111,15 @@ def check_user_groups():
     try:
         groups = subprocess.check_output(['groups']).decode().strip()
         print(f"User groups: {groups}")
+        
+        # Check if user has necessary permissions
+        required_groups = ['video', 'render']
+        missing_groups = [group for group in required_groups if group not in groups]
+        if missing_groups:
+            print(f"Warning: User is missing required groups: {', '.join(missing_groups)}")
+        else:
+            print("User has all required groups")
+            
     except Exception as e:
         print(f"Error checking groups: {e}")
 
@@ -82,6 +131,14 @@ def check_kms_status():
         for line in kms_status.split('\n'):
             if 'drm' in line.lower() or 'kms' in line.lower():
                 print(line)
+                
+        # Check if KMS is enabled
+        try:
+            kms_enabled = subprocess.check_output(['cat', '/sys/module/drm_kms_helper/parameters/edid_firmware']).decode().strip()
+            print(f"\nKMS helper edid_firmware: {kms_enabled}")
+        except:
+            print("Could not check KMS helper status")
+            
     except Exception as e:
         print(f"Error checking KMS status: {e}")
 

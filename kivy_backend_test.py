@@ -2,6 +2,61 @@ import platform
 import os
 import sys
 import subprocess
+import json
+
+def check_sdl2_config():
+    print("\nChecking SDL2 configuration:")
+    try:
+        # Check SDL2 version and configuration
+        sdl_version = subprocess.check_output(['pkg-config', '--modversion', 'sdl2']).decode().strip()
+        print(f"SDL2 version: {sdl_version}")
+        
+        # Check SDL2 configuration
+        sdl_config = subprocess.check_output(['sdl2-config', '--cflags', '--libs']).decode().strip()
+        print(f"SDL2 configuration: {sdl_config}")
+        
+        # Check if KMSDRM is enabled in SDL2
+        try:
+            sdl_features = subprocess.check_output(['sdl2-config', '--features']).decode().strip()
+            print(f"SDL2 features: {sdl_features}")
+        except:
+            print("Could not get SDL2 features")
+            
+    except Exception as e:
+        print(f"Error checking SDL2 configuration: {e}")
+
+def check_display_modes():
+    print("\nChecking display modes:")
+    try:
+        # Check modes for DSI display
+        print("\nDSI Display (drm-rp1-dsi) modes:")
+        dsi_modes = subprocess.check_output(['modetest', '-M', 'drm-rp1-dsi']).decode()
+        print(dsi_modes)
+        
+        # Check modes for VC4 driver
+        print("\nVC4 Display modes:")
+        vc4_modes = subprocess.check_output(['modetest', '-M', 'vc4-drm']).decode()
+        print(vc4_modes)
+        
+    except Exception as e:
+        print(f"Error checking display modes: {e}")
+
+def check_boot_config():
+    print("\nChecking /boot/config.txt:")
+    try:
+        with open('/boot/config.txt', 'r') as f:
+            config = f.read()
+            print("Current /boot/config.txt contents:")
+            print(config)
+            
+            # Check for relevant overlays
+            if 'dtoverlay=vc4-kms-v3d' in config:
+                print("Found vc4-kms-v3d overlay")
+            if 'dtoverlay=rp1-dsi' in config:
+                print("Found rp1-dsi overlay")
+                
+    except Exception as e:
+        print(f"Error checking /boot/config.txt: {e}")
 
 def check_drm_devices():
     print("\nChecking DRM devices:")
@@ -38,13 +93,13 @@ def setup_environment():
 
     # Set up environment
     os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
-    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card2'  # VC4 driver
+    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card1'  # DSI display
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
     
     # Additional SDL environment variables for KMSDRM
-    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card2'
+    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card1'
     os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '0'
     os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '0'
     os.environ['SDL_VIDEO_KMSDRM_MODE'] = '0'
@@ -55,9 +110,12 @@ def setup_environment():
     os.environ['SDL_VIDEO_KMSDRM_FORCE_HEIGHT'] = '480'
     os.environ['SDL_VIDEO_KMSDRM_FORCE_REFRESH'] = '60'
     
-    # Additional timing parameters based on DSI configuration
+    # DSI specific configuration
     os.environ['SDL_VIDEO_KMSDRM_FORCE_DPI'] = '30000'  # DPI clock from kernel
     os.environ['SDL_VIDEO_KMSDRM_FORCE_BYTE_CLOCK'] = '90000000'  # Byte clock from kernel
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_DSI_CHANNEL'] = '0'  # DSI channel from kernel
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_DSI_LANES'] = '1'  # DSI lanes from kernel
+    os.environ['SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT'] = '0'  # DSI format from kernel
     
     # Debug logging
     os.environ['SDL_LOG_PRIORITY'] = 'VERBOSE'
@@ -88,6 +146,9 @@ def setup_environment():
     print(f"SDL_VIDEO_KMSDRM_FORCE_REFRESH={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_REFRESH')}")
     print(f"SDL_VIDEO_KMSDRM_FORCE_DPI={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_DPI')}")
     print(f"SDL_VIDEO_KMSDRM_FORCE_BYTE_CLOCK={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_BYTE_CLOCK')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_DSI_CHANNEL={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_DSI_CHANNEL')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_DSI_LANES={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_DSI_LANES')}")
+    print(f"SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT={os.environ.get('SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT')}")
     print(f"KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}")
     print(f"KIVY_TEXT={os.environ.get('KIVY_TEXT')}")
     print(f"DISPLAY={os.environ.get('DISPLAY')}")
@@ -100,12 +161,15 @@ def main():
         print("This script is designed for Linux systems.")
         return
 
-    print("\n=== DRM/KMS System Diagnostics ===")
+    print("\n=== System Diagnostics ===")
+    check_sdl2_config()
+    check_display_modes()
+    check_boot_config()
     check_drm_devices()
     check_user_groups()
     check_kms_status()
 
-    print("\n=== Testing DRM card: card2 ===")  # Updated message
+    print("\n=== Testing DRM card: card1 ===")
     setup_environment()
 
     try:
@@ -132,7 +196,7 @@ def main():
                 except Exception as e:
                     print(f"Error getting GL backend name: {e}")
 
-                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card2")  # Updated card name
+                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card1")
 
         print("Starting Kivy app...")
         MinimalTestApp().run()

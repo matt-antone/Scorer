@@ -141,44 +141,28 @@ SERVICE_CONTENT=$(cat <<EOF
 [Unit]
 Description=Scorer Kivy Application
 After=network.target multi-user.target
-# If Kivy shows display errors related to X11 or Wayland not being found,
-# and you're certain you need a graphical server context even for KMS/DRM:
-# Wants=graphical.target
-# After=graphical.target
 
 [Service]
 Type=simple
 User=$APP_USER
-Group=$(id -g -n "$APP_USER") # Get the primary group of the user
+Group=$(id -g -n "$APP_USER")
 WorkingDirectory=$APP_WORKING_DIR
-ExecStart=$VENV_PYTHON_EXECUTABLE $MAIN_SCRIPT_PATH
+ExecStart=$APP_WORKING_DIR/launch_scorer.sh
 
 # Environment variables for Kivy on Raspberry Pi (headless/CLI boot)
-Environment="DISPLAY=:0"
-Environment="KIVY_BCM_DISPMANX_ID=4" # HDMI0. Use 5 for official DSI.
-# Environment="KIVY_WINDOW=sdl2" # Optional: force SDL2 window provider
-# Environment="KIVY_GRAPHICS=gles" # Optional: force GLES graphics
-# Environment="KIVY_TEXT=sdl2" # Optional: force SDL2 text provider
-# Environment="KIVY_LOG_LEVEL=debug" # For troubleshooting startup issues
+Environment="KIVY_BCM_DISPMANX_ID=5" # For official DSI display
+Environment="KIVY_LOG_LEVEL=debug"   # For troubleshooting startup issues
 
 # Access to input devices is crucial for touchscreens
-# The 'input' group gives access to /dev/input/event*
-# The 'video' group might be needed for direct framebuffer access by some drivers.
-# The 'render' group for DRM/KMS rendering.
-# Ensure $APP_USER is a member of these groups (sudo usermod -a -G input,video,render $APP_USER)
-# This is usually handled by default on Pi OS for the 'pi' user with desktop.
-# For CLI-only, these might need explicit adding if not the 'pi' user or if permissions are tight.
 SupplementaryGroups=input video render tty
 
 StandardOutput=journal
 StandardError=journal
 Restart=on-failure
 RestartSec=10s
-# RestartPreventExitStatus=255 # If Kivy has a clean exit code you want to respect
 
 [Install]
 WantedBy=multi-user.target
-# WantedBy=graphical.target # If used above
 EOF
 )
 

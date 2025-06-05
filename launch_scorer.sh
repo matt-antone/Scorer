@@ -4,11 +4,21 @@
 # - On macOS: Uses default SDL2 settings
 # - On Raspberry Pi: Configures KMSDRM and DSI display settings
 
+# Exit on any error
+set -e
+
 # Navigate to the application directory
-cd "$(dirname "$0")"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "$SCRIPT_DIR"
+
+# Check if virtual environment exists
+if [ ! -d ".venv" ]; then
+    echo "Error: Virtual environment not found. Please run install.sh first."
+    exit 1
+fi
 
 # Activate the Python virtual environment
-source venv/bin/activate
+source .venv/bin/activate
 
 # Check if we're running on Raspberry Pi
 if [ "$(uname -m)" = "aarch64" ]; then
@@ -28,6 +38,12 @@ if [ "$(uname -m)" = "aarch64" ]; then
     export SDL_VIDEO_KMSDRM_DEVICE=/dev/dri/card1
     export SDL_VIDEO_KMSDRM_CRTC=34
     export SDL_VIDEO_KMSDRM_CONNECTOR=36
+
+    # Additional Pi-specific settings
+    export KIVY_WINDOW=sdl2
+    export KIVY_GRAPHICS=gles
+    export KIVY_TEXT=sdl2
+    export KIVY_LOG_LEVEL=debug
 else
     # macOS specific settings
     echo "Running on macOS - using default SDL2 settings"

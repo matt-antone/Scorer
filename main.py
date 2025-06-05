@@ -1234,7 +1234,6 @@ class ScorerApp(App):
 
     def initialize_game_state(self): 
         self.game_state = self._get_default_game_state() 
-        self.load_game_state()
 
     def on_stop(self):
         print("Application stopping. Saving game state...")

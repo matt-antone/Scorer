@@ -150,15 +150,15 @@ def setup_environment():
 
     # Set up environment
     os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
-    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card2'  # VC4 driver
+    os.environ['SDL_VIDEODRIVER_DEVICE'] = '/dev/dri/card1'  # DSI display
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
     
     # Additional SDL environment variables for KMSDRM
-    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card2'
-    os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '0'
-    os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '0'
+    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card1'
+    os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '34'  # From modetest output
+    os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '36'  # From modetest output
     os.environ['SDL_VIDEO_KMSDRM_MODE'] = '0'
     
     # Force specific display mode based on DSI configuration
@@ -167,7 +167,7 @@ def setup_environment():
     os.environ['SDL_VIDEO_KMSDRM_FORCE_HEIGHT'] = '480'
     os.environ['SDL_VIDEO_KMSDRM_FORCE_REFRESH'] = '60'
     
-    # DSI specific configuration
+    # DSI specific configuration from kernel messages
     os.environ['SDL_VIDEO_KMSDRM_FORCE_DPI'] = '30000'  # DPI clock from kernel
     os.environ['SDL_VIDEO_KMSDRM_FORCE_BYTE_CLOCK'] = '90000000'  # Byte clock from kernel
     os.environ['SDL_VIDEO_KMSDRM_FORCE_DSI_CHANNEL'] = '0'  # DSI channel from kernel
@@ -226,7 +226,7 @@ def main():
     check_user_groups()
     check_kms_status()
 
-    print("\n=== Testing DRM card: card2 ===")
+    print("\n=== Testing DRM card: card1 ===")
     setup_environment()
 
     try:
@@ -253,7 +253,7 @@ def main():
                 except Exception as e:
                     print(f"Error getting GL backend name: {e}")
 
-                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card2")
+                return Label(text=f"Kivy GL Test\nWindow: {Window.__class__.__name__}\nGL Backend: {actual_gl_backend}\nDRM Card: card1")
 
         print("Starting Kivy app...")
         MinimalTestApp().run()

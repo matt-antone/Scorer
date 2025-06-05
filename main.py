@@ -1131,19 +1131,19 @@ class ScorerApp(App):
                             return "resumable"
                     else:
                         print(f"Save file {save_file_path} is incomplete or malformed. Starting new game state.")
-                        self.initialize_game_state() # Reset to default
+                        self.game_state = self._get_default_game_state() # Reset to default
                         return "no_save"
             else:
                 print("No save file found. Initializing new game state.")
-                self.initialize_game_state() # Ensure clean state if no file
+                self.game_state = self._get_default_game_state() # Ensure clean state if no file
                 return "no_save"
         except json.JSONDecodeError:
             print(f"Error decoding JSON from {save_file_path}. Initializing new game state.")
-            self.initialize_game_state() # Reset to default
+            self.game_state = self._get_default_game_state() # Reset to default
             return "no_save"
         except Exception as e:
             print(f"An unexpected error occurred during load_game_state: {e}. Initializing new game state.")
-            self.initialize_game_state() # Reset to default
+            self.game_state = self._get_default_game_state() # Reset to default
             return "no_save"
 
     def _determine_screen_from_gamestate(self):

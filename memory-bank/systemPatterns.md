@@ -91,7 +91,7 @@ This provides a high-level view. Specific implementation details of the Kivy UI 
 
 ## 5. Web Client (JavaScript) Architecture
 
-- **Centralized Screen Controller**: The web client's UI is divided into distinct "screens" (e.g., Splash, Game, Game Over). The logic for determining which screen is visible MUST be centralized in a single controller or function. This controller listens for game state updates from the server and uses the `game_phase` property (`'splash'`, `'game_play'`, `'game_over') as the single source of truth to show the appropriate screen and hide all others. This describes the **Spectator Client**.
+- **Centralized Screen Controller**: The web client's UI is divided into distinct "screens". A central controller listens for game state updates from the server and uses the `game_phase` property as the single source of truth to show the appropriate screen. The defined client-facing phases are: `'setup'` (for all pre-game states), `'game_play'`, and `'game_over'`.
 - **State-Driven UI**: Individual screen modules should not manage their own visibility. They should only be responsible for updating their internal content based on the game state they receive. The central controller handles the show/hide logic. This prevents state conflicts where, for example, the "Game Over" screen fails to hide when a new game starts.
 - **Player Client (Future)**: A second, distinct web client will be created for players. It will be a minimal interface focused only on letting a player modify their own score/CP. It will be accessed via a player-specific QR code from the Kivy `NameEntryScreen` and will not contain the full splash/game/game-over flow.
 

@@ -128,9 +128,17 @@ class WebSocketServer:
             if self.server_thread.is_alive():
                 logger.warning("WebSocket server thread did not stop gracefully")
 
-    def broadcast_game_state(self, game_state: Dict[str, Any]):
-        """Broadcast game state to all connected clients"""
-        self.socketio.emit('game_state_update', game_state)
+    def broadcast_game_state(self):
+        """
+        Broadcasts the sanitized game state to all connected clients
+        by calling the registered callback function.
+        """
+        if self.game_state_callback:
+            game_state = self.game_state_callback()
+            self.socketio.emit('game_state_update', game_state)
+            logger.info("Broadcasted full game state update to all clients.")
+        else:
+            logger.warning("Cannot broadcast game state: no callback registered.")
 
     def broadcast_score_update(self, player_id: int, new_score: int):
         """Broadcast score update to all connected clients"""

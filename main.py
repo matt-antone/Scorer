@@ -1087,7 +1087,7 @@ class ScorerApp(App):
         self.reset_game_state_to_default()
         self.game_state['game_phase'] = 'name_entry' # Explicitly set the phase
         self.save_game_state() # This contains the broadcast call
-        self.websocket_server.broadcast_game_state(self.game_state) # Explicitly broadcast again for robustness
+        self.websocket_server.broadcast_game_state() # Explicitly broadcast again for robustness
         if self.root:
             self.switch_screen('name_entry')
 
@@ -1100,7 +1100,7 @@ class ScorerApp(App):
             with open(self.get_save_file_path(), 'w') as f:
                 json.dump(self.game_state, f)
             # Broadcast the updated game state to all connected clients
-            self.websocket_server.broadcast_game_state(self.game_state)
+            self.websocket_server.broadcast_game_state()
         except Exception as e:
             print(f"Error saving game state: {e}")
 
@@ -1276,29 +1276,47 @@ class ScorerApp(App):
 
     def get_game_state(self):
         """
-        Get the current game state for WebSocket clients.
-        This method acts as a sanitization layer to protect clients
-        from invalid or confusing server-side states.
+        Returns a sanitized, deep copy of the game state suitable for clients.
+        This acts as a sanitization layer between the server's internal state
+        and what clients receive.
         """
-        # Create a deep copy to avoid modifying the server's internal state
+        # Create a deep copy to avoid modifying the internal state accidentally
         sanitized_state = json.loads(json.dumps(self.game_state))
 
-        # --- Rule 1: Clamp Round Number ---
-        # Never allow a round greater than 5 to be sent to the client.
-        if sanitized_state.get("current_round", 0) > 5:
-            sanitized_state["current_round"] = 5
-            sanitized_state["status_message"] = "Game Over - Round 5 Complete"
-            print("Sanitization: Clamped current_round from >5 to 5 for client.")
+        # --- Sanitization and Rule Enforcement ---
 
-        # --- Rule 2: Translate Internal Server Screens ---
-        # If the Kivy app is on the 'resume_or_new' screen, the client should
-        # not see the underlying (potentially 'game_over') state. It should
-        # see a generic 'setup' phase. This prevents the client from getting
-        # stuck on the Game Over screen when the app is restarted.
-        if self.root and self.root.current == 'resume_or_new':
+        # 1. Clamp the round number to a valid client-facing range (1-5)
+        # The internal state can go to 6 briefly, but clients should never see that.
+        if sanitized_state.get('current_round', 0) > 5:
+            sanitized_state['current_round'] = 5
+
+        # 2. Translate internal-only screens/phases into client-friendly phases.
+        current_screen = self.root.current
+        # If the app is on the "Resume or New" screen, the client should think
+        # it's in the 'setup' phase to prevent showing a stale 'Game Over' screen.
+        if current_screen == 'resume_or_new':
             sanitized_state['game_phase'] = 'setup'
-            sanitized_state['status_message'] = 'Waiting for game to start...'
-            print("Sanitization: Translated internal 'resume_or_new' screen to 'setup' phase for client.")
+        
+        # If the app is in deployment or first turn setup, the client should be
+        # in a setup phase (like 'name_entry') to not show the game board.
+        server_phase = sanitized_state.get('game_phase')
+        if server_phase in ['name_entry', 'deployment', 'first_turn']:
+            sanitized_state['game_phase'] = 'setup'
+
+        # 3. Remove fields that are not relevant to the client.
+        # This reduces payload size and prevents leaking internal-only data.
+        for player in ['player1', 'player2']:
+            # Remove internal roll data and raw second counts.
+            # Keep 'player_time_display' as the client uses it directly.
+            for field in ['deployment_roll', 'first_turn_roll', 'player_elapsed_time_seconds']:
+                if field in sanitized_state.get(player, {}):
+                    del sanitized_state[player][field]
+
+        # Also remove internal-only timer fields
+        if 'game_timer' in sanitized_state:
+            for field in ['start_time', 'turn_segment_start_time']:
+                if field in sanitized_state['game_timer']:
+                    del sanitized_state['game_timer'][field]
 
         return sanitized_state
 

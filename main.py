@@ -1152,8 +1152,8 @@ class ScorerApp(App):
                         print(f"Game state loaded from {save_file_path}")
                         
                         if self.game_state.get('game_phase') == 'game_over':
-                            print("Loaded game state is 'game_over', but treating as resumable to show final screen.")
-                            return "resumable"
+                            print("Loaded game state is 'game_over'. Starting new game.")
+                            return "game_over"
                         else:
                             # Game is not over, or game_phase is something else (e.g. playing, setup)
                             print(f"Resumable game state loaded. Phase: {self.game_state.get('game_phase')}")
@@ -1193,17 +1193,18 @@ class ScorerApp(App):
             else:
                 # If names are missing even if it thought it was resumable, something is off. Start new.
                 print("Resumable state but missing player names. Defaulting to name_entry.")
-                self.initialize_game_state() # Ensure a fresh start if names were bad
+                self.reset_game_state_to_default() # Ensure a fresh start if names were bad
                 return 'name_entry'
         elif load_status == "game_over":
             print(f"Determined screen: name_entry (status: {load_status}, game was over)")
             # Game was over, so we want to start a new game by going to name entry.
             # Ensure a clean slate for the new game by re-initializing
-            self.initialize_game_state()
+            self.reset_game_state_to_default()
             return 'name_entry'
         else: # "no_save" or any other unhandled case from load_game_state
             print(f"Determined screen: name_entry (status: {load_status})")
             # No save or bad save, so start new. initialize_game_state was already called in load_game_state.
+            self.reset_game_state_to_default()
             return 'name_entry'
 
     def build(self):

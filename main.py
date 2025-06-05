@@ -132,7 +132,6 @@ class NameEntryScreen(Screen):
             self.vkeyboard = VKeyboard(size_hint_y=None)
             self.ids.main_layout.add_widget(self.vkeyboard)
             self._keyboard_added = True
-            Clock.schedule_once(self._finish_keyboard_setup) # Defer the rest of the setup
 
     def _initialize_fields(self, dt):
         """Initializes the text input fields with names from the game state."""
@@ -148,13 +147,6 @@ class NameEntryScreen(Screen):
         self.player2_name_input.text = p2_name
         # Initial validation check
         self.on_name_input(self.player1_name_input, p1_name)
-
-    def _finish_keyboard_setup(self, dt):
-        """Binds the VKeyboard's height to its internal layout's minimum_height."""
-        if self.vkeyboard and self.vkeyboard.children:
-            self.vkeyboard.children[0].bind(minimum_height=self.vkeyboard.setter('height'))
-        else:
-            print("ERROR: VKeyboard layout widget not found for binding.")
 
     def on_name_input(self, instance, value):
         # Enable continue button only if both fields have non-empty, non-whitespace text

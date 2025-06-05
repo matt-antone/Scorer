@@ -3,13 +3,7 @@ import os
 import sys
 import subprocess
 
-print(f"Python version: {sys.version}")
-print(f"Python executable: {sys.executable}")
-
-if platform.system() == "Linux":
-    print("\n=== DRM/KMS System Diagnostics ===")
-    
-    # Check DRM devices
+def check_drm_devices():
     print("\nChecking DRM devices:")
     try:
         drm_devices = subprocess.check_output(['ls', '-l', '/dev/dri/']).decode()
@@ -17,7 +11,7 @@ if platform.system() == "Linux":
     except Exception as e:
         print(f"Error checking DRM devices: {e}")
 
-    # Check user groups
+def check_user_groups():
     print("\nChecking user groups:")
     try:
         groups = subprocess.check_output(['groups']).decode().strip()
@@ -25,7 +19,7 @@ if platform.system() == "Linux":
     except Exception as e:
         print(f"Error checking groups: {e}")
 
-    # Check if KMS is enabled in kernel
+def check_kms_status():
     print("\nChecking KMS status:")
     try:
         kms_status = subprocess.check_output(['dmesg']).decode()
@@ -36,9 +30,7 @@ if platform.system() == "Linux":
     except Exception as e:
         print(f"Error checking KMS status: {e}")
 
-    # Set up environment for card0
-    print("\n=== Testing DRM card: card0 ===")
-    
+def setup_environment():
     # Clear any existing SDL environment variables
     for key in list(os.environ.keys()):
         if key.startswith('SDL_'):
@@ -71,6 +63,22 @@ if platform.system() == "Linux":
     print(f"KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}")
     print(f"KIVY_TEXT={os.environ.get('KIVY_TEXT')}")
     print(f"DISPLAY={os.environ.get('DISPLAY')}")
+
+def main():
+    print(f"Python version: {sys.version}")
+    print(f"Python executable: {sys.executable}")
+
+    if platform.system() != "Linux":
+        print("This script is designed for Linux systems.")
+        return
+
+    print("\n=== DRM/KMS System Diagnostics ===")
+    check_drm_devices()
+    check_user_groups()
+    check_kms_status()
+
+    print("\n=== Testing DRM card: card0 ===")
+    setup_environment()
 
     try:
         from kivy.config import Config
@@ -107,8 +115,5 @@ if platform.system() == "Linux":
     except Exception as e:
         print(f"Error: {e}")
 
-except ImportError as e:
-    print(f"Minimal Test: Failed to import Kivy modules: {e}")
-    print("Minimal Test: Ensure Kivy is installed correctly in your virtual environment.")
-except Exception as e:
-    print(f"Minimal Test: An unexpected error occurred: {e}") 
+if __name__ == '__main__':
+    main() 

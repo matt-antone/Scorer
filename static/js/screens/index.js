@@ -1,4 +1,5 @@
 // Export all screen functions
-export { showSplashScreen, getSplashStatus } from "./splash.js";
-export { showGameScreen, updateGameScreen } from "./game.js";
-export { showGameOverScreen } from "./gameOver.js";
+export { splash } from "./splash.js";
+export { nameEntry } from "./nameEntry.js";
+export { game } from "./game.js";
+export { gameOver } from "./gameOver.js";

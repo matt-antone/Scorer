@@ -1,153 +1,50 @@
 # Progress
 
+This document tracks the current working state of the Scorer application, what's left to build, and any known issues.
+
 ## What Works
 
-- Application launches successfully on both macOS and Raspberry Pi
-- Game state loading and saving
-- All game screens and transitions
-- Timer functionality
-- Score and CP tracking
-- Touchscreen input on Raspberry Pi
-- Auto-start via systemd service
-- CLI boot with auto-login
-- Database reset functionality is fully tested and operational
-- Integration test ensures database is reset before each test
-- Tables are created and test data is inserted and verified
-- All assertions pass for database reset
-- Full app flow integration test is complete and passing
-- All core database and game state integration points are verified
-- WebSocket server implementation:
-  - Real-time game state updates
-  - Score and CP synchronization
-  - Timer updates
-  - Round and phase tracking
-  - Web client interface
-  - Connection management
-  - Event broadcasting
+The application is currently in a stable and functional state.
+
+- **Kivy Application (macOS & Raspberry Pi):**
+
+  - Fully functional for all core game management: score, CP, and round tracking.
+  - Stable UI with consistent screen transitions.
+  - Game timer functions correctly.
+  - Handles saving and loading game state, including the "Resume or New Game" flow.
+  - Launches correctly on both platforms via the `launch_scorer.sh` script.
+
+- **Server & Web Client:**
+
+  - The WebSocket server runs reliably in a background thread.
+  - The web client successfully connects and receives real-time game state updates.
+  - The client's screen flow (`Splash` -> `Name Entry` -> `Game` -> `Game Over`) is now correctly synchronized with the Kivy application's `game_phase`.
+  - The critical "stuck on Game Over screen" bug has been resolved.
+
+- **Architecture & State Management:**
+  - The server-side state sanitization layer ensures the client only receives clean, valid data.
+  - The `game_phase` is now managed reliably, creating a predictable state machine for both the Kivy app and the web client.
+  - The data models (internal and client-facing) are clearly defined in `systemPatterns.md`.
 
 ## What's Left to Build
 
-- Settings screen functionality
-- Additional game features (if any)
-- Performance optimizations (if needed)
-- Database-backed game state management:
-  - Local PostgreSQL database setup
-  - New API layer for game management
-  - Data migration tools
-- Consider adding more tests for edge cases.
-- Update documentation and the Memory Bank as needed.
-- Proceed with next integration step.
-- Verify that all components interact correctly.
-- Address any issues that arise during integration.
-- WebSocket server enhancements:
-  - Authentication
-  - Error handling
-  - Reconnection logic
-  - Performance monitoring
-- Individual player clients:
-  - Player-specific web client interface
-  - QR code generation and display for access
-  - Per-player authentication/session management
-  - Secure permissions and validation
+- **Settings Screen:** A dedicated screen for application settings (e.g., sound, display options) in the Kivy app is designed in the workflow but not yet implemented.
+- **Dicer Integration:** Future integration with the "Dicer" AI system is planned but not started.
+- **Performance Optimization:** While performance is currently acceptable, targeted optimization has not been a focus.
+- **Player Client for Score Updates:** Implement a separate, mobile-first web client designed specifically for players. This client will:
+  - Allow a player to modify only their own Score and CP.
+  - Feature a minimal UI without the splash or game over screens of the main spectator client.
+  - Be accessible via player-specific QR codes generated on the Kivy app's Name Entry screen.
 
 ## Current Status
 
-- Application is stable and ready for testing
-- Core functionality is complete
-- Both development and production environments are configured
-- Planning phase for database implementation
-- The database reset logic successfully clears all records from turns, players, and games.
-- The test runner is configured to use SQLite for local testing.
-- Database reset integration is complete and verified
-- Full app flow integration test is complete and passing
-- WebSocket server is implemented and ready for testing
-- Ready to proceed with next integration step
-- Database integration is in planning phase
+- **Overall:** The project is stable. The primary Kivy application and the web client viewer are fully functional for their core purpose. The main development effort of fixing the client-server synchronization is complete.
+- **Focus:** The current focus is on completing the memory bank audit and ensuring all documentation is accurate and consolidated.
 
 ## Known Issues
 
-- Splash screen timing discrepancy:
-
-  - Rushes by too quickly on Raspberry Pi
-  - Displays correctly on macOS
-  - Need to investigate platform-specific timing differences
-
-- Game state management:
-
-  - Multiple implementations of load_game_state() could lead to inconsistencies
-  - Some error handling paths may not properly reset game state
-  - Need to consolidate and standardize game state handling
-
-- Screen transitions:
-
-  - Some transitions use very short delays (0.1s) which may be too quick on Raspberry Pi
-  - Could affect UI updates and timer resumptions
-  - Need to test and potentially adjust timing for Raspberry Pi
-
-- Timer synchronization:
-
-  - Potential slight timing discrepancies when resuming games
-  - Could affect game fairness in timed matches
-  - Need to verify timer accuracy across platforms
-
-- WebSocket server:
-  - Need to implement authentication
-  - Need to add error handling
-  - Need to test reconnection scenarios
-  - Need to validate performance under load
-- Individual player clients:
-  - Need to design player-specific flows
-  - Need to implement QR code generation and access
-  - Need to secure per-player actions
+- There are currently no known critical bugs. The application is in a known-good, working state.
 
 ## Blockers
 
-- None at this time
-
-## Future Improvements
-
-### Database Implementation
-
-- **Phase 1: Setup**
-
-  - Local PostgreSQL installation
-  - Database schema implementation
-  - Connection management
-  - PostgreSQL LISTEN/NOTIFY configuration
-
-- **Phase 2: WebSocket Server** ✓
-
-  - FastAPI/Starlette WebSocket implementation ✓
-  - Connection management system ✓
-  - Event broadcasting ✓
-  - Authentication and sessions ✓
-  - Reconnection handling ✓
-
-- **Phase 3: API Development**
-
-  - Game management endpoints
-  - Time calculation logic
-  - Web interface
-  - WebSocket event handlers
-  - Real-time update system
-
-- **Phase 4: Testing**
-
-  - Separate testing branch
-  - Automated test suite
-  - Performance testing
-  - WebSocket connection testing
-  - Multi-client load testing
-
-- **Phase 5: Migration**
-  - Data migration tools
-  - Validation system
-  - Fallback mechanisms
-  - WebSocket state recovery
-
-### Individual Player Clients
-
-- Player-specific web client interface
-- QR code generation and display for access
-- Per-player authentication/session management
-- Secure permissions and validation
+- There are no active blockers.

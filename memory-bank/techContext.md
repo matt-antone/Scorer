@@ -1,45 +1,84 @@
 # Tech Context: Scorer
 
-This document lists the technologies, development setup, technical constraints, and dependencies for Scorer.
+This document lists the technologies, development setup, technical constraints, and dependencies for the Scorer project.
 
-## 1. Core Technologies
+## 1. Core Technologies & Stack
 
-- **Programming Language**: Python (targeting version 3.9+ or as appropriate for Raspberry Pi OS stability)
-- **GUI Framework (Raspberry Pi Touchscreen)**: Kivy
-  - Reason: Popular open-source Python library for rapid development of applications with innovative user interfaces, such as multi-touch apps. Well-suited for Raspberry Pi and touchscreen interaction. It will be used to create the fullscreen application.
-- **Web Framework (Player Interface)**: Flask
-  - Reason: A lightweight and highly popular WSGI web application framework in Python. Its simplicity and flexibility make it ideal for the embedded web server providing player access.
-- **QR Code Generation**: `qrcode` library (likely with `Pillow` for image manipulation).
-  - Reason: A popular and easy-to-use Python library for creating QR codes.
-- **Data Persistence**: JSON files.
-  - Reason: Game sessions (current scores, CPs, round, timer state, etc.) will be saved to local JSON files (specifically `game_state.json` in the Kivy user data directory). This allows for game state to be preserved between application runs or in case of a restart.
-- **Custom Fonts**: Uses `LabelBase.register` from `kivy.core.text` to register custom fonts like "InterBlack" for use throughout the application via KV language or Python styling.
+- **Programming Language**: Python 3.11+
+- **GUI Framework**: Kivy 2.2.1+
+- **Web Framework**: Flask 3.0.0+
+- **Data Persistence**: Local JSON file (`game_state.json`)
+- **WebSocket Server**: `python-socketio` and `flask-socketio` for real-time communication.
+- **QR Code Generation**: `qrcode` library with `Pillow`.
+- **Custom Fonts**: Kivy's `LabelBase` for registering and using custom fonts like "InterBlack".
 
-## 2. Platform & Deployment
+## 2. Platform & Hardware
 
-- **Primary Development Environment**: macOS (user's local machine).
-- **Target Deployment Platform**: Raspberry Pi 5 with a 5-inch touchscreen, accessible at `madlab5.local` on the local network. (Username for SSH: `matthewantone`).
-- **Operating System (Deployment)**: Raspberry Pi OS (default configuration, likely with desktop environment to support Kivy, unless a more minimal setup is feasible).
-- **Python Environment**: Standard Python installation on macOS for development, `venv` will be used for managing project dependencies. Similar setup on Raspberry Pi OS for deployment.
-- **Web Server Deployment**: The Flask development server will be used initially. For a more robust local deployment, Gunicorn might be considered later if needed, but is likely not necessary for the intended use case.
+### 2.1. Target Deployment Platform
 
-## 3. Development Setup & Tools (macOS and mirrored on Pi where applicable)
+- **Hardware**: Raspberry Pi 5 (8GB RAM, 32GB microSD)
+- **Operating System**: Raspberry Pi OS (64-bit)
+- **Display**: 5-inch DSI touchscreen (800x480@60Hz, using `tc358762` DSI device on socket 1)
+- **Network**: Accessible on the local network (e.g., `madlab5.local`).
 
-- **Python Execution Command**: `python3` (to be used for running scripts and invoking pip, e.g., `python3 -m pip ...`)
-- **Version Control**: Git (repository to be hosted on a platform like GitHub).
-- **Dependency Management**: `requirements.txt` file managed by `pip` and `venv`.
-- **Code Formatting**: Black (to ensure consistent code style).
-- **Linting**: Flake8 (to catch common Python errors and style issues).
-- **IDE/Editor**: User's preference (Cursor).
+### 2.2. Development Platform
 
-## 4. Technical Constraints & Considerations
+- **Operating System**: macOS
+- **Key Difference**: Uses the default SDL2 window provider instead of the custom-built KMSDRM version for the Raspberry Pi.
 
-- **Raspberry Pi Performance**: The application should be optimized to run smoothly on the Raspberry Pi 5, considering its processing power and RAM limitations, especially with a GUI and web server running simultaneously.
-- **Touchscreen Input**: The Kivy interface must be designed for touch input, with appropriately sized buttons and interactive elements for the 5-inch screen.
-- **Local Network Reliance**: The web interface for players relies on the Raspberry Pi and the players' devices being on the same local network.
-- **Python Version Compatibility**: Ensure all chosen libraries are compatible with the target Python version on the Raspberry Pi.
-- **Fullscreen Mode**: Kivy will need to be configured to run in fullscreen mode, hiding any desktop elements.
-- **Platform-Specific Dependencies**: Care must be taken with dependencies that have platform-specific builds. For example, TensorFlow, planned for the future "Dicer" AI feature, has different packages for macOS (e.g., `tensorflow-macos`, `tensorflow-metal`) and ARM-based Linux on Raspberry Pi (e.g., a general `tensorflow` package). The `requirements.txt` for Pi deployment must only include packages compatible with the Pi. macOS-specific packages should be managed in the local macOS development environment if needed for features developed there but not immediately deployed or used on the Pi.
+## 3. Environment & Dependencies
+
+### 3.1. Python Environment
+
+- A `venv` virtual environment is used for both development and deployment.
+- Dependencies are managed in `requirements.txt`.
+- **Python Dependencies**:
+  - `Kivy==2.2.1`
+  - `Flask==3.0.0`
+  - `python-socketio`
+  - `flask-socketio`
+  - `qrcode`
+  - `Pillow`
+  - `python-dotenv==1.0.0`
+  - `requests==2.31.0`
+
+### 3.2. System Dependencies (Raspberry Pi Only)
+
+- **SDL2**: Must be built from source to include KMSDRM support, which is critical for hardware acceleration on the Pi's DSI display. The default `apt` version is insufficient.
+- **Build Tools**: `build-essential`, `git`, `autoconf`, `automake`, `libtool`, `pkg-config`.
+- **SDL2 Dependencies**: A full list of `lib-dev` packages required to build SDL2, including those for audio, video (X11, Wayland, DRM), and input.
+
+## 4. Raspberry Pi Configuration
+
+### 4.1. Boot Configuration (`/boot/firmware/config.txt`)
+
+- `dtoverlay=vc4-kms-v3d`: Enables the KMS graphics driver.
+- `max_framebuffers=2`: Required for KMS.
+- `disable_fw_kms_setup=1`: Prevents firmware from interfering with KMS.
+- `dtoverlay=tc358762,...`: Specific overlay for the DSI display.
+
+### 4.2. Runtime Environment Variables
+
+These variables are critical for launching the Kivy app correctly on the Pi.
+
+- `SDL_VIDEODRIVER=kmsdrm`: Forces SDL2 to use the KMSDRM backend.
+- `SDL_VIDEODRIVER_DEVICE=/dev/dri/card1`: Points to the DSI display's DRM device.
+- `KIVY_BCM_DISPMANX_ID=5`: Selects the correct display socket for the 5-inch screen.
+- `SDL_LOG_PRIORITY=VERBOSE`: (For debugging) Enables verbose logging from SDL2.
+
+### 4.3. User Permissions
+
+- The user running the application must be a member of the `video` and `render` groups to access the DRM hardware.
+
+## 5. Development Tools & Workflow
+
+- **Version Control**: Git & GitHub.
+- **Code Formatting**: Black.
+- **Linting**: Flake8.
+- **Installation Scripts**:
+  - `install.sh`: Full installation script for the Pi, including the complete SDL2 build process.
+  - `install_on_pi.sh`: A quicker script for development, does not build SDL2.
+- **Launcher Script**: `launch_scorer.sh` is a platform-aware script that sets the correct environment variables before running the application on either macOS or the Pi.
 
 ## Development Environment
 

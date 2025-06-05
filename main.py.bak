@@ -44,7 +44,7 @@ from kivy.properties import DictProperty, StringProperty, NumericProperty, Objec
 from kivy.uix.popup import Popup # Import Popup
 from kivy.uix.gridlayout import GridLayout # For NumberPad layout
 from kivy.metrics import dp # Import dp from kivy.metrics
-from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition # Added ScreenManager, Screen, FadeTransition
+from kivy.uix.screenmanager import ScreenManager, Screen # Added ScreenManager, Screen
 from kivy.clock import Clock # Added for timer updates
 from kivy.uix.textinput import TextInput # Added for player names
 from kivy.core.text import LabelBase # For registering fonts by name
@@ -103,44 +103,45 @@ class NameEntryScreen(Screen):
     player2_name_input = ObjectProperty(None)
     continue_button = ObjectProperty(None)
 
-    def on_enter(self, *args):
-        # When entering the screen, load the latest names from game_state
-        app = App.get_running_app()
-        p1_name = app.game_state.get('player1', {}).get('name', 'Player 1')
-        p2_name = app.game_state.get('player2', {}).get('name', 'Player 2')
-        self.player1_name_input.text = p1_name
-        self.player2_name_input.text = p2_name
-        # Initial validation check
-        self.on_name_input(self.player1_name_input, p1_name)
-
-    def on_name_input(self, instance, value):
-        # Enable continue button only if both fields have non-empty, non-whitespace text
-        p1_name = self.player1_name_input.text.strip()
-        p2_name = self.player2_name_input.text.strip()
-        self.continue_button.disabled = not (p1_name and p2_name)
+    def on_pre_enter(self, *args):
+        # Initialize or clear names in game_state if necessary
+        gs = App.get_running_app().game_state
+        # self.player1_name_input.text = gs['player1'].get('name', 'Player 1') # Optionally load previous
+        # self.player2_name_input.text = gs['player2'].get('name', 'Player 2') # Optionally load previous
+        self.player1_name_input.text = "Player 1"
+        self.player2_name_input.text = "Player 2"
+        self.update_continue_button_state()
 
     def on_text_validate_p1(self, instance):
-        # When Enter is pressed on P1 input, focus P2 input
-        self.player2_name_input.focus = True
+        self.update_continue_button_state()
 
     def on_text_validate_p2(self, instance):
-        # When Enter is pressed on P2 input, if valid, proceed
-        if not self.continue_button.disabled:
-            self.save_names_and_proceed()
+        self.update_continue_button_state()
+    
+    def on_name_input(self, instance, value): # Called on each text change
+        self.update_continue_button_state()
+
+    def update_continue_button_state(self):
+        if self.player1_name_input and self.player2_name_input and self.continue_button:
+            p1_name = self.player1_name_input.text.strip()
+            p2_name = self.player2_name_input.text.strip()
+            self.continue_button.disabled = not (p1_name and p2_name)
 
     def save_names_and_proceed(self):
-        app = App.get_running_app()
+        gs = App.get_running_app().game_state
         p1_name = self.player1_name_input.text.strip()
         p2_name = self.player2_name_input.text.strip()
 
-        # Update game state
-        app.game_state['player1']['name'] = p1_name
-        app.game_state['player2']['name'] = p2_name
-        app.game_state['game_phase'] = 'deployment'
-        app.save_game_state()
+        if not p1_name or not p2_name:
+            # This should ideally be a label on the screen
+            print("Please enter names for both players.")
+            return
 
-        # Switch screen
-        app.switch_screen('deployment_setup')
+        gs['player1']['name'] = p1_name
+        gs['player2']['name'] = p2_name
+        gs['status_message'] = "Names entered. Proceeding to Deployment Setup."
+        print(f"Names Saved: P1: {p1_name}, P2: {p2_name}")
+        self.manager.current = 'deployment_setup'
 
 class DeploymentSetupScreen(Screen):
     # Player 1 UI
@@ -294,10 +295,7 @@ class DeploymentSetupScreen(Screen):
         gs['status_message'] = "Deployment roles chosen. Ready for First Turn Setup."
         
     def proceed_to_first_turn_setup(self):
-        app = App.get_running_app()
-        app.game_state['game_phase'] = 'first_turn'
-        app.save_game_state()
-        app.switch_screen('first_turn_setup')
+        self.manager.current = 'first_turn_setup'
 
 class FirstTurnSetupScreen(Screen):
     # Player 1 UI
@@ -449,16 +447,29 @@ class FirstTurnSetupScreen(Screen):
         gs['status_message'] = "First turn decided. Ready to start game."
 
     def start_game_action(self):
-        app = App.get_running_app()
-        app.game_state['game_phase'] = 'game_play'
-        app.game_state['current_round'] = 1
-        app.save_game_state()
+        gs = App.get_running_app().game_state
+        
+        if gs.get("active_player_id") is None:
+            self.first_turn_status_label.text = "Error: First turn decision not completed."
+            return
 
-        # Get the scorer screen and start its timers/UI updates
-        scorer_screen = app.root.get_screen('scorer_root')
-        scorer_screen.start_timers_and_ui()
+        gs["current_round"] = 1
+        gs["game_phase"] = "playing"
+        active_player_name = gs[f'player{gs["active_player_id"]}']["name"]
+        gs["status_message"] = f"Round 1 - {active_player_name}'s Turn"
+        
+        scorer_screen = App.get_running_app().root.get_screen('scorer_root')
+        if scorer_screen:
+            scorer_screen.start_timer()
 
-        app.switch_screen('scorer_root')
+        App.get_running_app().save_game_state() # Save state when game starts
+
+        self.manager.current = 'scorer_root'
+        if scorer_screen:
+             Clock.schedule_once(lambda dt: scorer_screen.update_ui_from_state(), 0)
+             # Also ensure timers are visually updated if loading into an active game state
+             Clock.schedule_once(lambda dt: scorer_screen.update_timer_display(0), 0.1)
+
 
 class ScorerRootWidget(Screen):
     # Header elements from KV
@@ -486,26 +497,27 @@ class ScorerRootWidget(Screen):
         self.numpad_popup = None
 
     def on_pre_enter(self, *args):
-        """Ensure UI and timers are correctly initialized when entering the screen."""
-        self.update_ui_from_state() # Initial UI setup from state
+        self.update_ui_from_state() # Call first to try and set up UI elements
+        self.update_timer_display(0) # Initial call to set timer text based on current state
         
         gs = App.get_running_app().game_state
-        if gs.get('game_phase') == 'game_play':
-            if gs.get('game_timer', {}).get('status') == 'running':
-                # If state says running, make sure the clock is scheduled.
+        if gs['game_phase'] == 'playing':
+            if gs['game_timer']['status'] == 'running':
+                # Timer should be running. Ensure Clock.schedule_interval is active.
                 is_scheduled = False
-                for event in Clock.get_events():
+                for event in Clock.get_events(): # Check events scheduled for this widget (self)
                     if event.callback == self.update_timer_display:
                         is_scheduled = True
                         break
                 if not is_scheduled:
+                    print("ScorerRootWidget.on_pre_enter: Timer status is 'running' but not scheduled. Re-scheduling.")
                     Clock.schedule_interval(self.update_timer_display, 1)
-            else:
-                # If game is playing but state says timer is stopped, start it.
-                self.start_timer()
-
-        # Final check to ensure UI is updated after a short delay
-        Clock.schedule_once(lambda dt: self.update_ui_from_state(), 0.05)
+                # self.update_timer_display(0) # Already called above
+            elif gs['game_timer']['status'] == 'stopped' and gs['game_timer']['start_time'] == 0:
+                 print("ScorerRootWidget.on_pre_enter: Game playing, timer stopped & never started. Calling start_timer().")
+                 self.start_timer() # This will set status to 'running' and schedule
+        # Ensure UI is updated once more in case properties weren't ready on first call
+        Clock.schedule_once(lambda dt: self.update_ui_from_state(), 0.05) 
 
     def update_ui_from_state(self):
         print("ScorerRootWidget: Attempting update_ui_from_state")
@@ -545,7 +557,7 @@ class ScorerRootWidget(Screen):
         p1_base_name = gs['player1']['name']
         p2_base_name = gs['player2']['name']
 
-        if gs['game_phase'] == "game_play":
+        if gs['game_phase'] == "playing":
             if gs["active_player_id"] == 1:
                 self.p1_name_label.text = f"{p1_base_name} - Active"
                 self.p2_name_label.text = p2_base_name
@@ -568,7 +580,7 @@ class ScorerRootWidget(Screen):
         current_gs_active_id = gs.get("active_player_id") # Capture it for this specific decision block
         print(f"ScorerRootWidget.update_ui_from_state: ButtonLogic using active_player_id = {current_gs_active_id} for button visibility.")
 
-        is_playing = gs['game_phase'] == "game_play"
+        is_playing = gs['game_phase'] == "playing"
         
         # Player 1 Button
         if is_playing and current_gs_active_id == 1:
@@ -601,7 +613,7 @@ class ScorerRootWidget(Screen):
             self.p2_concede_button.opacity = 0
             self.p2_concede_button.disabled = True
 
-        if gs['game_phase'] == "game_play":
+        if gs['game_phase'] == "playing":
             self.header_round_label.text = f"Round {gs['current_round']}"
         elif gs['game_phase'] == "game_over":
             final_round = gs.get('last_round_played', 5)
@@ -609,28 +621,6 @@ class ScorerRootWidget(Screen):
         else: 
             self.header_round_label.text = "Round: -"
         print("ScorerRootWidget: update_ui_from_state completed.")
-
-    def start_timers_and_ui(self):
-        """A single method to call when transitioning to this screen to ensure UI and timers are correctly initialized."""
-        self.update_ui_from_state() # Initial UI setup from state
-        
-        gs = App.get_running_app().game_state
-        if gs.get('game_phase') == 'game_play':
-            if gs.get('game_timer', {}).get('status') == 'running':
-                # If state says running, make sure the clock is scheduled.
-                is_scheduled = False
-                for event in Clock.get_events():
-                    if event.callback == self.update_timer_display:
-                        is_scheduled = True
-                        break
-                if not is_scheduled:
-                    Clock.schedule_interval(self.update_timer_display, 1)
-            else:
-                # If game is playing but state says timer is stopped, start it.
-                self.start_timer()
-
-        # Final check to ensure UI is updated after a short delay, as widgets might not be ready instantly.
-        Clock.schedule_once(lambda dt: self.update_ui_from_state(), 0.05)
 
     def start_timer(self):
         gs = App.get_running_app().game_state
@@ -674,13 +664,13 @@ class ScorerRootWidget(Screen):
             self.header_total_time_label.text = f"Total Time: {gs['game_timer']['elapsed_display']}"
 
         current_segment_duration = 0
-        if game_status == 'running' and game_phase == 'game_play':
+        if game_status == 'running' and game_phase == 'playing':
              current_segment_duration = time_now - gs['game_timer']['turn_segment_start_time']
 
         # Player 1 Timer Update
         p1_key = "player1"
         p1_total_seconds = gs[p1_key]['player_elapsed_time_seconds']
-        if active_player_id == 1 and game_status == 'running' and game_phase == 'game_play':
+        if active_player_id == 1 and game_status == 'running' and game_phase == 'playing':
             live_total_seconds_p1 = p1_total_seconds + current_segment_duration
             gs[p1_key]['player_time_display'] = self._format_seconds_to_hms(live_total_seconds_p1)
             # print(f"  P1 (Active) timer: base={p1_total_seconds:.2f}, seg_dur={current_segment_duration:.2f}, live_total={live_total_seconds_p1:.2f}")
@@ -694,7 +684,7 @@ class ScorerRootWidget(Screen):
         # Player 2 Timer Update
         p2_key = "player2"
         p2_total_seconds = gs[p2_key]['player_elapsed_time_seconds']
-        if active_player_id == 2 and game_status == 'running' and game_phase == 'game_play':
+        if active_player_id == 2 and game_status == 'running' and game_phase == 'playing':
             live_total_seconds_p2 = p2_total_seconds + current_segment_duration
             gs[p2_key]['player_time_display'] = self._format_seconds_to_hms(live_total_seconds_p2)
             # print(f"  P2 (Active) timer: base={p2_total_seconds:.2f}, seg_dur={current_segment_duration:.2f}, live_total={live_total_seconds_p2:.2f}")
@@ -705,12 +695,12 @@ class ScorerRootWidget(Screen):
         if self.p2_player_timer_label: 
             self.p2_player_timer_label.text = f"{gs[p2_key]['player_time_display']}"
 
-    def end_turn(self):
+    def end_turn(self): # Removed player_id argument
         gs = App.get_running_app().game_state
         print(f"--- End Turn Button Pressed ---")
         print(f"Initial state: active_player_id={gs.get('active_player_id')}, game_phase={gs.get('game_phase')}, round={gs.get('current_round')}")
 
-        if gs["game_phase"] != "game_play":
+        if gs["game_phase"] != "playing":
             print("End Turn: Game not in 'playing' phase. No action.")
             return
 
@@ -731,33 +721,33 @@ class ScorerRootWidget(Screen):
         print(f"End Turn: Active player_id changed to {gs['active_player_id']}")
         newly_active_player_name = gs[f'player{gs["active_player_id"]}']["name"]
 
+        round_advanced_or_game_ended = False
         first_player_of_game_id = gs.get("first_player_of_game_id")
-        is_second_player_turn_end = (first_player_of_game_id is not None and outgoing_player_id != first_player_of_game_id)
-
-        # Game Over Check: This is the absolute end condition.
-        if gs["current_round"] == 5 and is_second_player_turn_end:
-            gs["game_phase"] = "game_over"
-            gs["last_round_played"] = 5
-            gs["status_message"] = "Game Over - Round 5 complete"
-            print("End Turn: Game Over. Final turn of Round 5 has ended.")
-            self.stop_timer()
-            App.get_running_app().switch_screen('game_over')
-            App.get_running_app().save_game_state() # Save final state
-            return
-
-        # Round Advancement: Only happens if the game is not over.
-        if is_second_player_turn_end:
+        # Round advances if the outgoing player was NOT the first player of the game (meaning both players have had a turn in this round number)
+        if first_player_of_game_id is not None and outgoing_player_id != first_player_of_game_id:
             gs["current_round"] += 1
+            round_advanced_or_game_ended = True
             print(f"End Turn: Round advanced to {gs['current_round']}")
-
-        gs["status_message"] = f"Round {gs['current_round']} - {newly_active_player_name}'s Turn"
-        gs['game_timer']['turn_segment_start_time'] = time_now 
-        print(f"End Turn: New turn segment start_time = {time_now:.2f}")
-        print(f"End Turn: Status message = {gs['status_message']}")
+        
+        if gs["current_round"] > 5: 
+            gs["game_phase"] = "game_over"
+            gs["last_round_played"] = 5 
+            gs["status_message"] = f"Game Over - Round 5 complete" 
+            print(f"End Turn: Game Over. Last round was {gs['last_round_played']}. Transitioning to game_over screen.")
+            self.stop_timer()
+            self.manager.current = 'game_over' 
+            return
+        else:
+            gs["status_message"] = f"Round {gs['current_round']} - {newly_active_player_name}'s Turn"
+            gs['game_timer']['turn_segment_start_time'] = time_now 
+            print(f"End Turn: New turn segment start_time = {time_now:.2f}")
+            print(f"End Turn: Status message = {gs['status_message']}")
             
         print("End Turn: Calling self.update_ui_from_state()")
         self.update_ui_from_state()
-        self.update_timer_display(0)
+        if not round_advanced_or_game_ended or gs["game_phase"] == "playing": # Ensure timer display updates if game still playing
+             print("End Turn: Calling self.update_timer_display(0)")
+             self.update_timer_display(0)
         App.get_running_app().save_game_state() # Save state after turn ends
         print(f"--- End Turn Processing Complete. Active player: {gs['active_player_id']} ---")
 
@@ -765,7 +755,7 @@ class ScorerRootWidget(Screen):
         gs = App.get_running_app().game_state
         print(f"--- Player {conceding_player_id} Pressed Concede Button ---")
 
-        if gs["game_phase"] != "game_play":
+        if gs["game_phase"] != "playing":
             print(f"Concede: Game not in 'playing' phase. No action.")
             return
 
@@ -784,13 +774,13 @@ class ScorerRootWidget(Screen):
 
         self.stop_timer()
         self.update_ui_from_state() # Update UI to hide buttons, show game over state on labels
-        App.get_running_app().switch_screen('game_over')
+        self.manager.current = 'game_over'
         App.get_running_app().save_game_state()
         print(f"--- Concession Processing Complete ---")
 
     def open_score_numpad(self, player_id_to_score):
         gs = App.get_running_app().game_state
-        if gs["game_phase"] != "game_play":
+        if gs["game_phase"] != "playing":
             gs["status_message"] = "Cannot change score, game not active."
             self.update_ui_from_state()
             return
@@ -824,7 +814,7 @@ class ScorerRootWidget(Screen):
 
     def add_cp(self, player_id, amount=1):
         gs = App.get_running_app().game_state
-        if gs["game_phase"] != "game_play": return
+        if gs["game_phase"] != "playing": return
         player_key = f"player{player_id}"
         if player_key in gs:
             gs[player_key]["cp"] = max(0, gs[player_key]["cp"] + amount)
@@ -834,7 +824,7 @@ class ScorerRootWidget(Screen):
 
     def remove_cp(self, player_id, amount=1): 
         gs = App.get_running_app().game_state
-        if gs["game_phase"] != "game_play": return
+        if gs["game_phase"] != "playing": return
         player_key = f"player{player_id}"
         if player_key in gs:
             if gs[player_key]["cp"] > 0:
@@ -854,7 +844,7 @@ class ScorerRootWidget(Screen):
         print("Exiting application...")
         gs = App.get_running_app().game_state
         if gs['game_timer']['status'] == 'running':
-            if gs['game_phase'] == 'game_play' and gs.get('active_player_id'):
+            if gs['game_phase'] == 'playing' and gs.get('active_player_id'):
                 active_player_id = gs['active_player_id']
                 time_now = time.time()
                 if gs['game_timer'].get('turn_segment_start_time') and gs['game_timer']['turn_segment_start_time'] > 0:
@@ -934,56 +924,53 @@ class GameOverScreen(Screen):
     def on_pre_enter(self, *args):
         gs = App.get_running_app().game_state
         
-        # Use .get() for safe access to potentially missing keys
-        p1_stats = gs.get('player1', {})
-        p2_stats = gs.get('player2', {})
-        timer_stats = gs.get('game_timer', {})
-
         winner_text = ""
-        raw_status_message = gs.get("status_message", "Game Over")
+        raw_status_message = gs.get("status_message", "")
         status_message_lower = raw_status_message.lower()
         print(f"GameOverScreen.on_pre_enter: Raw status_message from game_state: '{raw_status_message}'")
 
-        p1_score = p1_stats.get('total_score', 0)
-        p2_score = p2_stats.get('total_score', 0)
+        # Always get player scores from game_state for display
+        p1_score = gs['player1']['total_score']
+        p2_score = gs['player2']['total_score']
 
+        # Check for concession: looking for "concedes." and "wins!" (note the period)
         if "concedes." in status_message_lower and "wins!" in status_message_lower:
-            winner_text = raw_status_message
+            # Game ended by concession, winner is in the status message
+            winner_text = raw_status_message # Use the original casing from game_state as it's already formatted
             print(f"GameOverScreen: Detected concession. Winner text set to: '{winner_text}'")
         else:
-            p1_name = p1_stats.get('name', 'Player 1')
-            p2_name = p2_stats.get('name', 'Player 2')
+            # Game ended normally or status_message format for concession not matched, determine by score
             if p1_score > p2_score:
-                winner_text = f"{p1_name} Wins by Score!"
+                winner_text = f"{gs['player1']['name']} Wins by Score!"
             elif p2_score > p1_score:
-                winner_text = f"{p2_name} Wins by Score!"
+                winner_text = f"{gs['player2']['name']} Wins by Score!"
             else:
                 winner_text = "It's a Tie by Score!"
-            print(f"GameOverScreen: Determined winner by score. P1: {p1_score}, P2: {p2_score}. Winner text: '{winner_text}'")
+            print(f"GameOverScreen: No concession detected or message format mismatch. Determined winner by score. P1: {p1_score}, P2: {p2_score}. Winner text: '{winner_text}'")
         
         if self.result_status_label: self.result_status_label.text = winner_text
         
-        # Populate Player 1 Stats safely
-        if self.p1_final_name_label: self.p1_final_name_label.text = f"Player: {p1_stats.get('name', 'P1')}"
+        # Populate Player 1 Stats
+        if self.p1_final_name_label: self.p1_final_name_label.text = f"Player: {gs['player1']['name']}"
         if self.p1_final_score_label: self.p1_final_score_label.text = f"Final Score: {p1_score}"
-        if self.p1_final_cp_label: self.p1_final_cp_label.text = f"CP Remaining: {p1_stats.get('cp', 0)}"
-        if self.p1_final_time_label: self.p1_final_time_label.text = f"Time Played: {p1_stats.get('player_time_display', '00:00:00')}"
+        if self.p1_final_cp_label: self.p1_final_cp_label.text = f"CP Remaining: {gs['player1']['cp']}"
+        if self.p1_final_time_label: self.p1_final_time_label.text = f"Time Played: {gs['player1']['player_time_display']}"
 
-        # Populate Player 2 Stats safely
-        if self.p2_final_name_label: self.p2_final_name_label.text = f"Player: {p2_stats.get('name', 'P2')}"
+        # Populate Player 2 Stats
+        if self.p2_final_name_label: self.p2_final_name_label.text = f"Player: {gs['player2']['name']}"
         if self.p2_final_score_label: self.p2_final_score_label.text = f"Final Score: {p2_score}"
-        if self.p2_final_cp_label: self.p2_final_cp_label.text = f"CP Remaining: {p2_stats.get('cp', 0)}"
-        if self.p2_final_time_label: self.p2_final_time_label.text = f"Time Played: {p2_stats.get('player_time_display', '00:00:00')}"
+        if self.p2_final_cp_label: self.p2_final_cp_label.text = f"CP Remaining: {gs['player2']['cp']}"
+        if self.p2_final_time_label: self.p2_final_time_label.text = f"Time Played: {gs['player2']['player_time_display']}"
 
-        # Populate Game Stats safely
-        if self.total_game_time_label: self.total_game_time_label.text = f"Total Game Time: {timer_stats.get('elapsed_display', '00:00:00')}"
+        # Populate Game Stats
+        if self.total_game_time_label: self.total_game_time_label.text = f"Total Game Time: {gs['game_timer']['elapsed_display']}"
+        # last_round_played should be 5 as per logic in end_turn
         if self.rounds_played_label: self.rounds_played_label.text = f"Rounds Played: {gs.get('last_round_played', 5)}"
 
     def start_new_game(self):
-        app = App.get_running_app()
-        app.start_new_game_flow()
+        App.get_running_app().start_new_game_flow()
 
-    def exit_app_from_game_over(self):
+    def exit_app_from_game_over(self): # Renamed to avoid conflict if we had an exit_app here
         App.get_running_app().stop()
 
 
@@ -992,22 +979,69 @@ class ResumeOrNewScreen(Screen):
     resume_button = ObjectProperty(None)
     new_game_button = ObjectProperty(None)
 
-    def on_enter(self, *args):
-        # Optional: Update the label text with more specific info if needed
-        app = App.get_running_app()
-        phase = app.game_state.get('game_phase')
-        p1_name = app.game_state.get('player1', {}).get('name', 'P1')
-        p2_name = app.game_state.get('player2', {}).get('name', 'P2')
-        self.resume_info_label.text = f"Found saved game for {p1_name} vs {p2_name} in phase '{phase}'. Resume?"
+    def on_pre_enter(self, *args):
+        # Optionally, update the label text if needed, though it can be static
+        if self.resume_info_label:
+            self.resume_info_label.text = "Saved game data found. Resume or Start New Game?"
 
     def resume_game_action(self):
         app = App.get_running_app()
-        target_screen = app._get_screen_for_phase(app.game_state.get('game_phase'))
-        app.switch_screen(target_screen)
+        gs = app.game_state
+        
+        current_phase = gs.get('game_phase')
+        target_screen_for_resume = 'name_entry' # Default fallback
+
+        if current_phase == 'playing':
+            target_screen_for_resume = 'scorer_root'
+        elif current_phase == 'first_turn_setup':
+            target_screen_for_resume = 'first_turn_setup'
+        elif current_phase == 'deployment_setup':
+            target_screen_for_resume = 'deployment_setup'
+        # Add other phases here if they are legitimately resumable states
+        # For example, if you could resume directly to 'name_entry' under some condition
+        # elif current_phase == 'name_entry':
+        #     target_screen_for_resume = 'name_entry'
+        else:
+            # If the phase is unknown or not considered directly resumable to a specific game screen,
+            # it might indicate an issue or a need to go to a more general starting point.
+            # However, given our load_game_state logic, a "resumable" status should imply a valid phase.
+            print(f"ResumeOrNewScreen: Warning - Unexpected game_phase '{current_phase}' for resume. Defaulting to 'scorer_root'.")
+            target_screen_for_resume = 'scorer_root' # Fallback to scorer if phase is unusual but game was 'resumable'
+
+        print(f"ResumeOrNewScreen: Resuming game. Determined target screen: '{target_screen_for_resume}' from game_phase: '{current_phase}'")
+        
+        # Special handling if resuming directly to scorer_root for timer and UI updates
+        if target_screen_for_resume == 'scorer_root':
+            scorer_screen = app.screen_manager.get_screen('scorer_root')
+            if scorer_screen:
+                # Ensure UI is updated based on the loaded state
+                Clock.schedule_once(lambda x: scorer_screen.update_ui_from_state(), 0.05)
+                # Handle timer state
+                if gs.get('game_phase') == 'playing': # Double check, should be true if going to scorer_root
+                    if gs.get('game_timer', {}).get('status') == 'running':
+                        is_scheduled = False
+                        for event in Clock.get_events():
+                            if event.callback == scorer_screen.update_timer_display:
+                                is_scheduled = True
+                                break
+                        if not is_scheduled:
+                            print("ResumeOrNewScreen (to scorer_root): Timer status 'running', re-scheduling.")
+                            Clock.schedule_interval(scorer_screen.update_timer_display, 1)
+                    elif gs.get('game_timer', {}).get('status') == 'stopped' and gs.get('game_timer', {}).get('start_time', 0) == 0:
+                        # This condition implies game is playing, timer was never started (e.g. quit before first turn fully ended)
+                        # or was explicitly stopped but should now resume.
+                        print("ResumeOrNewScreen (to scorer_root): Game playing, timer seems stopped/reset. Calling start_timer.")
+                        scorer_screen.start_timer()
+                    else:
+                         # Ensure timer display reflects current state even if not actively running (e.g., was paused)
+                        Clock.schedule_once(lambda x: scorer_screen.update_timer_display(0), 0.1)
+
+        app.screen_manager.current = target_screen_for_resume
 
     def start_new_game_from_resume_screen_action(self):
-        app = App.get_running_app()
-        app.start_new_game_flow()
+        print("ResumeOrNewScreen: Starting new game.")
+        App.get_running_app().start_new_game_flow() # This resets state and goes to name_entry
+
 
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
@@ -1085,11 +1119,9 @@ class ScorerApp(App):
             # This ensures the application remains functional
         
         self.reset_game_state_to_default()
-        self.game_state['game_phase'] = 'name_entry' # Explicitly set the phase
-        self.save_game_state() # This contains the broadcast call
-        self.websocket_server.broadcast_game_state(self.game_state) # Explicitly broadcast again for robustness
+        self.save_game_state() 
         if self.root:
-            self.switch_screen('name_entry')
+            self.root.current = 'name_entry'
 
     def get_save_file_path(self):
         return os.path.join(self.user_data_dir, self.SAVE_FILE_NAME)
@@ -1124,8 +1156,9 @@ class ScorerApp(App):
                         print(f"Game state loaded from {save_file_path}")
                         
                         if self.game_state.get('game_phase') == 'game_over':
-                            print("Loaded game state is 'game_over', but treating as resumable to show final screen.")
-                            return "resumable"
+                            print("Loaded game state is 'game_over'. Treating as new game for screen choice.")
+                            # We've loaded it, but for screen determination, it's like starting fresh for 'name_entry'
+                            return "game_over" 
                         else:
                             # Game is not over, or game_phase is something else (e.g. playing, setup)
                             print(f"Resumable game state loaded. Phase: {self.game_state.get('game_phase')}")
@@ -1206,7 +1239,7 @@ class ScorerApp(App):
         # --- Point of setting splash screen current ---
         time_before_splash_current = time.time()
         print(f"ScorerApp.build(): About to set 'splash_screen' as current. Time elapsed since build start: {time_before_splash_current - time.time():.4f}s")
-        self.switch_screen('splash_screen')
+        self.screen_manager.current = 'splash_screen'
         # ---------------------------------------------
         
         if platform.system() == "Linux":
@@ -1225,12 +1258,13 @@ class ScorerApp(App):
             target_screen_name = 'resume_or_new'
         
         try:
-            self.switch_screen(target_screen_name)
+            self.screen_manager.transition.direction = 'left'
+            self.screen_manager.current = target_screen_name
             print(f"ScorerApp.transition_from_splash(): Successfully transitioned to {target_screen_name}")
         except Exception as e:
             print(f"ScorerApp.transition_from_splash(): Error during transition: {str(e)}")
             # Fallback to resume_or_new screen if transition fails
-            self.switch_screen('resume_or_new')
+            self.screen_manager.current = 'resume_or_new'
 
     def initialize_game_state(self): 
         self.game_state = self._get_default_game_state() 
@@ -1275,50 +1309,8 @@ class ScorerApp(App):
         self.websocket_server.broadcast_game_phase_update(phase)
 
     def get_game_state(self):
-        """
-        Get the current game state for WebSocket clients.
-        This method acts as a sanitization layer to protect clients
-        from invalid or confusing server-side states.
-        """
-        # Create a deep copy to avoid modifying the server's internal state
-        sanitized_state = json.loads(json.dumps(self.game_state))
-
-        # --- Rule 1: Clamp Round Number ---
-        # Never allow a round greater than 5 to be sent to the client.
-        if sanitized_state.get("current_round", 0) > 5:
-            sanitized_state["current_round"] = 5
-            sanitized_state["status_message"] = "Game Over - Round 5 Complete"
-            print("Sanitization: Clamped current_round from >5 to 5 for client.")
-
-        # --- Rule 2: Translate Internal Server Screens ---
-        # If the Kivy app is on the 'resume_or_new' screen, the client should
-        # not see the underlying (potentially 'game_over') state. It should
-        # see a generic 'setup' phase. This prevents the client from getting
-        # stuck on the Game Over screen when the app is restarted.
-        if self.root and self.root.current == 'resume_or_new':
-            sanitized_state['game_phase'] = 'setup'
-            sanitized_state['status_message'] = 'Waiting for game to start...'
-            print("Sanitization: Translated internal 'resume_or_new' screen to 'setup' phase for client.")
-
-        return sanitized_state
-
-    def switch_screen(self, screen_name):
-        self.root.transition = FadeTransition(duration=0.2)
-        self.root.current = screen_name
-
-    def on_start(self):
-        self.load_game_state()
-        self._determine_screen_from_gamestate()
-
-    def _get_screen_for_phase(self, phase):
-        if phase == 'deployment':
-            return 'deployment_setup'
-        elif phase == 'first_turn':
-            return 'first_turn_setup'
-        elif phase == 'game_play':
-            return 'scorer_root'
-        else:
-            return 'name_entry'
+        """Get the current game state for WebSocket clients"""
+        return self.game_state
 
 if __name__ == '__main__':
     # Conditionally set Window.size for non-Linux environments

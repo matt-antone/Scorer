@@ -92,6 +92,13 @@ ScreenManager:
 
 <NameEntryScreen>:
     name: 'name_entry'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     player1_name_input: p1_name_entry_input
     player2_name_input: p2_name_entry_input
     continue_button: name_entry_continue_btn
@@ -190,6 +197,13 @@ ScreenManager:
 
 <DeploymentSetupScreen>:
     name: 'deployment_setup'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     p1_name_label: p1_name_dsp_lbl
     p1_roll_button: p1_roll_dsp_btn
     p1_roll_display_label: p1_roll_dsp_lbl
@@ -327,6 +341,13 @@ ScreenManager:
 
 <FirstTurnSetupScreen>:
     name: 'first_turn_setup'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     p1_name_label: p1_name_ft_lbl
     p1_ft_roll_button: p1_roll_ft_btn
     p1_ft_roll_display_label: p1_roll_ft_lbl
@@ -719,6 +740,13 @@ ScreenManager:
 
 <GameOverScreen>:
     name: 'game_over'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     result_status_label: result_status_lbl
     p1_final_name_label: p1_name_final_lbl
     p1_final_score_label: p1_score_final_lbl
@@ -857,13 +885,28 @@ ScreenManager:
 
 <SplashScreen>:
     name: 'splash_screen'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     Image:
-        id: splash_image_id
-        source: 'assets/splash.jpg'
-        fit_mode: 'fill'
+        source: 'static/logo-original.png'
+        size_hint: None, None
+        size: dp(256), dp(256)
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
 
 <ResumeOrNewScreen>:
     name: 'resume_or_new'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
     resume_info_label: resume_info_lbl
     resume_button: resume_btn
     new_game_button: new_game_btn_resume_screen

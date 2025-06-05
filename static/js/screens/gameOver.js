@@ -1,42 +1,45 @@
-// Game over screen management
-export function showGameOverScreen(gameState) {
-  console.log("Showing game over screen");
-  document.getElementById("splash_screen").style.display = "none";
-  document.getElementById("game_screen").style.display = "none";
-  document.getElementById("game_over_screen").style.display = "flex";
+const gameOverScreen = document.getElementById("game_over_screen");
 
-  // Update round/status message
-  document.getElementById("game_over_round").textContent =
-    gameState.status_message || "Game Over";
+function init() {
+  console.log("Game over screen initialized");
+}
 
-  const player1NameEl = document.getElementById("game_over_player1_name");
-  const player2NameEl = document.getElementById("game_over_player2_name");
+function show() {
+  gameOverScreen.style.display = "block";
+}
 
-  // Determine winner and update names
-  const p1Score = gameState.player1.total_score;
-  const p2Score = gameState.player2.total_score;
+function hide() {
+  gameOverScreen.style.display = "none";
+}
 
-  player1NameEl.textContent = gameState.player1.name;
-  player2NameEl.textContent = gameState.player2.name;
+function update(state) {
+  // Update player names
+  document.getElementById("game_over_player1_name").textContent =
+    state.player1.name;
+  document.getElementById("game_over_player2_name").textContent =
+    state.player2.name;
 
-  if (p1Score > p2Score) {
-    player1NameEl.textContent += " - Wins!";
-  } else if (p2Score > p1Score) {
-    player2NameEl.textContent += " - Wins!";
-  }
-  // If scores are equal, no one wins
+  // Update scores
+  document.getElementById("game_over_player1_score").textContent =
+    state.player1.total_score;
+  document.getElementById("game_over_player2_score").textContent =
+    state.player2.total_score;
 
-  // Update player data
-  document.getElementById("game_over_player1_score").textContent = p1Score;
+  // Update timers
   document.getElementById("game_over_player1_time").textContent =
-    gameState.player1.player_time_display || "00:00:00";
-
-  document.getElementById("game_over_player2_score").textContent = p2Score;
+    state.player1.player_time_display || "00:00:00";
   document.getElementById("game_over_player2_time").textContent =
-    gameState.player2.player_time_display || "00:00:00";
+    state.player2.player_time_display || "00:00:00";
 
   // Update total time
   document.getElementById("game_over_total_time").textContent = `Total Time: ${
-    gameState.game_timer.elapsed_display || "00:00:00"
+    state.game_timer.elapsed_display || "00:00:00"
   }`;
+
+  // Update round
+  document.getElementById(
+    "game_over_round"
+  ).textContent = `Round ${state.current_round}`;
 }
+
+export const gameOver = { init, show, hide, update };

@@ -261,6 +261,12 @@
    - I must verify the commit message is complete before committing
    - I must reference the commit message in my responses when relevant
 
+## Development Philosophy
+
+1.  **Meticulous Verification**: I MUST adopt a more rigorous and careful process. Before proposing any change, I will pause and think through the full implications.
+2.  **Holistic Context**: When making a change in one file (e.g., a Python file), I MUST consider its relationship with all other relevant files (e.g., corresponding `.kv` files, configuration files, shell scripts). I will no longer operate with tunnel vision.
+3.  **Preventing Regressions**: I will actively consider how a fix or feature could introduce new problems. I will trace the potential side effects of my changes to ensure I am not creating new bugs. My goal is to produce complete, working solutions, not partial fixes that lead to more errors.
+
 # Automated Testing Rule
 
 - Tests may be run unattended by the assistant. No user approval required for test execution.

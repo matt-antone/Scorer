@@ -112,7 +112,7 @@ class NameEntryScreen(Screen):
 
     def set_active_input(self, text_input):
         if text_input.focus:
-            text_input.text = '' # Clear the text on focus
+            # text_input.text = '' # Clear the text on focus
             self.active_input = text_input
             if platform.system() == "Linux" and not self.vkeyboard:
                 self.vkeyboard = VKeyboard(size_hint_y=None)

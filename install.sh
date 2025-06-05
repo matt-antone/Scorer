@@ -101,10 +101,22 @@ echo "This may take several minutes..."
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
 
+# Function to clean up on exit
+cleanup() {
+    cd "$SCRIPT_DIR"
+    rm -rf "$TEMP_DIR"
+}
+
+# Set up trap to clean up on exit
+trap cleanup EXIT
+
 # Clone SDL2 repository
 echo "Cloning SDL2 repository..."
 git clone https://github.com/libsdl-org/SDL.git
-if [ $? -ne 0 ]; then echo "Error cloning SDL2 repository. Exiting."; exit 1; fi
+if [ $? -ne 0 ]; then 
+    echo "Error cloning SDL2 repository. Exiting."
+    exit 1
+fi
 
 cd SDL
 
@@ -126,28 +138,46 @@ echo "Configuring SDL2..."
     --enable-video-vulkan \
     --enable-video-offscreen
 
-if [ $? -ne 0 ]; then echo "Error configuring SDL2. Exiting."; exit 1; fi
+if [ $? -ne 0 ]; then 
+    echo "Error configuring SDL2. Exiting."
+    exit 1
+fi
 
 # Build SDL2
 echo "Building SDL2..."
 make -j4
-if [ $? -ne 0 ]; then echo "Error building SDL2. Exiting."; exit 1; fi
+if [ $? -ne 0 ]; then 
+    echo "Error building SDL2. Exiting."
+    exit 1
+fi
 
 # Install SDL2
 echo "Installing SDL2..."
 sudo make install
-if [ $? -ne 0 ]; then echo "Error installing SDL2. Exiting."; exit 1; fi
+if [ $? -ne 0 ]; then 
+    echo "Error installing SDL2. Exiting."
+    exit 1
+fi
 
 # Update shared library cache
 echo "Updating shared library cache..."
 sudo ldconfig
-if [ $? -ne 0 ]; then echo "Error updating shared library cache. Exiting."; exit 1; fi
+if [ $? -ne 0 ]; then 
+    echo "Error updating shared library cache. Exiting."
+    exit 1
+fi
 
-# Clean up
-cd "$SCRIPT_DIR"
-rm -rf "$TEMP_DIR"
+# Verify KMSDRM support
+echo "Verifying KMSDRM support..."
+if ! sdl2-config --static-libs | grep -q kmsdrm; then
+    echo "Error: SDL2 was built but KMSDRM support is not available."
+    echo "Please check the build logs for any errors."
+    exit 1
+fi
 
 echo "SDL2 with KMSDRM support installed successfully."
+
+# Clean up is handled by the trap
 
 # --- 3. Create Python virtual environment ---
 echo ""

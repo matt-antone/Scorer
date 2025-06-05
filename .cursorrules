@@ -18,10 +18,95 @@
    - If unsure about any aspect, MUST ask for clarification
 
 2. **Documentation Updates**
+
    - After ANY changes, MUST update relevant Memory Bank files
    - Focus on `activeContext.md` and `progress.md` for immediate updates
    - Update `techContext.md` for technical changes
    - Update `systemPatterns.md` for architectural changes
+
+3. **Command Sequences**
+
+   - NEVER provide partial command sequences
+   - ALWAYS include ALL required steps in order
+   - For environment setup, ALWAYS include:
+     - Directory changes
+     - Environment activation
+     - All required environment variables
+     - Complete command sequence
+   - Example of complete sequence:
+     ```bash
+     cd /path/to/project
+     source .venv/bin/activate
+     export SDL_VIDEODRIVER=kmsdrm
+     export SDL_VIDEODRIVER_DEVICE=/dev/dri/card1
+     # ... all other required environment variables ...
+     python script.py
+     ```
+
+4. **Bash Script Execution Environment**
+
+   - MUST explicitly specify where a bash script is intended to run (macOS, Raspberry Pi, or both)
+   - MUST include platform detection in scripts that need to run on multiple platforms
+   - MUST document platform-specific environment variables and settings
+   - Example:
+
+     ```bash
+     #!/bin/bash
+     # Platform: macOS and Raspberry Pi
+     # This script handles both environments with platform detection
+
+     if [ "$(uname -m)" = "aarch64" ]; then
+         # Raspberry Pi specific settings
+         export KIVY_BCM_DISPMANX_ID=5
+     else
+         # macOS specific settings
+         export KIVY_WINDOW=sdl2
+     fi
+     ```
+
+5. **SDL2 Testing Pattern**
+
+   - ALWAYS verify SDL2 installation before testing:
+     ```bash
+     sdl2-config --static-libs | grep kmsdrm
+     ```
+   - ALWAYS set ALL required environment variables before testing:
+     ```bash
+     export SDL_VIDEODRIVER=kmsdrm
+     export SDL_VIDEODRIVER_DEVICE=/dev/dri/card1
+     export SDL_VIDEO_KMSDRM_DEVICE=/dev/dri/card1
+     export SDL_VIDEO_KMSDRM_CRTC=34
+     export SDL_VIDEO_KMSDRM_CONNECTOR=36
+     # ... all other required variables ...
+     ```
+   - ALWAYS enable verbose logging for debugging:
+     ```bash
+     export SDL_LOG_PRIORITY=VERBOSE
+     export SDL_LOG_CATEGORY_VIDEO=VERBOSE
+     ```
+   - ALWAYS check DRM device permissions:
+     ```bash
+     ls -l /dev/dri/
+     groups $USER | grep video
+     groups $USER | grep render
+     ```
+
+6. **Installation Scripts**
+   - ALWAYS use `install.sh` for SDL2 builds - it has the correct configuration
+   - NEVER use `install_on_pi.sh` for SDL2 builds - it doesn't build SDL2 from source
+   - After running `install.sh`, ALWAYS verify SDL2 build:
+     ```bash
+     sdl2-config --static-libs | grep kmsdrm
+     ```
+   - SDL2 build dependencies (do not include libesd0-dev as it's obsolete):
+     ```bash
+     sudo apt install -y build-essential git autoconf automake libtool pkg-config \
+       libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
+       libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
+       libxss-dev libgl1-mesa-dev libdbus-1-dev libudev-dev \
+       libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
+       libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
+     ```
 
 ## Kivy Development Patterns
 

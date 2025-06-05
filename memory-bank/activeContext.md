@@ -48,74 +48,63 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## Current Focus
 
-- Resolving SDL2 KMSDRM support issue for Raspberry Pi 5 display
-- Ensuring proper display configuration for DSI display
+- Resolving SDL2 KMSDRM support issues
+- Ensuring proper display configuration for camera/display socket 1
+- Investigating DSI display initialization through tc358762 device
+- Platform-aware script execution environment
 
 ## Recent Changes
 
-- Identified that SDL2 needs to be built from source with KMSDRM support
-- Documented required build dependencies and configuration steps
-- Added detailed display configuration parameters to techContext.md
+- Added platform detection to launch_scorer.sh
+- Documented DSI display configuration requirements
+- Added tc358762 overlay to /boot/firmware/config.txt
+- Updated .cursorrules with bash script execution environment requirements
 
 ## Active Decisions
 
-1. SDL2 Build:
+- Using KIVY_BCM_DISPMANX_ID=5 for camera/display socket 1
+- Building SDL2 from source with KMSDRM support
+- Configuring DSI display through tc358762 device
+- Platform-specific environment variables in launch scripts
 
-   - Must build SDL2 from source with KMSDRM support
-   - Default apt package lacks required KMSDRM support
-   - Need to install specific build dependencies
+## Current Challenges
 
-2. Display Configuration:
-   - Using DSI display (card1) with specific parameters
-   - CRTC ID: 34
-   - Connector ID: 36
-   - Display mode: 800x480@60Hz
+- KMSDRM support not available despite correct SDL2 build
+- DSI display not showing up in DRM devices
+- Need to verify tc358762 overlay configuration
+- Need to ensure proper user permissions for DRM access
 
 ## Next Steps
 
-1. Build SDL2 from source with KMSDRM support:
+1. Verify tc358762 overlay parameters
+2. Check DRM device permissions
+3. Test DSI display initialization
+4. Monitor SDL2/KMSDRM debug output
 
-   ```bash
-   sudo apt-get update
-   sudo apt-get install -y build-essential git autoconf automake libtool pkg-config \
-     libasound2-dev libpulse-dev libaudio-dev libx11-dev libxext-dev \
-     libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libxxf86vm-dev \
-     libxss-dev libgl1-mesa-dev libesd0-dev libdbus-1-dev libudev-dev \
-     libgles2-mesa-dev libegl1-mesa-dev libibus-1.0-dev \
-     libdrm-dev libgbm-dev libinput-dev libudev-dev libxkbcommon-dev
+## Open Questions
 
-   git clone https://github.com/libsdl-org/SDL.git
-   cd SDL
-   ./configure --enable-video-kmsdrm --enable-video-opengl --enable-video-opengles \
-     --enable-video-opengles2 --enable-video-egl --enable-video-gbm \
-     --enable-video-dummy --enable-video-x11 --enable-video-wayland \
-     --enable-video-rpi --enable-video-vivante --enable-video-cocoa \
-     --enable-video-metal --enable-video-vulkan --enable-video-offscreen
-   make -j4
-   sudo make install
-   sudo ldconfig
-   ```
+- Are all required DSI parameters correctly set?
+- Is the tc358762 device properly initialized?
+- Are there any missing overlays or configurations?
+- Do we need additional kernel modules loaded?
 
-2. After SDL2 rebuild:
-   - Run kivy_backend_test.py again
-   - Verify KMSDRM support is available
-   - Check display output
+## Recent Discoveries
 
-## Current Issues
+- Display is connected through camera/display socket 1
+- tc358762 device requires specific DSI configuration
+- KIVY_BCM_DISPMANX_ID=5 is required for camera/display socket
+- Platform detection is needed for environment variables
 
-1. SDL2 KMSDRM Support:
+## Current Environment
 
-   - Error: "kmsdrm not available"
-   - Need to rebuild SDL2 from source
-   - Default package lacks KMSDRM support
+- Development: macOS
+- Target: Raspberry Pi 5 with 5-inch DSI touchscreen
+- Display Interface: Camera/Display Socket 1
+- DSI Device: tc358762
 
-2. Display Configuration:
-   - DSI display properly initialized
-   - VC4 driver reports issues
-   - Need to ensure correct display mode settings
+## Active Considerations
 
-## Environment Setup
-
-- Using specific environment variables for SDL2/KMSDRM
-- Debug logging enabled
-- DSI display configuration parameters set
+- Need to maintain separate configurations for macOS and Raspberry Pi
+- Must ensure proper display initialization on Raspberry Pi
+- Need to verify hardware acceleration support
+- Must document all platform-specific requirements

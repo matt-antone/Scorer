@@ -83,63 +83,66 @@ class SplashScreen(Screen):
     _splash_timer_scheduled = False # Flag to ensure timer is scheduled only once
 
     def on_enter(self, *args):
-        super().on_enter(*args) # Call superclass method
-        self._splash_timer_scheduled = False
-        # Schedule _setup_splash_image_handler to run on the next frame.
-        # This ensures that the self.ids dictionary is populated.
+        super().on_enter(*args)
+        print("SplashScreen: on_enter called.")
+        self._splash_timer_scheduled = False # Reset flag on each entry
         Clock.schedule_once(self._setup_splash_image_handler, 0)
 
     def _setup_splash_image_handler(self, dt):
+        print("SplashScreen: _setup_splash_image_handler called.")
         splash_image = self.ids.get('splash_image_id')
         if splash_image:
             if splash_image.texture:
-                # Texture is already available (e.g., cached or loaded very quickly)
                 print("SplashScreen: Image texture was already available upon setup.")
                 self._start_splash_timer(splash_image, splash_image.texture)
             else:
-                # Texture not yet ready, bind to the on_texture event.
                 print("SplashScreen: Image texture not yet available. Binding to on_texture event.")
                 splash_image.bind(on_texture=self._start_splash_timer)
         else:
-            # Fallback: If the splash_image_id is not found in ids (e.g., KV error).
-            print("SplashScreen: Error - 'splash_image_id' not found in self.ids. Scheduling direct transition as fallback.")
-            app = App.get_running_app()
-            if not self._splash_timer_scheduled: # Ensure only one timer is scheduled
-                Clock.schedule_once(
-                    lambda x: app.transition_from_splash(app.target_screen_after_splash, x),
-                    app.VISIBLE_SPLASH_TIME
-                )
-                self._splash_timer_scheduled = True
+            print("SplashScreen: Error - 'splash_image_id' not found. Scheduling fallback transition.")
+            self._schedule_fallback_transition()
 
     def _start_splash_timer(self, instance, texture_value):
-        # This method is called when the Image widget's texture is updated.
-        # We only want to schedule the transition once the texture is valid (not None).
-        if not self._splash_timer_scheduled and texture_value is not None:
-            self._splash_timer_scheduled = True
+        print(f"SplashScreen: _start_splash_timer called. Scheduled: {self._splash_timer_scheduled}, Texture: {texture_value is not None}")
+        if self._splash_timer_scheduled:
+            print("SplashScreen: _start_splash_timer - Timer already scheduled or executed. Ignoring.")
+            return
+
+        if texture_value is not None:
+            self._splash_timer_scheduled = True # Set flag immediately
+            print("SplashScreen: Image texture is valid.")
             
-            # Unbind the event handler to prevent it from being called again.
             if instance: # 'instance' is the Image widget
+                print("SplashScreen: Unbinding on_texture event.")
                 instance.unbind(on_texture=self._start_splash_timer)
 
             app = App.get_running_app()
-            print(f"SplashScreen: Image texture loaded successfully. Starting {app.VISIBLE_SPLASH_TIME}s timer for transition.")
+            print(f"SplashScreen: Scheduling transition to {app.target_screen_after_splash} in {app.VISIBLE_SPLASH_TIME}s.")
             Clock.schedule_once(
                 lambda x: app.transition_from_splash(app.target_screen_after_splash, x),
                 app.VISIBLE_SPLASH_TIME
             )
-        elif texture_value is None and not self._splash_timer_scheduled:
-            # This case means on_texture was called, but the texture became None (e.g., source changed to invalid).
-            # This is unlikely for a static splash screen.
-            print("SplashScreen: Warning - on_texture event fired but texture is None. Transition may not occur as expected.")
+        else:
+            print("SplashScreen: Warning - _start_splash_timer called but texture is None. Not scheduling transition based on this call.")
+
+    def _schedule_fallback_transition(self):
+        if self._splash_timer_scheduled:
+            return
+        self._splash_timer_scheduled = True
+        app = App.get_running_app()
+        print(f"SplashScreen: Fallback - Scheduling transition to {app.target_screen_after_splash} in {app.VISIBLE_SPLASH_TIME}s.")
+        Clock.schedule_once(
+            lambda x: app.transition_from_splash(app.target_screen_after_splash, x),
+            app.VISIBLE_SPLASH_TIME
+        )
 
     def on_leave(self, *args):
-        super().on_leave(*args) # Call superclass method
-        # Clean up: Unbind the event handler if the screen is left.
+        super().on_leave(*args)
+        print("SplashScreen: on_leave called. Cleaning up bindings.")
         splash_image = self.ids.get('splash_image_id')
         if splash_image:
             splash_image.unbind(on_texture=self._start_splash_timer)
-        self._splash_timer_scheduled = False # Reset flag for potential re-entry
-        print("SplashScreen: Left splash screen, any texture event bindings have been cleaned up.")
+        # self._splash_timer_scheduled = False # Don't reset here, on_enter will handle it.
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)

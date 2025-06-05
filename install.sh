@@ -154,13 +154,13 @@ WorkingDirectory=$APP_WORKING_DIR
 ExecStart=$VENV_PYTHON_EXECUTABLE $MAIN_SCRIPT_PATH
 
 # Environment variables for Kivy on Raspberry Pi (headless/CLI boot)
-Environment="DISPLAY=:0"
-Environment="KIVY_BCM_DISPMANX_ID=4" # Set to 4 for HDMI, 5 for official DSI. Adjust if needed.
+# Environment="DISPLAY=:0" # REMOVED - to avoid X11 attempts if not present/intended
+# Environment="KIVY_BCM_DISPMANX_ID=4" # REMOVED - for older Pi display manager
 Environment="KIVY_LOG_LEVEL=debug"   # For troubleshooting startup issues. Can be changed to 'info' or 'warning' in production.
-# Optional Kivy environment variables (usually not needed if Kivy auto-detects correctly):
-# Environment="KIVY_WINDOW=sdl2"
-# Environment="KIVY_GRAPHICS=gles"
-# Environment="KIVY_TEXT=sdl2"
+# KIVY_WINDOW=sdl2 and KIVY_GRAPHICS=gles are often defaults but can be set if auto-detection fails.
+# Forcing specific KMS/DRM settings might be needed if problems persist, e.g.:
+# Environment="KIVY_GRAPHICS_BACKEND=drm" # Or similar depending on Kivy version & RPi setup
+# Environment="KIVY_WINDOW_SYSTEM=egl"   # If EGL is the target
 
 # Access to input devices is crucial for touchscreens
 SupplementaryGroups=input video render tty

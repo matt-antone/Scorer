@@ -184,11 +184,11 @@ sudo systemctl enable "$SERVICE_FILE_NAME"
 if [ $? -ne 0 ]; then echo "Error enabling service. Exiting."; exit 1; fi
 echo "Service enabled."
 
-# --- Configure boot to CLI ---
+# --- Configure boot to CLI with auto-login ---
 echo ""
-echo "--- Configuring boot to CLI ---"
-# Disable desktop autostart
-sudo raspi-config nonint do_boot_behaviour B1
+echo "--- Configuring boot to CLI with auto-login ---"
+# Enable CLI auto-login
+sudo raspi-config nonint do_boot_behaviour B2
 if [ $? -ne 0 ]; then echo "Error configuring boot behavior. Exiting."; exit 1; fi
 
 # Disable splash screen

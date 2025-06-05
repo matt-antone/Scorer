@@ -7,6 +7,15 @@ print(f"Python executable: {sys.executable}")
 
 if platform.system() == "Linux":
     print("Minimal Test: Linux detected. Setting Kivy and SDL2 environment variables for SDL2/KMSDRM.")
+    os.environ['SDL_LOG_PRIORITY'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_APPLICATION'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_ERROR'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_SYSTEM'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_AUDIO'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_VIDEO'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_RENDER'] = 'VERBOSE'
+    os.environ['SDL_LOG_CATEGORY_INPUT'] = 'VERBOSE'
+    
     os.environ['SDL_VIDEODRIVER'] = 'kmsdrm'
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'

@@ -1,12 +1,11 @@
-Flask
-Flask-SocketIO
+Flask==2.3.2
+Flask-SocketIO==5.3.6
 eventlet
 Kivy
 Pillow
 sqlalchemy
 alembic
 python-dotenv
-asyncpg
 aiosqlite
 
 # Testing libraries - can be kept separate or installed as needed
@@ -14,8 +13,6 @@ aiosqlite
 # pytest-asyncio
 
 Kivy-Garden==0.1.5
-python-engineio==4.8.0
-python-socketio==5.10.0
 bidict==0.22.1
 qrcode==8.2
 Cython==3.1.1

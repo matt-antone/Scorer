@@ -93,15 +93,19 @@ class SplashScreen(Screen):
 
     def on_enter(self, *args):
         super().on_enter(*args)
-        print(f"SplashScreen: on_enter. Current screen: {App.get_running_app().root.current}. Is this instance current? {App.get_running_app().root.current_screen == self}")
+        
+        app = App.get_running_app()
+        if not app or not app.root:
+            print("SplashScreen: on_enter called, but app or app.root is not yet available. Ignoring this call.")
+            return
 
-        # Only proceed if this screen instance is actually becoming the current screen
-        # and if we haven't already scheduled the transition for this instance.
-        if App.get_running_app().root.current_screen == self and not self._transition_scheduled_for_this_instance:
+        print(f"SplashScreen: on_enter. Current screen in manager: {app.root.current}. Is this instance current? {app.root.current_screen == self}")
+
+        if app.root.current_screen == self and not self._transition_scheduled_for_this_instance:
             print("SplashScreen: Confirmed as current screen and no transition yet scheduled. Proceeding with setup.")
-            self._transition_scheduled_for_this_instance = True # Set flag immediately
+            self._transition_scheduled_for_this_instance = True
             Clock.schedule_once(self._setup_splash_image_handler, 0)
-        elif App.get_running_app().root.current_screen != self:
+        elif app.root.current_screen != self:
             print("SplashScreen: on_enter called, but this instance is NOT the current screen. Ignoring.")
         elif self._transition_scheduled_for_this_instance:
             print("SplashScreen: on_enter called, but transition ALREADY scheduled for this instance. Ignoring.")

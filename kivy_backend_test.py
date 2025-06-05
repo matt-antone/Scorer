@@ -42,6 +42,14 @@ def setup_environment():
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_TEXT'] = 'sdl2'
     os.environ['KIVY_LOG_LEVEL'] = 'debug'
+    
+    # Additional SDL environment variables for KMSDRM
+    os.environ['SDL_VIDEO_KMSDRM_DEVICE'] = '/dev/dri/card2'
+    os.environ['SDL_VIDEO_KMSDRM_CRTC'] = '0'  # Try first CRTC
+    os.environ['SDL_VIDEO_KMSDRM_CONNECTOR'] = '0'  # Try first connector
+    os.environ['SDL_VIDEO_KMSDRM_MODE'] = '0'  # Try first mode
+    
+    # Debug logging
     os.environ['SDL_LOG_PRIORITY'] = 'VERBOSE'
     os.environ['SDL_LOG_CATEGORY_APPLICATION'] = 'VERBOSE'
     os.environ['SDL_LOG_CATEGORY_ERROR'] = 'VERBOSE'
@@ -60,6 +68,10 @@ def setup_environment():
     print("Environment variables set:")
     print(f"SDL_VIDEODRIVER={os.environ.get('SDL_VIDEODRIVER')}")
     print(f"SDL_VIDEODRIVER_DEVICE={os.environ.get('SDL_VIDEODRIVER_DEVICE')}")
+    print(f"SDL_VIDEO_KMSDRM_DEVICE={os.environ.get('SDL_VIDEO_KMSDRM_DEVICE')}")
+    print(f"SDL_VIDEO_KMSDRM_CRTC={os.environ.get('SDL_VIDEO_KMSDRM_CRTC')}")
+    print(f"SDL_VIDEO_KMSDRM_CONNECTOR={os.environ.get('SDL_VIDEO_KMSDRM_CONNECTOR')}")
+    print(f"SDL_VIDEO_KMSDRM_MODE={os.environ.get('SDL_VIDEO_KMSDRM_MODE')}")
     print(f"KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}")
     print(f"KIVY_TEXT={os.environ.get('KIVY_TEXT')}")
     print(f"DISPLAY={os.environ.get('DISPLAY')}")

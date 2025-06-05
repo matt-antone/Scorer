@@ -52,6 +52,11 @@ This document tracks what works, what's left to build, current status, and known
   - `requirements.txt` for Python dependencies.
   - Basic Kivy app structure is sound and debuggable on macOS.
   - `.cursorrules` file documents Kivy development patterns.
+- **Basic Kivy application structure**
+- **SDL2 compilation with KMSDRM support**
+- **DRM subsystem configuration**
+- **User permissions and group setup**
+- **Diagnostic test script for KMSDRM**
 
 ## 3. What's Left to Build (High-Level)
 
@@ -71,8 +76,54 @@ This document tracks what works, what's left to build, current status, and known
   - Secondary score input/tracking.
   - Full implementation of the "Settings" button/screen functionality on `ScorerRootWidget`.
   - Further UI polish based on extended use and Pi testing.
+- **Complete KMSDRM support**
+- **Finalize display configuration**
+- **Optimize performance**
+- **Complete documentation**
 
 ## 4. Known Issues
 
 - **macOS SDL2 Warnings**: `objc[...] Class SDLApplication ...` warnings persist on macOS. Not currently blocking, but noted.
 - **Settings Button**: The "Settings" button on `ScorerRootWidget` currently exits the app; its intended functionality needs to be designed and implemented. (This is more a placeholder than an issue).
+- **KMSDRM Support**
+  - **Status**: Investigating
+  - **Impact**: High
+  - **Current Focus**: Debugging "kmsdrm not available" error
+  - **Next Steps**: Run diagnostic tests, verify kernel support
+- **DRM Card Selection**
+  - **Status**: Pending
+  - **Impact**: Medium
+  - **Current Focus**: Identifying correct card for display
+  - **Next Steps**: Test with different cards, document findings
+- **Kernel KMS Support**
+  - **Status**: Verifying
+  - **Impact**: High
+  - **Current Focus**: Confirming KMS is properly enabled
+  - **Next Steps**: Check kernel configuration, review logs
+
+## 5. Recent Achievements
+
+- **Created comprehensive diagnostic test script**
+- **Verified DRM device presence and permissions**
+- **Confirmed proper group memberships**
+- **Added detailed system diagnostics**
+
+## 6. Next Milestones
+
+1. **Resolve KMSDRM support**
+2. **Complete display configuration**
+3. **Optimize performance**
+4. **Finalize documentation**
+
+## 7. Blockers
+
+- **KMSDRM support not working**
+- **Need to verify kernel-level KMS support**
+- **May need to adjust SDL2 configuration**
+
+## 8. Notes
+
+- **DRM subsystem appears properly configured**
+- **Permissions and groups look correct**
+- **Need to verify kernel-level support**
+- **May need to adjust SDL2 configuration**

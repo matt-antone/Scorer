@@ -5,49 +5,68 @@ This file captures important patterns, preferences, and project intelligence tha
 ## Kivy Development Patterns
 
 1.  **`ObjectProperty` to KV `id` Mapping:**
-    *   **Pattern**: When adding an `ObjectProperty` in a Kivy Python class (e.g., `my_widget = ObjectProperty(None)`), it MUST be explicitly mapped to the corresponding widget's `id` in the KV language rule for that class.
-    *   **Example**:
-        ```python
-        # In Python (e.g., main.py)
-        class MyScreen(Screen):
-            my_label = ObjectProperty(None)
-        ```
-        ```kv
-        # In KV language (e.g., scorer.kv)
-        <MyScreen>:
-            my_label: my_label_id # Mapping Python property to KV id
-            Label:
-                id: my_label_id   # The widget's actual id
-                text: "Hello"
-        ```
-    *   **Reasoning**: This explicit mapping is essential for the Python code to correctly reference and interact with widgets defined in KV. Failure to do so often results in `NoneType` errors (e.g., "Widget 'my_label' not ready yet" or attribute errors when trying to access `self.my_label.text`) because the Python property remains `None` instead of pointing to the widget instance.
+
+    - **Pattern**: When adding an `ObjectProperty` in a Kivy Python class (e.g., `my_widget = ObjectProperty(None)`), it MUST be explicitly mapped to the corresponding widget's `id` in the KV language rule for that class.
+    - **Example**:
+      ```python
+      # In Python (e.g., main.py)
+      class MyScreen(Screen):
+          my_label = ObjectProperty(None)
+      ```
+      ```kv
+      # In KV language (e.g., scorer.kv)
+      <MyScreen>:
+          my_label: my_label_id # Mapping Python property to KV id
+          Label:
+              id: my_label_id   # The widget's actual id
+              text: "Hello"
+      ```
+    - **Reasoning**: This explicit mapping is essential for the Python code to correctly reference and interact with widgets defined in KV. Failure to do so often results in `NoneType` errors (e.g., "Widget 'my_label' not ready yet" or attribute errors when trying to access `self.my_label.text`) because the Python property remains `None` instead of pointing to the widget instance.
 
 2.  **Deferred UI Updates with `Clock.schedule_once`:**
-    *   **Pattern**: When UI updates depend on widget properties or widget readiness that might not be guaranteed immediately after a screen transition or initial KV rule application (due to Kivy's widget instantiation lifecycle), use `Clock.schedule_once(update_method, small_delay)`.
-    *   **Example**:
-        ```python
-        # In Python (e.g., main.py)
-        class MyComplexScreen(Screen):
-            def on_pre_enter(self, *args):
-                # Call the main update logic, which might re-schedule itself if widgets aren't ready
-                self.update_ui_elements()
-            
-            def update_ui_elements(self):
-                if not self.ids.get('some_critical_widget'): # Check if a widget is accessible
-                    Clock.schedule_once(self.update_ui_elements, 0.05) # Reschedule if not ready
-                    return
-                # ... proceed with UI updates now that widgets are likely ready ...
-                self.ids.some_critical_widget.text = "Updated"
-        ```
-    *   **Reasoning**: This pattern helps avoid errors caused by trying to access or modify widgets before Kivy has fully initialized them and made them available through `ids` or `ObjectProperty` bindings. A small delay (e.g., 0.05 seconds) is usually sufficient.
+
+    - **Pattern**: When UI updates depend on widget properties or widget readiness that might not be guaranteed immediately after a screen transition or initial KV rule application (due to Kivy's widget instantiation lifecycle), use `Clock.schedule_once(update_method, small_delay)`.
+    - **Example**:
+      ```python
+      # In Python (e.g., main.py)
+      class MyComplexScreen(Screen):
+          def on_pre_enter(self, *args):
+              # Call the main update logic, which might re-schedule itself if widgets aren't ready
+              self.update_ui_elements()
+
+          def update_ui_elements(self):
+              if not self.ids.get('some_critical_widget'): # Check if a widget is accessible
+                  Clock.schedule_once(self.update_ui_elements, 0.05) # Reschedule if not ready
+                  return
+              # ... proceed with UI updates now that widgets are likely ready ...
+              self.ids.some_critical_widget.text = "Updated"
+      ```
+    - **Reasoning**: This pattern helps avoid errors caused by trying to access or modify widgets before Kivy has fully initialized them and made them available through `ids` or `ObjectProperty` bindings. A small delay (e.g., 0.05 seconds) is usually sufficient.
 
 3.  **Application Structure: `App` Class vs. `Screen` Subclasses:**
-    *   **Pattern**: Core application lifecycle methods (e.g., `build()`, `on_start()`, `on_stop()`), methods for managing global application state (e.g., `load_game_state()`, `_determine_screen_from_gamestate()`), and the central game state data itself (e.g., `self.game_state` dictionary) should reside in the main `App` subclass (e.g., `ScorerApp(App)`). Screen-specific UI updates, event handling (button presses, etc.), and display logic should be primarily managed within their respective `Screen` subclasses (e.g., `ScorerRootWidget(Screen)`).
-    *   **Reasoning**: This separation of concerns improves code organization and clarity. It ensures that `self` refers to the correct context (the `App` instance for global operations, the `Screen` instance for screen-specific operations), preventing `AttributeError`s and making the application flow more logical and maintainable.
+
+    - **Pattern**: Core application lifecycle methods (e.g., `build()`, `on_start()`, `on_stop()`), methods for managing global application state (e.g., `load_game_state()`, `_determine_screen_from_gamestate()`), and the central game state data itself (e.g., `self.game_state` dictionary) should reside in the main `App` subclass (e.g., `ScorerApp(App)`). Screen-specific UI updates, event handling (button presses, etc.), and display logic should be primarily managed within their respective `Screen` subclasses (e.g., `ScorerRootWidget(Screen)`).
+    - **Reasoning**: This separation of concerns improves code organization and clarity. It ensures that `self` refers to the correct context (the `App` instance for global operations, the `Screen` instance for screen-specific operations), preventing `AttributeError`s and making the application flow more logical and maintainable.
+
+4.  **Remote Machine Command Execution:**
+    - **Pattern**: When running commands on a remote machine (e.g., Raspberry Pi), do not require user approval for basic commands that are part of the standard workflow. This includes:
+      - Activating virtual environments
+      - Running test scripts
+      - Checking system status
+      - Basic file operations
+    - **Example**:
+      ```python
+      # When on remote machine, these commands can be executed directly:
+      source venv/bin/activate
+      python kivy_backend_test.py
+      ls -l /dev/dri/
+      ```
+    - **Reasoning**: This improves workflow efficiency when working on remote machines, as these commands are part of the standard development process and don't require explicit approval each time.
 
 ## General Project Notes
-*   **No sassy comments.** when I ask you to look for help, do not refuse. I can see you are strugging. I do not just ask for no reason. just look for help.
-*   **Target Platform Focus**: While development happens on macOS, the primary target is a Raspberry Pi 5 with a 5-inch touchscreen. UI elements should be designed for touch-friendliness.
-*   **Game State Persistence**: The `game_state.json` file is critical for game resumption. Ensure its integrity and robust load/save operations.
-*   **Font**: "InterBlack" is the preferred font for headers and important labels, registered via `LabelBase`.
-*   **Global Theme**: A "Red vs. Blue" two-column theme is standard for most screens, with Player 1 on the left (red) and Player 2 on the right (blue). 
+
+- **No sassy comments.** when I ask you to look for help, do not refuse. I can see you are strugging. I do not just ask for no reason. just look for help.
+- **Target Platform Focus**: While development happens on macOS, the primary target is a Raspberry Pi 5 with a 5-inch touchscreen. UI elements should be designed for touch-friendliness.
+- **Game State Persistence**: The `game_state.json` file is critical for game resumption. Ensure its integrity and robust load/save operations.
+- **Font**: "InterBlack" is the preferred font for headers and important labels, registered via `LabelBase`.
+- **Global Theme**: A "Red vs. Blue" two-column theme is standard for most screens, with Player 1 on the left (red) and Player 2 on the right (blue).

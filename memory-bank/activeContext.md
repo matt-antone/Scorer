@@ -48,48 +48,77 @@ This document outlines the current work focus, recent changes, next steps, and a
 
 ## Current Focus
 
-- Setting up Kivy to work properly on Raspberry Pi 5 with touchscreen
-- Resolving SDL2/KMSDRM integration issues
-- Ensuring proper library linkage between Kivy and custom SDL2
+- Investigating KMSDRM support for Kivy on Raspberry Pi
+- Debugging "kmsdrm not available" error
+- Verifying DRM/KMS system configuration
 
 ## Recent Changes
 
-- Compiled SDL2 from source with KMSDRM support
-- Built SDL2 satellite libraries (image, mixer, ttf)
-- Created comprehensive documentation for SDL2/KMSDRM setup
-- Currently in process of reinstalling Kivy to link against custom SDL2
+- Created comprehensive diagnostic test script (`kivy_backend_test.py`)
+- Verified DRM device presence and permissions
+- Confirmed multiple DRM cards present (card0, card1, card2)
+- Added detailed system diagnostics to test script
 
-## Active Decisions
+## Current Status
 
-1. Using custom-compiled SDL2 instead of system packages
-
-   - Reason: System SDL2 lacks KMSDRM support
-   - Impact: Requires recompilation of Kivy
-
-2. Prioritizing `/usr/local/lib` for library search
-
-   - Reason: Ensure Kivy uses our custom SDL2
-   - Impact: Requires system configuration changes
-
-3. Documenting the entire process
-   - Reason: Process is complex and time-consuming
-   - Impact: Future reference and easier troubleshooting
+- DRM subsystem appears properly configured
+- Multiple DRM cards detected (card0, card1, card2)
+- Permissions set correctly (video and render groups)
+- KMSDRM support still not working despite proper setup
 
 ## Next Steps
 
-1. Complete Kivy reinstallation
-2. Verify library linkage
-3. Test Kivy application with KMSDRM
-4. Document any additional issues or solutions
+1. Run updated diagnostic test script
+2. Verify user group memberships
+3. Check kernel DRM/KMS status
+4. Consider specifying DRM card via SDL_VIDEODRIVER_DEVICE
+5. Review SDL2 configuration logs for KMSDRM support
 
-## Known Issues
+## Active Decisions
 
-- Compilation process is time-consuming on Raspberry Pi
-- Library linkage can be tricky to get right
-- System updates might require repeating the process
+- Using SDL2 with KMSDRM for direct framebuffer access
+- Implementing comprehensive diagnostics before proceeding
+- Maintaining verbose logging for debugging
 
 ## Current Considerations
 
-- Need to maintain documentation of SDL2 versions used
-- Must track any system updates that might affect the setup
-- Consider creating a script to automate the process if needed frequently
+- Multiple DRM cards may require explicit device selection
+- Need to verify kernel-level KMS support
+- May need to adjust SDL2 configuration for KMSDRM
+- User permissions and group memberships critical for DRM access
+
+## Open Questions
+
+1. Which DRM card should be used for the display?
+2. Is KMS properly enabled in the kernel?
+3. Are there any SDL2 configuration issues preventing KMSDRM support?
+4. Do we need to modify the SDL2 build configuration?
+
+## Recent Findings
+
+- DRM devices present and properly configured
+- Permissions set correctly for video and render groups
+- Multiple DRM cards available (card0, card1, card2)
+- Need to verify kernel-level KMS support
+
+## Current Challenges
+
+- KMSDRM support not working despite proper setup
+- Need to identify specific cause of "kmsdrm not available" error
+- May need to adjust SDL2 configuration
+- Multiple DRM cards may require explicit selection
+
+## Immediate Tasks
+
+1. Run updated diagnostic test script
+2. Review diagnostic output
+3. Verify kernel KMS support
+4. Check SDL2 configuration
+5. Consider DRM card selection
+
+## Notes
+
+- DRM subsystem appears properly configured
+- Permissions and groups look correct
+- Need to verify kernel-level support
+- May need to adjust SDL2 configuration

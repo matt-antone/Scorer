@@ -44,6 +44,11 @@
   - Error handling
   - Reconnection logic
   - Performance monitoring
+- Individual player clients:
+  - Player-specific web client interface
+  - QR code generation and display for access
+  - Per-player authentication/session management
+  - Secure permissions and validation
 
 ## Current Status
 
@@ -90,6 +95,10 @@
   - Need to add error handling
   - Need to test reconnection scenarios
   - Need to validate performance under load
+- Individual player clients:
+  - Need to design player-specific flows
+  - Need to implement QR code generation and access
+  - Need to secure per-player actions
 
 ## Blockers
 
@@ -135,3 +144,10 @@
   - Validation system
   - Fallback mechanisms
   - WebSocket state recovery
+
+### Individual Player Clients
+
+- Player-specific web client interface
+- QR code generation and display for access
+- Per-player authentication/session management
+- Secure permissions and validation

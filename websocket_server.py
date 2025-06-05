@@ -74,6 +74,35 @@ class WebSocketServer:
                         self.broadcast_cp_update(player_id, new_cp)
                         logger.info(f"CP updated for player {player_id}: {new_cp}")
 
+        @self.socketio.on('update_game_phase')
+        def handle_game_phase_update(data):
+            if self.game_state_callback:
+                game_state = self.game_state_callback()
+                new_phase = data.get('phase')
+                if new_phase is not None:
+                    game_state['phase'] = new_phase
+                    self.broadcast_game_phase_update(new_phase)
+                    logger.info(f"Game phase updated to: {new_phase}")
+
+        @self.socketio.on('update_round')
+        def handle_round_update(data):
+            if self.game_state_callback:
+                game_state = self.game_state_callback()
+                new_round = data.get('round')
+                if new_round is not None:
+                    game_state['round'] = new_round
+                    self.broadcast_round_update(new_round)
+                    logger.info(f"Round updated to: {new_round}")
+
+        @self.socketio.on('update_timer')
+        def handle_timer_update(data):
+            if self.game_state_callback:
+                game_state = self.game_state_callback()
+                if isinstance(data, dict) and 'status' in data:
+                    game_state['game_timer'] = data
+                    self.broadcast_timer_update(data)
+                    logger.info(f"Timer updated: {data}")
+
     def set_game_state_callback(self, callback):
         """Set the callback function to get the current game state"""
         self.game_state_callback = callback
@@ -86,7 +115,7 @@ class WebSocketServer:
 
         def run_server():
             logger.info(f"Starting WebSocket server on {self.host}:{self.port}")
-            self.socketio.run(self.app, host=self.host, port=self.port)
+            self.socketio.run(self.app, host=self.host, port=self.port, allow_unsafe_werkzeug=True)
 
         self.server_thread = threading.Thread(target=run_server, daemon=True)
         self.server_thread.start()

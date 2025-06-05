@@ -250,3 +250,7 @@
    - I must write commit messages following this format
    - I must verify the commit message is complete before committing
    - I must reference the commit message in my responses when relevant
+
+# Automated Testing Rule
+
+- Tests may be run unattended by the assistant. No user approval required for test execution.

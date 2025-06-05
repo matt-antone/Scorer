@@ -6,8 +6,11 @@ if platform.system() == "Linux":
     os.environ['KIVY_WINDOW'] = 'sdl2'
     os.environ['KIVY_GRAPHICS_BACKEND'] = 'egl_rpi' # Kivy 2.0+ style for backend
     os.environ['KIVY_TEXT'] = 'sdl2'
+    # Add EGL/GLES library paths for Raspberry Pi
+    os.environ['KIVY_EGL_LIB'] = '/opt/vc/lib/libEGL.so'
+    os.environ['KIVY_GLES_LIB'] = '/opt/vc/lib/libGLESv2.so'
     os.environ.pop('DISPLAY', None) # Still pop DISPLAY as a fallback
-    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS_BACKEND={os.environ.get('KIVY_GRAPHICS_BACKEND')}, DISPLAY={os.environ.get('DISPLAY')}")
+    print(f"Main.py: Env Vars Set -> KIVY_WINDOW={os.environ.get('KIVY_WINDOW')}, KIVY_GRAPHICS_BACKEND={os.environ.get('KIVY_GRAPHICS_BACKEND')}, KIVY_EGL_LIB={os.environ.get('KIVY_EGL_LIB')}, KIVY_GLES_LIB={os.environ.get('KIVY_GLES_LIB')}, DISPLAY={os.environ.get('DISPLAY')}")
 
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
 

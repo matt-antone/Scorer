@@ -141,6 +141,9 @@ SERVICE_CONTENT=$(cat <<EOF
 [Unit]
 Description=Scorer Kivy Application
 After=network.target multi-user.target
+# Ensure clean shutdown
+DefaultDependencies=no
+Conflicts=shutdown.target reboot.target halt.target
 
 [Service]
 Type=simple
@@ -160,6 +163,11 @@ StandardOutput=journal
 StandardError=journal
 Restart=on-failure
 RestartSec=10s
+
+# Handle shutdown gracefully
+TimeoutStopSec=5
+KillMode=mixed
+KillSignal=SIGTERM
 
 [Install]
 WantedBy=multi-user.target

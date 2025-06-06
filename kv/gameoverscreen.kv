@@ -7,7 +7,7 @@
             source: 'assets/background.png'
             pos: self.pos
             size: self.size
-    result_status_label: result_status_lbl
+    result_status_label: subhead
     p1_final_name_label: p1_name_final_lbl
     p1_final_score_label: p1_score_final_lbl
     p1_final_cp_label: p1_cp_final_lbl
@@ -24,121 +24,166 @@
         orientation: 'vertical'
         HeaderLayout:
             title_text: 'Game Over' # Set the property
-        # Original Root BoxLayout for GameOverScreen content
-        BoxLayout:
-            orientation: 'vertical'
-            padding: dp(20)
-            spacing: dp(10)
-            # Old title Label removed from here
-
-            Label:
-                id: result_status_lbl
-                text: "Determining winner..."
-                font_size: '26sp'
-                italic: True
-                size_hint_y: None
-                height: dp(40)
-                halign: 'center'
-
-            GridLayout:
-                cols: 2
-                spacing: dp(10)
-                padding: dp(10)
-                size_hint_y: 0.6 # Give it some substantial height
-
-                # Player 1 Final Stats
-                BoxLayout:
-                    orientation: 'vertical'
-                    spacing: dp(5)
-                    Label:
-                        id: p1_name_final_lbl
-                        text: 'Player 1:'
-                        font_size: '20sp'
-                        bold: True
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p1_score_final_lbl
-                        text: 'Score: 0'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p1_cp_final_lbl
-                        text: 'CP: 0'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p1_time_final_lbl
-                        text: 'Time: 00:00:00'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-
-                # Player 2 Final Stats
-                BoxLayout:
-                    orientation: 'vertical'
-                    spacing: dp(5)
-                    Label:
-                        id: p2_name_final_lbl
-                        text: 'Player 2:'
-                        font_size: '20sp'
-                        bold: True
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p2_score_final_lbl
-                        text: 'Score: 0'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p2_cp_final_lbl
-                        text: 'CP: 0'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-                    Label:
-                        id: p2_time_final_lbl
-                        text: 'Time: 00:00:00'
-                        font_size: '18sp'
-                        halign: 'left'
-                        text_size: self.width, None
-            
-            Label: # Spacer to push game stats and buttons down a bit
-                size_hint_y: 0.1
-
-            # Overall Game Stats
             Label:
                 id: total_time_final_lbl
                 text: 'Total Game Time: 00:00:00'
                 font_size: '18sp'
-                size_hint_y: None
-                height: dp(30)
                 halign: 'center'
+                size_hint_y: None
             Label:
                 id: rounds_played_final_lbl
                 text: 'Rounds Played: 5'
                 font_size: '18sp'
                 size_hint_y: None
-                height: dp(30)
-                halign: 'center'
+        SubHeaderLayout:
+            id: subhead
 
-            Widget: # Spacer
-                size_hint_y: 0.3
+        # Original Root BoxLayout for GameOverScreen content
+        GridLayout:
+            cols: 2
+            spacing: dp(20)
+            padding: dp(20)
+            size_hint_y: 0.6 # Give it some substantial height
 
+            # Player 1 Final Stats
             BoxLayout:
-                orientation: 'horizontal'
+                id: p1_panel_id
+                orientation: 'vertical'
                 size_hint_y: None
-                height: dp(50)
-                spacing: dp(20)
-                Button:
-                    text: 'Start New Game'
-                    font_size: '20sp'
-                    on_press: root.start_new_game()
-                Button:
-                    id: exit_btn_gos
-                    text: 'Exit Application'
-                    font_size: '20sp'
-                    on_press: root.exit_app_from_game_over() 
+                height: self.minimum_height
+                InterBlack:
+                    id: p1_name_final_lbl
+                    text: 'Player 1'
+                    font_size: '24sp'
+                    text_size: self.width, None
+                    halign: 'left' # Align left as requested
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+                InterBlack:
+                    id: p1_name_label_id
+                    text: 'Attacker'
+                    font_size: '12sp'
+                    text_size: self.width, None
+                    halign: 'left' # Align left as requested
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+                BoxLayout:
+                    orientation: 'vertical'
+                    valign: 'bottom'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    InterBlack:
+                        id: p1_score_final_lbl
+                        text: '0'
+                        font_size: '96sp'
+                        text_size: self.width, None
+                        halign: 'left' # Align left as requested
+                        valign: 'top'
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(5)
+                        width: self.texture_size[0]
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        InterBlack:
+                            id: p1_cp_final_lbl
+                            text: 'Command Points: 0'
+                            font_size: '18sp'
+                            text_size: self.width, None
+                            halign: 'left' # Align left as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+                        InterBlack:
+                            id: p1_time_final_lbl
+                            text: '00:00:00'
+                            font_size: '18sp'
+                            text_size: self.width, None
+                            halign: 'left' # Align left as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+            # Player 2 Final Stats
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: dp(5)
+                InterBlack:
+                    id: p2_name_final_lbl
+                    text: 'Player 2'
+                    font_size: '24sp'
+                    text_size: self.width, None
+                    halign: 'right' # Align right as requested
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+                InterBlack:
+                    id: p1_name_label_id
+                    text: 'Attacker'
+                    font_size: '12sp'
+                    text_size: self.width, None
+                    halign: 'right' # Align right as requested
+                    valign: 'top'
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(5)
+                BoxLayout:
+                    orientation: 'vertical'
+                    valign: 'bottom'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    InterBlack:
+                        id: p2_score_final_lbl
+                        text: '0'
+                        font_size: '96sp'
+                        text_size: self.width, None
+                        halign: 'right' # Align right as requested
+                        valign: 'top'
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(5)
+                        width: self.texture_size[0]
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        valign: 'bottom'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        InterBlack:
+                            id: p2_time_final_lbl
+                            text: '00:00:00'
+                            font_size: '18sp'
+                            text_size: self.width, None
+                            halign: 'right' # Align right as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+                        InterBlack:
+                            id: p2_cp_final_lbl
+                            text: 'Command Points: 0'
+                            font_size: '18sp'
+                            text_size: self.width, None
+                            halign: 'right' # Align right as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+        
+        Label: # Spacer to push game stats and buttons down a bit
+            size_hint_y: 0.1
+
+        Widget: # Spacer
+            size_hint_y: 0.3
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(50)
+            spacing: dp(20)
+            Button:
+                text: 'Start New Game'
+                font_size: '20sp'
+                on_press: root.start_new_game()
+            Button:
+                id: exit_btn_gos
+                text: 'Exit Application'
+                font_size: '20sp'
+                on_press: root.exit_app_from_game_over() 

@@ -50,16 +50,16 @@ class GameOverScreen(Screen):
         if self.result_status_label: self.result_status_label.text = winner_text
         
         # Populate Player 1 Stats safely
-        if self.p1_final_name_label: self.p1_final_name_label.text = f"Player: {p1_stats.get('name', 'P1')}"
-        if self.p1_final_score_label: self.p1_final_score_label.text = f"Final Score: {p1_score}"
-        if self.p1_final_cp_label: self.p1_final_cp_label.text = f"CP Remaining: {p1_stats.get('cp', 0)}"
-        if self.p1_final_time_label: self.p1_final_time_label.text = f"Time Played: {p1_stats.get('player_time_display', '00:00:00')}"
+        if self.p1_final_name_label: self.p1_final_name_label.text = f"{p1_stats.get('name', 'P1')}"
+        if self.p1_final_score_label: self.p1_final_score_label.text = f"{p1_score}"
+        if self.p1_final_cp_label: self.p1_final_cp_label.text = f"CP: {p1_stats.get('cp', 0)}"
+        if self.p1_final_time_label: self.p1_final_time_label.text = f"{p1_stats.get('player_time_display', '00:00:00')}"
 
         # Populate Player 2 Stats safely
-        if self.p2_final_name_label: self.p2_final_name_label.text = f"Player: {p2_stats.get('name', 'P2')}"
-        if self.p2_final_score_label: self.p2_final_score_label.text = f"Final Score: {p2_score}"
-        if self.p2_final_cp_label: self.p2_final_cp_label.text = f"CP Remaining: {p2_stats.get('cp', 0)}"
-        if self.p2_final_time_label: self.p2_final_time_label.text = f"Time Played: {p2_stats.get('player_time_display', '00:00:00')}"
+        if self.p2_final_name_label: self.p2_final_name_label.text = f"{p2_stats.get('name', 'P2')}"
+        if self.p2_final_score_label: self.p2_final_score_label.text = f"{p2_score}"
+        if self.p2_final_cp_label: self.p2_final_cp_label.text = f"CP: {p2_stats.get('cp', 0)}"
+        if self.p2_final_time_label: self.p2_final_time_label.text = f"{p2_stats.get('player_time_display', '00:00:00')}"
 
         # Populate Game Stats safely
         if self.total_game_time_label: self.total_game_time_label.text = f"Total Game Time: {timer_stats.get('elapsed_display', '00:00:00')}"

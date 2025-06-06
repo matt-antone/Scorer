@@ -89,6 +89,7 @@ ScreenManager:
     FirstTurnSetupScreen:
     ScorerRootWidget:
     GameOverScreen:
+    ScreensaverScreen:
 
 <NameEntryScreen>:
     name: 'name_entry'
@@ -866,64 +867,78 @@ ScreenManager:
 
 <SplashScreen>:
     name: 'splash_screen'
-    canvas.before:
-        Color:
-            rgba: 1, 1, 1, 1
-        Rectangle:
-            source: 'assets/background.png'
-            pos: self.pos
-            size: self.size
-    Image:
-        source: 'static/logo-original.png'
-        size_hint: None, None
-        size: dp(256), dp(256)
-        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                source: 'assets/background.png'
+                pos: self.pos
+                size: self.size
+
+        Image:
+            source: 'static/logo-original.png'
+            size_hint: None, None
+            size: dp(256), dp(256)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        Button:
+            text: 'START'
+            font_name: 'InterBlack'
+            color: 1, 1, 1, 1 # White text
+            font_size: '30sp'
+            size_hint: (0.4, None)
+            height: dp(60)
+            pos_hint: {'center_x': 0.5, 'center_y': 0.123} # Lowered from 0.165
+            background_color: 0, 0, 0, 0 # Transparent
+            on_press: root.transition_to_next_screen()
+            canvas.before:
+                Color:
+                    rgba: 0, 0, 0, 1 # Black background
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(8)]
 
 <ResumeOrNewScreen>:
     name: 'resume_or_new'
-    canvas.before:
-        Color:
-            rgba: 1, 1, 1, 1
-        Rectangle:
-            source: 'assets/background.png'
-            pos: self.pos
-            size: self.size
-    resume_info_label: resume_info_lbl
-    resume_button: resume_btn
-    new_game_button: new_game_btn_resume_screen
-
     BoxLayout:
         orientation: 'vertical'
-        HeaderLayout:
-            title_text: 'Game Found'
-        BoxLayout:
-            orientation: 'vertical'
-            padding: dp(40)
-            spacing: dp(20)
-            Label:
-                id: resume_info_lbl
-                text: "Saved game data found. What would you like to do?"
-                font_size: '20sp'
-                halign: 'center'
-                valign: 'middle'
-                text_size: self.width - dp(20), None # Allow text wrapping
-                size_hint_y: 0.4
+        padding: dp(20)
+        spacing: dp(20)
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
 
-            Button:
-                id: resume_btn
-                text: 'Resume Saved Game'
-                font_size: '22sp'
-                size_hint_y: None
-                height: dp(50)
+        InterBlack:
+            text: 'Game in Progress'
+            font_size: '40sp'
+            size_hint_y: 0.3
+
+        Label:
+            id: resume_info_label
+            text: 'A saved game was found. Resume or start a new game?'
+            font_size: '20sp'
+            size_hint_y: 0.2
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: dp(20)
+            size_hint_y: 0.5
+
+            ScoreboardButton:
+                id: resume_button
+                text: "Resume Game"
                 on_press: root.resume_game_action()
-            
-            Button:
-                id: new_game_btn_resume_screen
-                text: 'Start New Game'
-                font_size: '22sp'
-                size_hint_y: None
-                height: dp(50)
+
+            ScoreboardButton:
+                id: new_game_button
+                text: "Start New Game"
                 on_press: root.start_new_game_from_resume_screen_action()
-            
-            Widget:
-                size_hint_y: 0.2 # Some spacing at the bottom 
+
+<ScreensaverScreen>:
+    name: 'screensaver' 

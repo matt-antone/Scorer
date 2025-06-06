@@ -11,13 +11,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class WebSocketServer:
-    def __init__(self, host: str = '0.0.0.0', port: int = 6969):
+    def __init__(self, get_game_state_callback=None, broadcast_callback=None, host: str = '0.0.0.0', port: int = 6969):
         self.app = Flask(__name__, static_folder='static')
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         self.host = host
         self.port = port
         self.server_thread: Optional[threading.Thread] = None
-        self.game_state_callback = None
+        self.get_game_state_callback = get_game_state_callback
+        self.broadcast_callback = broadcast_callback
         self._setup_routes()
         self._setup_socket_handlers()
 
@@ -42,16 +43,16 @@ class WebSocketServer:
 
         @self.socketio.on('request_game_state')
         def handle_game_state_request():
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 emit('game_state_update', game_state)
             else:
                 logger.warning("No game state callback registered")
 
         @self.socketio.on('update_score')
         def handle_score_update(data):
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 player_id = data.get('player_id')
                 new_score = data.get('score')
                 if player_id and new_score is not None:
@@ -63,8 +64,8 @@ class WebSocketServer:
 
         @self.socketio.on('update_cp')
         def handle_cp_update(data):
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 player_id = data.get('player_id')
                 new_cp = data.get('cp')
                 if player_id and new_cp is not None:
@@ -76,8 +77,8 @@ class WebSocketServer:
 
         @self.socketio.on('update_game_phase')
         def handle_game_phase_update(data):
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 new_phase = data.get('phase')
                 if new_phase is not None:
                     game_state['phase'] = new_phase
@@ -86,8 +87,8 @@ class WebSocketServer:
 
         @self.socketio.on('update_round')
         def handle_round_update(data):
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 new_round = data.get('round')
                 if new_round is not None:
                     game_state['round'] = new_round
@@ -96,16 +97,12 @@ class WebSocketServer:
 
         @self.socketio.on('update_timer')
         def handle_timer_update(data):
-            if self.game_state_callback:
-                game_state = self.game_state_callback()
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
                 if isinstance(data, dict) and 'status' in data:
                     game_state['game_timer'] = data
                     self.broadcast_timer_update(data)
                     logger.info(f"Timer updated: {data}")
-
-    def set_game_state_callback(self, callback):
-        """Set the callback function to get the current game state"""
-        self.game_state_callback = callback
 
     def start(self):
         """Start the WebSocket server in a separate thread"""
@@ -133,8 +130,8 @@ class WebSocketServer:
         Broadcasts the sanitized game state to all connected clients
         by calling the registered callback function.
         """
-        if self.game_state_callback:
-            game_state = self.game_state_callback()
+        if self.get_game_state_callback:
+            game_state = self.get_game_state_callback()
             self.socketio.emit('game_state_update', game_state)
             logger.info("Broadcasted full game state update to all clients.")
         else:

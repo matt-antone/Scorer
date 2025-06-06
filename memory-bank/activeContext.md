@@ -13,6 +13,10 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
   - Replaced the PostgreSQL database dependency with **SQLite**. This removes the need for an external database server and simplifies deployment significantly.
   - Pinned critical Python packages (`Flask`, `Flask-SocketIO`) in `requirements.txt` to resolve dependency conflicts and ensure a stable build.
 - **"No Connection" Screen:** Implemented a UI screen on the web client that appears when the connection to the server is lost, improving user experience.
+- **Screensaver Integration:** Fully integrated the `ScreensaverScreen` into the main application. This includes an inactivity timer that, after a set duration, displays a slideshow of images. User interaction on the screensaver returns the user to their previous screen.
+- **Screensaver Enhancement:** The screensaver slideshow has been improved. It now randomizes the order of the billboard images and uses a slow, two-second fade animation for a smoother transition between slides.
+- **Bug Fix:** Resolved a startup crash (`TypeError`) caused by a refactoring mismatch between `main.py` and `websocket_server.py`. The `WebSocketServer`'s constructor was updated to accept the necessary callbacks directly, improving the code's robustness.
+- **Splash Screen Rework:** The splash screen has been changed from a timed, automatic transition to a manual one. It now features a large, styled "START" button that the user must press to enter the application. The logic for the splash screen has also been refactored into its own dedicated file (`screens/splash_screen.py`) for better code organization.
 
 ## Active Decisions
 

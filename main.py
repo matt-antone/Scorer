@@ -1,5 +1,7 @@
 import platform # For OS detection
 import os # Import os
+import json # For saving/loading game state
+import time # Added for timer
 
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
 
@@ -22,8 +24,6 @@ else:  # Default to development mode (e.g., macOS, Windows)
 from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 
 import random # Added for initiative roll
-import time # Added for timer
-import json # For saving/loading game state
 import os   # For path manipulation
 # Set default font *before* other Kivy components are imported if possible
 # Note: Paths here assume the script is run from the project root where assets/fonts exists.
@@ -50,8 +50,11 @@ from kivy.clock import Clock # Added for timer updates
 from kivy.uix.textinput import TextInput # Added for player names
 from kivy.uix.vkeyboard import VKeyboard # Import VKeyboard
 from kivy.core.text import LabelBase # For registering fonts by name
+from kivy.uix.image import Image
 from db.integration import reset_db_for_new_game_sync
 from websocket_server import WebSocketServer
+from screens.screensaver_screen import ScreensaverScreen
+from screens.splash_screen import SplashScreen
 
 # Register the Inter font family so it can be referred to by name 'Inter' in KV if needed.
 # This also acts as a fallback or explicit way to use it.
@@ -85,20 +88,6 @@ else:
 # Config.set('graphics', 'resizable', False) # MOVED
 
 # --- New Setup Screens ---
-
-class SplashScreen(Screen):
-    def on_enter(self, *args):
-        print("SplashScreen: on_enter called")
-        app = App.get_running_app()
-        if not app or not app.root:
-            print("SplashScreen: on_enter called, but app or app.root is not yet available. Ignoring this call.")
-            return
-
-        print(f"SplashScreen: Scheduling transition to {app.target_screen_after_splash} in {app.VISIBLE_SPLASH_TIME}s")
-        Clock.schedule_once(lambda dt: app.transition_from_splash(app.target_screen_after_splash, dt), app.VISIBLE_SPLASH_TIME)
-
-    def on_leave(self, *args):
-        print("SplashScreen: on_leave called")
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
@@ -1030,8 +1019,7 @@ class ResumeOrNewScreen(Screen):
 
     def resume_game_action(self):
         app = App.get_running_app()
-        target_screen = app._get_screen_for_phase(app.game_state.get('game_phase'))
-        app.switch_screen(target_screen)
+        app.root.current = app._get_screen_for_phase(app.game_state.get('game_phase', 'game_play'))
 
     def start_new_game_from_resume_screen_action(self):
         app = App.get_running_app()
@@ -1040,342 +1028,247 @@ class ResumeOrNewScreen(Screen):
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
     VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
-    target_screen_after_splash = None  # Add this attribute
+    INACTIVITY_TIMEOUT_SECONDS = 10 # 5 minutes
+    target_screen_after_splash = None
+    last_active_screen = None # To store the screen before screensaver
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.game_state = self._get_default_game_state()
-        self.websocket_server = WebSocketServer()
-        self.websocket_server.set_game_state_callback(self.get_game_state)
-        self.load_game_state()
-        self.websocket_server.start()
+        self.ws_server = WebSocketServer(
+            get_game_state_callback=self.get_game_state,
+            broadcast_callback=self.save_game_state # Use save_game_state to trigger broadcasts
+        )
 
     def _get_default_game_state(self):
-        """Helper method to return a pristine default game state dictionary."""
+        """Returns a new, clean game state dictionary."""
         return {
-            "player1": { 
-                "name": "Player 1", "primary_score": 0, "secondary_score": 0, "total_score": 0, "cp": 0, 
-                "deployment_roll": 0, "first_turn_roll": 0,
-                "player_elapsed_time_seconds": 0, "player_time_display": "00:00:00"
-            },
-            "player2": {
-                "name": "Player 2", "primary_score": 0, "secondary_score": 0, "total_score": 0, "cp": 0,
-                "deployment_roll": 0, "first_turn_roll": 0,
-                "player_elapsed_time_seconds": 0, "player_time_display": "00:00:00"
-            },
-            "current_round": 0, "active_player_id": None, 
-            "deployment_initiative_winner_id": None, "deployment_attacker_id": None, "deployment_defender_id": None,
-            "first_turn_choice_winner_id": None, "first_player_of_game_id": None,
-            "last_round_played": 0, 
-            "game_phase": "setup", # Always start in setup for a new game
-            "game_timer": { 
-                "status": "stopped", "start_time": 0, "elapsed_display": "00:00:00",
-                "turn_segment_start_time": 0 
-            },
-            "status_message": "Awaiting Name Entry..."
+            "player1": {"name": "Player 1", "primary_score": 0, "secondary_score": 0, "total_score": 0, "cp": 1, "deployment_roll": 0, "first_turn_roll": 0, "player_elapsed_time_seconds": 0.0, "player_time_display": "00:00:00"},
+            "player2": {"name": "Player 2", "primary_score": 0, "secondary_score": 0, "total_score": 0, "cp": 1, "deployment_roll": 0, "first_turn_roll": 0, "player_elapsed_time_seconds": 0.0, "player_time_display": "00:00:00"},
+            "current_round": 0,
+            "active_player_id": None,
+            "deployment_initiative_winner_id": None,
+            "deployment_attacker_id": None,
+            "deployment_defender_id": None,
+            "first_turn_choice_winner_id": None,
+            "first_player_of_game_id": None,
+            "last_round_played": 0,
+            "game_phase": "setup", # initial state
+            "game_timer": {"status": "stopped", "start_time": None, "elapsed_display": "00:00:00", "turn_segment_start_time": None}
         }
 
     def reset_game_state_to_default(self):
+        """Resets the current game state to the default."""
         self.game_state = self._get_default_game_state()
-        print("Game state has been reset to default.")
 
     def show_error_popup(self, title, message):
-        """Show an error popup with the given title and message."""
-        content = BoxLayout(orientation='vertical', spacing=dp(10), padding=dp(10))
-        message_label = Label(text=message, text_size=(self.root.width * 0.8, None), size_hint_y=None, height=dp(100))
-        ok_button = Button(text='OK', size_hint_y=None, height=dp(40))
+        """Displays an error popup dialog."""
+        popup_content = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
+        popup_content.add_widget(Label(text=message, size_hint_y=None, height=dp(40)))
+        ok_button = Button(text='OK', size_hint_y=None, height=dp(50))
+        popup_content.add_widget(ok_button)
         
-        content.add_widget(message_label)
-        content.add_widget(ok_button)
-        
-        popup = Popup(title=title, content=content, size_hint=(0.8, 0.4), auto_dismiss=False)
+        popup = Popup(title=title, content=popup_content, size_hint=(0.8, 0.4))
         ok_button.bind(on_press=popup.dismiss)
         popup.open()
 
     def start_new_game_flow(self):
-        print("Starting new game flow...")
-        # Stop timer on current game screen if it exists and is active
-        if self.root and self.root.current == 'scorer_root':
-            scorer_screen = self.root.get_screen('scorer_root')
-            if scorer_screen:
-                scorer_screen.stop_timer()
-        
-        # Reset the database for a new game
-        try:
-            from db.integration import reset_db_for_new_game_sync
-            reset_db_for_new_game_sync()
-            print("Database reset successful")
-        except Exception as e:
-            error_msg = f"Error resetting database: {e}\nThe game will continue, but some features may be limited."
-            print(error_msg)
-            self.show_error_popup("Database Error", error_msg)
-            # Continue with game state reset even if database reset fails
-            # This ensures the application remains functional
-        
+        """Initiates the sequence for starting a new game."""
+        # Reset the database synchronously
+        reset_db_for_new_game_sync()
+        # Reset the in-memory game state
         self.reset_game_state_to_default()
-        self.game_state['game_phase'] = 'name_entry' # Explicitly set the phase
-        self.save_game_state() # This contains the broadcast call
-        self.websocket_server.broadcast_game_state() # Explicitly broadcast again for robustness
+        # Update the game phase and save/broadcast
+        self.game_state['game_phase'] = 'name_entry'
+        self.save_game_state()
+        # Switch to the name entry screen
         if self.root:
             self.switch_screen('name_entry')
 
     def get_save_file_path(self):
+        """Returns the full path to the save file in the user's data directory."""
         return os.path.join(self.user_data_dir, self.SAVE_FILE_NAME)
 
     def save_game_state(self):
-        """Save the current game state to a file"""
+        """Saves the current game state to a JSON file and triggers a broadcast."""
         try:
             with open(self.get_save_file_path(), 'w') as f:
                 json.dump(self.game_state, f)
-            # Broadcast the updated game state to all connected clients
-            self.websocket_server.broadcast_game_state()
+            # After saving, broadcast the new state to all clients
+            if self.ws_server:
+                self.ws_server.broadcast_game_state()
         except Exception as e:
             print(f"Error saving game state: {e}")
 
     def load_game_state(self):
         """
-        Loads game state from SAVE_FILE_NAME.
-        Initializes to default if no valid save file is found or if the game was over.
-        Returns a status: "no_save", "game_over", or "resumable".
+        Loads the game state from the JSON file.
+        If the file doesn't exist or is invalid, returns a default state.
+        This also determines if a splash screen should be shown.
         """
-        save_file_path = self.get_save_file_path()
-        try:
-            if os.path.exists(save_file_path):
-                with open(save_file_path, 'r') as f:
+        save_file = self.get_save_file_path()
+        if os.path.exists(save_file):
+            try:
+                with open(save_file, 'r') as f:
                     loaded_state = json.load(f)
-                    # Basic validation: check if it's a dictionary and has player keys
-                    if isinstance(loaded_state, dict) and \
-                       'player1' in loaded_state and 'player2' in loaded_state and \
-                       'game_phase' in loaded_state: # Ensure game_phase exists
-                        
-                        self.game_state.update(loaded_state) # Load valid state
-                        print(f"Game state loaded from {save_file_path}")
-                        
-                        if self.game_state.get('game_phase') == 'game_over':
-                            print("Loaded game state is 'game_over'. Starting new game.")
-                            return "game_over"
-                        else:
-                            # Game is not over, or game_phase is something else (e.g. playing, setup)
-                            print(f"Resumable game state loaded. Phase: {self.game_state.get('game_phase')}")
-                            return "resumable"
-                    else:
-                        print(f"Save file {save_file_path} is incomplete or malformed. Starting new game state.")
-                        self.game_state = self._get_default_game_state() # Reset to default
-                        return "no_save"
-            else:
-                print("No save file found. Initializing new game state.")
-                self.game_state = self._get_default_game_state() # Ensure clean state if no file
-                return "no_save"
-        except json.JSONDecodeError:
-            print(f"Error decoding JSON from {save_file_path}. Initializing new game state.")
-            self.game_state = self._get_default_game_state() # Reset to default
-            return "no_save"
-        except Exception as e:
-            print(f"An unexpected error occurred during load_game_state: {e}. Initializing new game state.")
-            self.game_state = self._get_default_game_state() # Reset to default
-            return "no_save"
+                # Basic validation to see if it's a meaningful game state
+                if loaded_state and 'game_phase' in loaded_state:
+                    self.game_state = loaded_state
+                    print("Successfully loaded game state from file.")
+                    return True # Indicate that a load happened
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error loading or parsing game state file: {e}. Starting fresh.")
+                self.reset_game_state_to_default()
+        else:
+            print("No save file found. Starting with a fresh game state.")
+            self.reset_game_state_to_default()
+        return False # Indicate no load happened
 
     def _determine_screen_from_gamestate(self):
         """
-        Determines the initial screen based on the loaded game state.
+        Determines the appropriate starting screen based on the loaded game state.
+        This is the logic that decides whether to show "Resume or New Game".
         """
-        load_status = self.load_game_state() # This now populates self.game_state
+        # The 'game_phase' is the primary determinant.
+        phase = self.game_state.get('game_phase')
 
-        if load_status == "resumable":
-            # Check if essential player names are present for a truly resumable game.
-            # This prevents going to resume_or_new if the game state is somehow partial
-            # before names are even entered (though load_game_state's initialize should prevent this).
-            p1_name = self.game_state.get('player1', {}).get('name')
-            p2_name = self.game_state.get('player2', {}).get('name')
-            if p1_name and p2_name:
-                print(f"Determined screen: resume_or_new (status: {load_status})")
-                return 'resume_or_new'
-            else:
-                # If names are missing even if it thought it was resumable, something is off. Start new.
-                print("Resumable state but missing player names. Defaulting to name_entry.")
-                self.reset_game_state_to_default() # Ensure a fresh start if names were bad
-                return 'name_entry'
-        elif load_status == "game_over":
-            print(f"Determined screen: name_entry (status: {load_status}, game was over)")
-            # Game was over, so we want to start a new game by going to name entry.
-            # Ensure a clean slate for the new game by re-initializing
-            self.reset_game_state_to_default()
+        # If the game was in any form of setup, just start a new setup flow.
+        if phase in ['setup', 'name_entry', 'deployment', 'first_turn']:
             return 'name_entry'
-        else: # "no_save" or any other unhandled case from load_game_state
-            print(f"Determined screen: name_entry (status: {load_status})")
-            # No save or bad save, so start new. initialize_game_state was already called in load_game_state.
-            self.reset_game_state_to_default()
-            return 'name_entry'
+
+        # If the game was actively being played or is over, ask the user what to do.
+        if phase in ['game_play', 'game_over']:
+            return 'resume_or_new'
+
+        # Default fallback if the phase is unknown or missing.
+        return 'name_entry'
 
     def build(self):
-        print("ScorerApp.build(): Method started at", time.time())
-        # Initialize game state
-        self.initialize_game_state()
-        print("ScorerApp.build(): Game state initialized.")
+        # Determine the initial screen based on saved state BEFORE building the UI
+        # This tells the splash screen where to go next.
+        if self.load_game_state():
+             self.target_screen_after_splash = self._determine_screen_from_gamestate()
+        else:
+            # If no save file, we always start a new game flow.
+            self.target_screen_after_splash = 'name_entry'
 
-        # Create the screen manager
-        self.screen_manager = ScreenManager()
-        print("ScorerApp.build(): ScreenManager created.")
+        sm = ScreenManager(transition=FadeTransition(duration=0.5))
+        sm.add_widget(SplashScreen(name='splash'))
+        sm.add_widget(NameEntryScreen(name='name_entry'))
+        sm.add_widget(DeploymentSetupScreen(name='deployment_setup'))
+        sm.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
+        sm.add_widget(ScorerRootWidget(name='scorer_root'))
+        sm.add_widget(GameOverScreen(name='game_over'))
+        sm.add_widget(ResumeOrNewScreen(name='resume_or_new'))
+        sm.add_widget(ScreensaverScreen(name='screensaver')) # Add the screensaver screen
 
-        # Determine which screen to show after splash
-        self.target_screen_after_splash = self._determine_screen_from_gamestate()
-        print(f"ScorerApp.build(): Target screen after splash: {self.target_screen_after_splash}")
-
-        # Add the splash screen first
-        self.screen_manager.add_widget(SplashScreen(name='splash_screen'))
-        print("ScorerApp.build(): SplashScreen added to ScreenManager.")
-        self.screen_manager.add_widget(ResumeOrNewScreen(name='resume_or_new'))
-        self.screen_manager.add_widget(NameEntryScreen(name='name_entry'))
-        self.screen_manager.add_widget(DeploymentSetupScreen(name='deployment_setup'))
-        self.screen_manager.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
-        self.screen_manager.add_widget(ScorerRootWidget(name='scorer_root'))
-        self.screen_manager.add_widget(GameOverScreen(name='game_over'))
-        print("ScorerApp.build(): All game screens added to ScreenManager.")
-
-        # --- Point of setting splash screen current ---
-        time_before_splash_current = time.time()
-        print(f"ScorerApp.build(): About to set 'splash_screen' as current. Time elapsed since build start: {time_before_splash_current - time.time():.4f}s")
-        self.switch_screen('splash_screen')
-        # ---------------------------------------------
-        
-        if platform.system() == "Linux":
-            Window.fullscreen = True
-            Window.borderless = True
-            print("ScorerApp.build(): Linux detected - Window.fullscreen and Window.borderless set.")
-
-        build_end_time = time.time()
-        print(f"ScorerApp.build(): Method finished. Total time in build(): {build_end_time - time.time():.4f}s")
-        return self.screen_manager
+        # The app always starts on the splash screen
+        sm.current = 'splash'
+        return sm
 
     def transition_from_splash(self, target_screen_name, dt):
-        print(f"ScorerApp.transition_from_splash(): Transitioning to {target_screen_name}")
-        if not target_screen_name:
-            print("ScorerApp.transition_from_splash(): No target screen specified, defaulting to 'resume_or_new'")
-            target_screen_name = 'resume_or_new'
-        
-        try:
-            self.switch_screen(target_screen_name)
-            print(f"ScorerApp.transition_from_splash(): Successfully transitioned to {target_screen_name}")
-        except Exception as e:
-            print(f"ScorerApp.transition_from_splash(): Error during transition: {str(e)}")
-            # Fallback to resume_or_new screen if transition fails
-            self.switch_screen('resume_or_new')
+        """
+        Handles the transition from the splash screen to the determined target screen.
+        """
+        if self.root.current == 'splash':
+            print(f"ScorerApp: Transitioning from splash to {target_screen_name}")
+            self.root.current = target_screen_name
+            # Start the inactivity timer once the main app is visible
+            self.reset_inactivity_timer()
 
-    def initialize_game_state(self): 
-        self.game_state = self._get_default_game_state() 
+    def initialize_game_state(self):
+        self.game_state = self.load_game_state()
 
     def on_stop(self):
-        """Called when the application is stopping"""
-        self.websocket_server.stop()
+        """Called when the app is closing."""
+        print("ScorerApp: on_stop called, attempting to save game state.")
         self.save_game_state()
+        if self.ws_server:
+            self.ws_server.stop()
+        Clock.unschedule(self.start_screensaver)
 
+    # --- Game State Update Methods ---
     def update_score(self, player_id, new_score):
-        """Update a player's score and broadcast the change"""
         player_key = f"player{player_id}"
         if player_key in self.game_state:
-            self.game_state[player_key]["total_score"] = new_score
+            self.game_state[player_key]['total_score'] = new_score
             self.save_game_state()
-            self.websocket_server.broadcast_score_update(player_id, new_score)
 
     def update_cp(self, player_id, new_cp):
-        """Update a player's CP and broadcast the change"""
         player_key = f"player{player_id}"
         if player_key in self.game_state:
-            self.game_state[player_key]["cp"] = new_cp
+            self.game_state[player_key]['cp'] = new_cp
             self.save_game_state()
-            self.websocket_server.broadcast_cp_update(player_id, new_cp)
 
     def update_timer(self, timer_data):
-        """Update timer data and broadcast the change"""
         self.game_state['game_timer'].update(timer_data)
         self.save_game_state()
-        self.websocket_server.broadcast_timer_update(timer_data)
 
     def update_round(self, round_number):
-        """Update the current round and broadcast the change"""
         self.game_state['current_round'] = round_number
         self.save_game_state()
-        self.websocket_server.broadcast_round_update(round_number)
 
     def update_game_phase(self, phase):
-        """Update the game phase and broadcast the change"""
         self.game_state['game_phase'] = phase
         self.save_game_state()
-        self.websocket_server.broadcast_game_phase_update(phase)
 
     def set_player_name(self, player_id, name):
-        """Update a player's name and broadcast the change."""
         player_key = f"player{player_id}"
         if player_key in self.game_state:
-            self.game_state[player_key]["name"] = name
-            print(f"Set {player_key} name to {name}")
-            self.save_game_state() # This will trigger a broadcast
+            self.game_state[player_key]['name'] = name
+            self.save_game_state()
 
     def get_game_state(self):
         """
-        Returns a sanitized, deep copy of the game state suitable for clients.
-        This acts as a sanitization layer between the server's internal state
-        and what clients receive.
+        Designated callback for the WebSocket server.
+        Returns a sanitized version of the application's game_state.
         """
-        # Create a deep copy to avoid modifying the internal state accidentally
-        sanitized_state = json.loads(json.dumps(self.game_state))
-
-        # --- Sanitization and Rule Enforcement ---
-
-        # 1. Clamp the round number to a valid client-facing range (1-5)
-        # The internal state can go to 6 briefly, but clients should never see that.
-        if sanitized_state.get('current_round', 0) > 5:
-            sanitized_state['current_round'] = 5
-
-        # 2. Translate internal-only screens/phases into client-friendly phases.
-        current_screen = self.root.current
-        # If the app is on the "Resume or New" screen, the client should think
-        # it's in the 'setup' phase to prevent showing a stale 'Game Over' screen.
+        client_state = json.loads(json.dumps(self.game_state))
+        current_screen = self.root.current if self.root else ''
         if current_screen == 'resume_or_new':
-            sanitized_state['game_phase'] = 'setup'
-        
-        # If the app is in deployment or first turn setup, the client should be
-        # in a setup phase (like 'name_entry') to not show the game board.
-        server_phase = sanitized_state.get('game_phase')
-        if server_phase in ['name_entry', 'deployment', 'first_turn']:
-            sanitized_state['game_phase'] = 'setup'
-
-        # 3. Remove fields that are not relevant to the client.
-        # This reduces payload size and prevents leaking internal-only data.
-        for player in ['player1', 'player2']:
-            # Remove internal roll data and raw second counts.
-            # Keep 'player_time_display' as the client uses it directly.
-            for field in ['deployment_roll', 'first_turn_roll', 'player_elapsed_time_seconds']:
-                if field in sanitized_state.get(player, {}):
-                    del sanitized_state[player][field]
-
-        # Also remove internal-only timer fields
-        if 'game_timer' in sanitized_state:
-            for field in ['start_time', 'turn_segment_start_time']:
-                if field in sanitized_state['game_timer']:
-                    del sanitized_state['game_timer'][field]
-
-        return sanitized_state
+            client_state['game_phase'] = 'setup'
+        if client_state.get('current_round', 0) > 5:
+            client_state['current_round'] = 5
+        if client_state.get('game_phase') == 'game_over':
+            client_state['last_round_played'] = 5
+            client_state['current_round'] = 5
+        return client_state
 
     def switch_screen(self, screen_name):
-        self.root.current = screen_name
+        if self.root:
+            self.root.current = screen_name
 
     def on_start(self):
-        self.load_game_state()
-        self._determine_screen_from_gamestate()
+        """Called after build() and the root widget is created."""
+        self.ws_server.start()
+        Window.bind(on_touch_down=self.reset_inactivity_timer)
 
     def _get_screen_for_phase(self, phase):
-        if phase == 'deployment':
-            return 'deployment_setup'
-        elif phase == 'first_turn':
-            return 'first_turn_setup'
-        elif phase == 'game_play':
-            return 'scorer_root'
-        else:
-            return 'name_entry'
+        phase_to_screen = {
+            "setup": "name_entry",
+            "name_entry": "name_entry",
+            "deployment": "deployment_setup",
+            "first_turn": "first_turn_setup",
+            "game_play": "scorer_root",
+            "game_over": "game_over"
+        }
+        return phase_to_screen.get(phase, "name_entry")
+
+    def reset_inactivity_timer(self, *args):
+        if self.root and self.root.current == 'screensaver':
+            # If on screensaver, deactivate it and go to the last known screen
+            self.root.current = self.last_active_screen or self._get_screen_for_phase(self.game_state.get('game_phase', 'setup'))
+            # Still restart the timer after this interaction
+        
+        # Always cancel the pending call and schedule a new one
+        Clock.unschedule(self.start_screensaver)
+        Clock.schedule_once(self.start_screensaver, self.INACTIVITY_TIMEOUT_SECONDS)
+
+    def start_screensaver(self, dt):
+        if self.root and self.root.current not in ['screensaver', 'splash']:
+            self.last_active_screen = self.root.current
+            self.root.current = 'screensaver'
+
 
 if __name__ == '__main__':
-    # Conditionally set Window.size for non-Linux environments
-    if platform.system() != "Linux":
-        Window.size = (800, 480) # Explicitly set window size before run for dev
     ScorerApp().run() 

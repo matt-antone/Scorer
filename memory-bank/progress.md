@@ -7,7 +7,9 @@ This document tracks the current working state of the Scorer application, what's
 - **Installation**: A fully automated `install.sh` script successfully sets up the entire environment on a fresh Raspberry Pi OS, including correct Python dependencies, FFmpeg, and a custom-built SDL2 with KMS/DRM support. The script is idempotent and handles both initial setup and updates.
 - **Game State**: The application uses a robust SQLite database for game state persistence (`db/scorer.db`). The database is automatically created if it doesn't exist.
 - **Kivy Backend**: The Kivy application runs correctly on both macOS (for development) and Raspberry Pi (for production) using the appropriate display drivers.
+- **Splash Screen**: The application starts with a manual splash screen requiring a user to press a "START" button to proceed, rather than an automatic timer.
 - **Name Entry Screen**: The "Continue" button is now always enabled, removing the validation that required users to input names. This simplifies the flow for users who accept the default names.
+- **Screensaver**: The application now includes a screensaver that activates after a period of inactivity. It displays a slideshow of images from the `assets/billboards` directory and deactivates upon user interaction, returning to the previous screen. The slideshow order is randomized, and images transition with a slow fade effect.
 
 ## What's Left to Build
 
@@ -22,7 +24,7 @@ This document tracks the current working state of the Scorer application, what's
 
 ## Known Issues
 
-- **None**: All major bugs related to installation, game state, and UI initialization have been resolved.
+- **None**: All major bugs related to installation, game state, UI initialization, and the recent startup crash have been resolved.
 
 ## Blockers
 

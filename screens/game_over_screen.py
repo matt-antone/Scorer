@@ -9,10 +9,12 @@ class GameOverScreen(Screen):
     p1_final_score_label = ObjectProperty(None)
     p1_final_cp_label = ObjectProperty(None)
     p1_final_time_label = ObjectProperty(None)
+    p1_role_label = ObjectProperty(None)
     p2_final_name_label = ObjectProperty(None)
     p2_final_score_label = ObjectProperty(None)
     p2_final_cp_label = ObjectProperty(None)
     p2_final_time_label = ObjectProperty(None)
+    p2_role_label = ObjectProperty(None)
     total_game_time_label = ObjectProperty(None)
     rounds_played_label = ObjectProperty(None)
     exit_button = ObjectProperty(None)
@@ -64,6 +66,13 @@ class GameOverScreen(Screen):
         # Populate Game Stats safely
         if self.total_game_time_label: self.total_game_time_label.text = f"Total Game Time: {timer_stats.get('elapsed_display', '00:00:00')}"
         if self.rounds_played_label: self.rounds_played_label.text = f"Rounds Played: {gs.get('last_round_played', 5)}"
+
+        attacker_id = gs.get('deployment_attacker_id')
+        p1_role = "Attacker" if attacker_id == 1 else "Defender"
+        p2_role = "Attacker" if attacker_id == 2 else "Defender"
+
+        self.p1_role_label.text = p1_role
+        self.p2_role_label.text = p2_role
 
     def start_new_game(self):
         app = App.get_running_app()

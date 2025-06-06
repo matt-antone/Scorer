@@ -20,6 +20,7 @@ class ScorerRootWidget(Screen):
     p1_player_timer_label = ObjectProperty(None)
     p1_end_turn_button = ObjectProperty(None)
     p1_concede_button = ObjectProperty(None)
+    p1_role_label = ObjectProperty(None)
 
     # Player 2 elements from KV
     p2_name_label = ObjectProperty(None)
@@ -28,6 +29,7 @@ class ScorerRootWidget(Screen):
     p2_player_timer_label = ObjectProperty(None)
     p2_end_turn_button = ObjectProperty(None)
     p2_concede_button = ObjectProperty(None)
+    p2_role_label = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -74,7 +76,9 @@ class ScorerRootWidget(Screen):
             "p1_player_timer_label": self.p1_player_timer_label,
             "p2_player_timer_label": self.p2_player_timer_label,
             "p1_concede_button": self.p1_concede_button,
-            "p2_concede_button": self.p2_concede_button
+            "p2_concede_button": self.p2_concede_button,
+            "p1_role_label": self.p1_role_label,
+            "p2_role_label": self.p2_role_label
         }
         all_ready = True
         for name, widget_ref in required_widgets.items():
@@ -111,6 +115,14 @@ class ScorerRootWidget(Screen):
         self.p1_cp_label.text = f"Command Points: {gs['player1']['cp']}"
         self.p2_score_label.text = str(gs['player2']['total_score'])
         self.p2_cp_label.text = f"Command Points: {gs['player2']['cp']}"
+
+        attacker_id = gs.get('deployment_attacker_id')
+        p1_role = "Attacker" if attacker_id == 1 else "Defender"
+        p2_role = "Attacker" if attacker_id == 2 else "Defender"
+
+
+        self.p1_role_label.text = p1_role
+        self.p2_role_label.text = p2_role
 
         # Manage End Turn button visibility and state
         current_gs_active_id = gs.get("active_player_id") # Capture it for this specific decision block

@@ -10,6 +10,7 @@ This document tracks the current working state of the Scorer application, what's
 - **Splash Screen**: The application starts with a manual splash screen requiring a user to press a "START" button to proceed, rather than an automatic timer.
 - **Name Entry Screen**: The "Continue" button is now always enabled, removing the validation that required users to input names. This simplifies the flow for users who accept the default names.
 - **Screensaver**: The application now includes a screensaver that activates after a period of inactivity. It displays a slideshow of images from the `assets/billboards` directory and deactivates upon user interaction, returning to the previous screen. The slideshow order is randomized, and images transition with a slow fade effect.
+- **Game Resume Flow**: The `ResumeOrNewScreen` now uses a robust initialization pattern, fixing a race condition and ensuring that saved games can be resumed reliably without crashing.
 
 ## What's Left to Build
 

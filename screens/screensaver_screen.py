@@ -6,6 +6,7 @@ from kivy.uix.label import Label
 from kivy.clock import Clock
 from kivy.uix.floatlayout import FloatLayout
 from kivy.animation import Animation
+from kivy.app import App
 
 
 class ScreensaverScreen(Screen):
@@ -15,6 +16,8 @@ class ScreensaverScreen(Screen):
         self.image_files = []
         self.current_image_index = 0
         self.slideshow_event = None
+        self.images_shown = 0
+        self.max_images_to_show = 0
 
         layout = FloatLayout()
         self.image_widget_front = Image(fit_mode='fill', opacity=1)
@@ -62,20 +65,47 @@ class ScreensaverScreen(Screen):
         anim_back.start(self.image_widget_back)
 
     def _on_animation_complete(self, animation, widget):
+        self.images_shown += 1
+        if self.max_images_to_show > 0 and self.images_shown >= self.max_images_to_show:
+            self._finish_slideshow()
+            return
+
         # Swap the widgets
         self.image_widget_front, self.image_widget_back = self.image_widget_back, self.image_widget_front
-        # Preload the next image in the new back widget
         self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
         self.image_widget_back.source = self.image_files[self.current_image_index]
 
+    def _finish_slideshow(self, *args):
+        """Safely tells the main app to exit the screensaver."""
+        app = App.get_running_app()
+        if app and app.root.current == 'screensaver':
+            # This app method handles returning to the correct screen and resetting the timer
+            app.reset_inactivity_timer()
 
     def on_enter(self, *args):
-        # Reset opacities and load initial images
+        # Reset state for a fresh slideshow every time
+        self.images_shown = 0
         self.image_widget_front.opacity = 1
         self.image_widget_back.opacity = 0
+
         if self.image_files:
+            # Re-shuffle, reset index, and set the first image
+            random.shuffle(self.image_files)
+            self.current_image_index = 0
             self.image_widget_front.source = self.image_files[self.current_image_index]
-        self.start_slideshow()
+            
+            # Set the counter and limit for this run
+            self.images_shown = 1
+            self.max_images_to_show = len(self.image_files) * 2
+
+            # Check if we should exit immediately (e.g., only 1 image)
+            if self.images_shown >= self.max_images_to_show:
+                 Clock.schedule_once(self._finish_slideshow, 5) # Show the 1 image for 5s then exit
+            else:
+                self.start_slideshow()
+        else:
+            # If there are no images, exit immediately.
+            Clock.schedule_once(self._finish_slideshow)
 
     def on_leave(self, *args):
         self.stop_slideshow() 

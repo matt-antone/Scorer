@@ -17,6 +17,7 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 - **Screensaver Enhancement:** The screensaver slideshow has been improved. It now randomizes the order of the billboard images and uses a slow, two-second fade animation for a smoother transition between slides.
 - **Bug Fix:** Resolved a startup crash (`TypeError`) caused by a refactoring mismatch between `main.py` and `websocket_server.py`. The `WebSocketServer`'s constructor was updated to accept the necessary callbacks directly, improving the code's robustness.
 - **Splash Screen Rework:** The splash screen has been changed from a timed, automatic transition to a manual one. It now features a large, styled "START" button that the user must press to enter the application. The logic for the splash screen has also been refactored into its own dedicated file (`screens/splash_screen.py`) for better code organization.
+- **Race Condition Fix**: Resolved a crash on the `ResumeOrNewScreen` by implementing the robust widget initialization pattern. This prevents an `AttributeError` that occurred when the screen's `on_enter` event fired before the UI widgets were fully loaded and ready.
 
 ## Active Decisions
 

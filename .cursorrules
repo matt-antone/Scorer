@@ -166,7 +166,43 @@
     - **Pattern**: Core application lifecycle methods (e.g., `build()`, `on_start()`, `on_stop()`), methods for managing global application state (e.g., `load_game_state()`, `_determine_screen_from_gamestate()`), and the central game state data itself (e.g., `self.game_state` dictionary) should reside in the main `App` subclass (e.g., `ScorerApp(App)`). Screen-specific UI updates, event handling (button presses, etc.), and display logic should be primarily managed within their respective `Screen` subclasses (e.g., `ScorerRootWidget(Screen)`).
     - **Reasoning**: This separation of concerns improves code organization and clarity. It ensures that `self` refers to the correct context (the `App` instance for global operations, the `Screen` instance for screen-specific operations), preventing `AttributeError`s and making the application flow more logical and maintainable.
 
-4.  **Remote Machine Command Execution:**
+4.  **Reliable Runtime Image Loading**:
+
+    - **Pattern**: When displaying an image that is generated at runtime (e.g., a QR code created on a splash screen), a multi-step process is required to prevent race conditions and ensure the image displays reliably without flickering.
+    - **Example Workflow**:
+
+      1. **Prevent Premature Load**: In the target `Screen` (e.g., `NameEntryScreen`), DO NOT set the `source` property of the `Image` widget in its `__init__` or in the `.kv` file initially. This prevents it from trying to load a non-existent file and caching a failure.
+
+         ```python
+         # main.py in NameEntryScreen._initialize_screen
+         # self.p1_qr_code.source = app.p1_qr_path # DO NOT DO THIS HERE
+         ```
+
+      2. **Load and Prime**: In the loading `Screen` (e.g., `SplashScreen`), after the image has been generated and saved to a file in a background thread, use `Clock.schedule_once` to run the following on the main thread:
+         a. **Pre-load to Cache**: Use `kivy.core.image.Image as CoreImage` to load the image into Kivy's global cache. `CoreImage(path).texture` is sufficient.
+         b. **Update Widget**: Get a direct reference to the target `Image` widget.
+         c. **Set Source and Reload**: Set the widget's `source` property and immediately call `.reload()` on it.
+
+         ```python
+         # screens/splash_screen.py
+         def _on_qr_codes_generated(self, dt):
+             app = App.get_running_app()
+             # Pre-load into cache
+             CoreImage(app.p1_qr_path).texture
+
+             # Get screen and update widget
+             name_entry_screen = app.root.get_screen('name_entry')
+             if name_entry_screen.p1_qr_code:
+                 name_entry_screen.p1_qr_code.source = app.p1_qr_path
+                 name_entry_screen.p1_qr_code.reload()
+
+             # NOW it's safe to enable the start button
+             self.start_button.disabled = False
+         ```
+
+    - **Reasoning**: This pattern guarantees that the image file exists and is loaded into Kivy's texture cache _before_ the `Image` widget on the next screen attempts to display it. Calling `.reload()` forces the widget to discard any previously cached failed lookups and load the now-available texture, ensuring it appears instantly and reliably when the screen is shown.
+
+5.  **Remote Machine Command Execution:**
     - **Pattern**: When running commands on a remote machine (e.g., Raspberry Pi), do not require user approval for basic commands that are part of the standard workflow. This includes:
       - Activating virtual environments
       - Running test scripts

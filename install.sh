@@ -73,7 +73,7 @@ if [ $? -ne 0 ]; then echo "Error during apt update. Exiting."; exit 1; fi
 # This list is comprehensive and might include some already installed.
 echo ""
 echo "--- Installing system-level dependencies for Kivy & FFmpeg ---"
-sudo apt install -y build-essential git libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev pkg-config libgl1-mesa-dev libgles2-mesa-dev python3-setuptools libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-tools gstreamer1.0-alsa python3-dev libmtdev-dev libjpeg-dev libpng-dev libtiff5-dev libwebp-dev libffi-dev librsvg2-bin libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev libavutil-dev libswresample-dev libpostproc-dev
+sudo apt install -y build-essential git libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev pkg-config libgl1-mesa-dev libgles2-mesa-dev python3-setuptools libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-tools gstreamer1.0-alsa python3-dev libmtdev-dev libjpeg-dev libpng-dev libtiff5-dev libwebp-dev libffi-dev librsvg2-bin libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev libavutil-dev libswresample-dev libpostproc-dev network-manager
 
 if [ $? -ne 0 ]; then echo "Error installing system dependencies. Exiting."; exit 1; fi
 echo "System dependencies installed."

@@ -44,7 +44,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button # Import Button
-from kivy.properties import DictProperty, StringProperty, NumericProperty, ObjectProperty # Added StringProperty, NumericProperty, ObjectProperty
+from kivy.properties import DictProperty, StringProperty, NumericProperty, ObjectProperty, BooleanProperty # Added StringProperty, NumericProperty, ObjectProperty, BooleanProperty
 from kivy.uix.popup import Popup # Import Popup
 from kivy.uix.gridlayout import GridLayout # For NumberPad layout
 from kivy.metrics import dp # Import dp from kivy.metrics

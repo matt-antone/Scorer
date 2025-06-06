@@ -308,3 +308,41 @@
 # Automated Testing Rule
 
 - Tests may be run unattended by the assistant. No user approval required for test execution.
+
+## Kivy General Best Practices
+
+This section outlines high-level best practices for building robust, maintainable, and performant Kivy applications, based on official documentation and community wisdom.
+
+### 1. Application Architecture & Structure
+
+A well-organized application is easier to maintain, debug, and optimize.
+
+- **Separate UI Design from Logic (`.kv` vs `.py`)**: This is the most fundamental Kivy best practice.
+  - **Use the `.kv` Language**: For defining the layout and static appearance of your user interface. It is declarative, expressive, and optimized for this purpose. It keeps your Python code clean and focused on functionality.
+  - **Use Python (`.py`)**: For implementing the application's dynamic logic, event handling, and state management.
+- **Model-View-Controller (MVC) Pattern**: While Kivy doesn't strictly enforce it, thinking in terms of MVC is highly beneficial.
+  - **Model**: Your application's data and business logic (e.g., the `game_state` dictionary).
+  - **View**: The `.kv` files that define what the user sees.
+  - **Controller**: The Python classes (e.g., `ScorerApp`, `SplashScreen`) that handle user input, manipulate the model, and update the view.
+- **Modularize with `ScreenManager`**: For any app with more than one view, use the `ScreenManager`. This keeps each screen's logic and UI self-contained and makes navigation straightforward.
+
+### 2. Performance Optimization
+
+Performance, especially on lower-powered devices like the Raspberry Pi, is critical. The primary bottleneck is often widget creation.
+
+- **Pre-load Widgets**: Create as many of your application's widgets as possible during startup (e.g., on a splash screen). This front-loads the creation cost, making screen transitions feel instantaneous later.
+- **Lazy Loading**: For applications with many screens, consider loading only the main screen at first, and then loading other screens in the background or on demand. This can significantly improve initial startup time.
+- **Simplify Your Widget Tree**: Fewer widgets mean better performance.
+  - **Combine Labels**: Instead of using multiple `Label` widgets for a single block of text, use one `Label` with Kivy's `markup` to apply different styles (font, size, color) to parts of the text.
+  - **Avoid Deeply Nested Layouts**: Each layout adds overhead. Try to achieve your design with the flattest possible hierarchy. `FloatLayout` and `RelativeLayout` can sometimes help avoid extra nested `BoxLayout`s.
+- **Use `RecycleView` for Large Lists**: Never create hundreds of widgets in a `ScrollView`. If you have a long, scrollable list of similar items, `RecycleView` is essential. It maintains only a small number of visible widgets and recycles them as you scroll, keeping memory usage low and performance high.
+- **Use Threads for Blocking Operations**: Any task that takes time (e.g., network requests, heavy computation, file I/O) MUST be run in a separate thread to avoid freezing the main Kivy UI thread.
+- **Optimize Graphics and Animations**:
+  - **Atlas Packing**: For apps with many small images, group them into a single texture atlas using the `atlas` command-line tool. This reduces the number of texture switches the GPU has to make, which can significantly improve rendering performance.
+  - **Reduce Animation `step`**: For animations that don't need to be perfectly smooth (like a simple fade), you can reduce the animation's `step` to update less frequently than every frame, saving CPU cycles. `Animation(opacity=1, d=.3, step=1/30)`
+
+### 3. Widget & Event Handling
+
+- **Use `on_` Events and Properties**: Leverage Kivy's property and event system. Instead of manually checking if a value has changed in an update loop, bind callbacks to property changes (e.g., `on_press` for a `Button`, or a custom `on_game_state` event). This is the foundation of Kivy's event-driven nature.
+- **Draw on the Canvas for Performance**: For highly repetitive or custom graphics, drawing directly onto a widget's `canvas` with instructions like `Rectangle` or `Line` is much faster than creating and managing many small, individual widgets.
+- **Use Explicit Imports**: Avoid `import kivy`. Instead, use `from kivy.uix.button import Button`. This slightly improves startup time and makes dependency tracking clearer.

@@ -69,7 +69,7 @@ class FirstTurnSetupScreen(Screen):
             gs['player1']['first_turn_roll'] = roll
             self.p1_ft_roll_button.disabled = True
             self._p1_ft_rolled_once = True
-            self.p1_ft_roll_display_label.text = f"P1 Rolled: {roll}"
+            self.p1_ft_roll_display_label.text = f"{roll}"
             if not self._p2_ft_rolled_once:
                 self.first_turn_status_label.text = "Waiting for Player 2 to roll..."
                 self.p2_ft_roll_display_label.text = "P2 To Roll"
@@ -80,7 +80,7 @@ class FirstTurnSetupScreen(Screen):
             gs['player2']['first_turn_roll'] = roll
             self.p2_ft_roll_button.disabled = True
             self._p2_ft_rolled_once = True
-            self.p2_ft_roll_display_label.text = f"P2 Rolled: {roll}"
+            self.p2_ft_roll_display_label.text = f"{roll}"
             if not self._p1_ft_rolled_once:
                 self.first_turn_status_label.text = "Waiting for Player 1 to roll..."
                 self.p1_ft_roll_display_label.text = "P1 To Roll"
@@ -133,7 +133,7 @@ class FirstTurnSetupScreen(Screen):
         if chooser_id is None: return
 
         starting_player_id = chooser_id if decision_is_self_goes_first else (1 if chooser_id == 2 else 2)
-        gs["active_player_id"] = starting_player_id
+        gs["first_turn_player_id"] = starting_player_id
         gs["first_player_of_game_id"] = starting_player_id
         
         starting_player_name = gs[f'player{starting_player_id}']["name"]
@@ -158,12 +158,18 @@ class FirstTurnSetupScreen(Screen):
 
     def start_game_action(self):
         app = App.get_running_app()
-        app.game_state['game_phase'] = 'game_play'
-        app.game_state['current_round'] = 1
+        gs = app.game_state
+        
+        gs['active_player_id'] = gs.get('first_turn_player_id')
+        if not gs['active_player_id']:
+            app.show_error_popup("Error", "First turn player not set.")
+            return
+
+        gs['game_phase'] = 'game_play'
+        gs['current_round'] = 1
         app.save_game_state()
 
-        # Get the scorer screen and start its timers/UI updates
-        scorer_screen = app.root.get_screen('scorer_root')
+        scorer_screen = app.root.get_screen('game')
         scorer_screen.start_timers_and_ui()
 
-        app.switch_screen('scorer_root') 
+        app.switch_screen('game') 

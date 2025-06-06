@@ -1,0 +1,97 @@
+<NameEntryScreen>:
+    name: 'name_entry'
+    player1_name_input: player1_name_input
+    player2_name_input: player2_name_input
+    p1_qr_code: p1_qr_code
+    p2_qr_code: p2_qr_code
+    continue_button: continue_button
+
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
+
+    BoxLayout: # Main Root for NameEntryScreen
+        id: main_layout
+        orientation: 'vertical'
+        HeaderLayout:
+            title_text: 'Roll Call - Enter your names and connect your phone.'
+
+        ScrollView:
+            do_scroll_x: False
+            GridLayout:
+                cols: 2
+                padding: dp(20)
+                spacing: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Player 1 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    Label:
+                        text: "Player 1 Name"
+                        font_name: 'InterBlack'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                    TextInput:
+                        id: player1_name_input
+                        text: 'Player 1'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(40)
+                        multiline: False
+                        on_focus: root.set_active_input(self)
+                    Image:
+                        id: p1_qr_code
+                        size_hint_y: None
+                        height: dp(150)
+                        width: dp(150)
+                        allow_stretch: True
+
+                # Player 2 Column
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    Label:
+                        text: "Player 2 Name"
+                        font_name: 'InterBlack'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: self.texture_size[1]
+                    TextInput:
+                        id: player2_name_input
+                        text: 'Player 2'
+                        font_size: '20sp'
+                        size_hint_y: None
+                        height: dp(40)
+                        multiline: False
+                        on_focus: root.set_active_input(self)
+                    Image:
+                        id: p2_qr_code
+                        size_hint_y: None
+                        height: dp(150)
+                        width: dp(150)
+                        allow_stretch: True
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            padding: [dp(20), 0, dp(20), dp(10)]
+            Button:
+                id: continue_button
+                text: 'Continue'
+                font_name: 'InterBlack'
+                font_size: '22sp'
+                size_hint: (1, 1)
+                on_press: root.save_names_and_proceed()
+                disabled: False 

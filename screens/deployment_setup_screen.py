@@ -68,7 +68,7 @@ class DeploymentSetupScreen(Screen):
             gs['player1']['deployment_roll'] = roll
             self.p1_roll_button.disabled = True
             self._p1_rolled_once = True
-            self.p1_roll_display_label.text = f"P1 Rolled: {roll}"
+            self.p1_roll_display_label.text = roll
             if not self._p2_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 2 to roll..."
                 self.p2_roll_display_label.text = "P2 To Roll"
@@ -79,7 +79,7 @@ class DeploymentSetupScreen(Screen):
             gs['player2']['deployment_roll'] = roll
             self.p2_roll_button.disabled = True
             self._p2_rolled_once = True
-            self.p2_roll_display_label.text = f"P2 Rolled: {roll}"
+            self.p2_roll_display_label.text = roll
             if not self._p1_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 1 to roll..."
                 self.p1_roll_display_label.text = "P1 To Roll"
@@ -97,23 +97,23 @@ class DeploymentSetupScreen(Screen):
         if self._p1_roll > self._p2_roll:
             winner_id = 1
             winner_name = p1_name
-            self.p1_roll_display_label.text = f"Deploy: Won! ({self._p1_roll})"
-            self.p2_roll_display_label.text = f"Deploy: Lost. ({self._p2_roll})"
+            self.p1_roll_display_label.text = f"Win {self._p1_roll}"
+            self.p2_roll_display_label.text = f"Lose {self._p2_roll}"
             self.p1_roll_button.disabled = True
             self.p2_roll_button.disabled = True
         elif self._p2_roll > self._p1_roll:
             winner_id = 2
             winner_name = p2_name
-            self.p1_roll_display_label.text = f"Deploy: Lost. ({self._p1_roll})"
-            self.p2_roll_display_label.text = f"Deploy: Won! ({self._p2_roll})"
+            self.p1_roll_display_label.text = f"Lose {self._p1_roll}"
+            self.p2_roll_display_label.text = f"Win {self._p2_roll}"
             self.p1_roll_button.disabled = True
             self.p2_roll_button.disabled = True
         else: # Tie
             self.deployment_status_label.text = "Tie! Both players re-roll for deployment."
             self._p1_roll = 0; gs['player1']['deployment_roll'] = 0; self._p1_rolled_once = False
             self._p2_roll = 0; gs['player2']['deployment_roll'] = 0; self._p2_rolled_once = False
-            self.p1_roll_button.disabled = False; self.p1_roll_display_label.text = "P1 Re-Roll!"
-            self.p2_roll_button.disabled = False; self.p2_roll_display_label.text = "P2 Re-Roll!"
+            self.p1_roll_button.disabled = False; self.p1_roll_display_label.text = "Re-Roll!"
+            self.p2_roll_button.disabled = False; self.p2_roll_display_label.text = "Re-Roll!"
             return
 
         gs['deployment_initiative_winner_id'] = winner_id

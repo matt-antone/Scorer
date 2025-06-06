@@ -25,6 +25,8 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
   - On a Raspberry Pi, the splash screen will now check for a network connection and present a connection manager popup if disconnected, ensuring QR codes can be generated with a valid IP.
   - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button.
 - **QR Code Race Condition Fix**: Resolved a critical bug where QR codes would fail to display. The fix involves a new robust pattern for loading runtime-generated images: preventing premature loads, pre-caching the image texture on a loading screen, and then explicitly calling `.reload()` on the target `Image` widget before it's displayed. This pattern has been documented in `.cursorrules`.
+- **Refactoring and Bug Fix**: Resolved a `KeyError` crash on the `FirstTurnSetupScreen` by removing a duplicate class definition from `main.py` and consolidating the correct logic into `screens/first_turn_setup_screen.py`. This fix also involved correcting the game state handling to ensure the `first_turn_player_id` was set and read properly before starting the game.
+- **macOS Stability Fix**: Resolved a significant dependency conflict on macOS where bundled versions of SDL2 and FFmpeg from `kivy` and `ffpyplayer` caused runtime instability and warnings. The fix involves using Homebrew to install shared versions of `sdl2` and `ffmpeg@6`, then building the Python packages from source against them. This procedure has been documented in `techContext.md`.
 
 ## Active Decisions
 

@@ -46,6 +46,32 @@ This document lists the technologies, development setup, technical constraints, 
   - **FFmpeg Libraries**: `libavcodec-dev`, `libavformat-dev`, `libswscale-dev`, etc., required for building the `ffpyplayer` wheel.
   - **Other Kivy Dependencies**: Libraries for audio, video, and input.
 
+### 3.3. macOS Dependency Management
+
+**Problem**: On macOS, both `kivy` and its dependency `ffpyplayer` can cause stability issues due to bundling their own separate versions of the SDL2 and FFmpeg libraries. When installed from pre-compiled wheels, these can conflict, leading to Objective-C warnings at runtime and potential for random crashes.
+
+**Solution**: The stable solution is to prevent `pip` from using pre-compiled wheels for these packages. Instead, we use Homebrew to install shared system versions of the required libraries (`sdl2` and `ffmpeg@6`) and then instruct `pip` to build `kivy` and `ffpyplayer` from source, linking against these shared libraries.
+
+The following procedure creates a stable development environment on macOS:
+
+1.  **Uninstall Conflicting Pip Packages**:
+
+    ```bash
+    pip uninstall kivy ffpyplayer -y
+    ```
+
+2.  **Install Shared Libraries with Homebrew**:
+
+    ```bash
+    brew install sdl2
+    brew install ffmpeg@6
+    ```
+
+3.  **Build Kivy and FFPyPlayer from Source**: This command uses an environment variable to tell the `ffpyplayer` build where to find the `ffmpeg@6` libraries and instructs pip to not use pre-built wheels for `kivy` or `ffpyplayer`.
+    ```bash
+    export PKG_CONFIG_PATH="/opt/homebrew/opt/ffmpeg@6/lib/pkgconfig" && pip install --no-binary=kivy,ffpyplayer "kivy[full]"
+    ```
+
 ## 4. Installation & Setup
 
 - The project is designed to be set up automatically using a single script.

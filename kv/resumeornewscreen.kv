@@ -1,0 +1,38 @@
+<ResumeOrNewScreen>:
+    name: 'resume_or_new'
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(20)
+        spacing: dp(20)
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.1, 0.1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        InterBlack:
+            text: 'Game in Progress'
+            font_size: '40sp'
+            size_hint_y: 0.3
+
+        Label:
+            id: resume_info_label
+            text: 'A saved game was found. Resume or start a new game?'
+            font_size: '20sp'
+            size_hint_y: 0.2
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: dp(20)
+            size_hint_y: 0.5
+
+            ScoreboardButton:
+                id: resume_button
+                text: "Resume Game"
+                on_press: root.resume_game_action()
+
+            ScoreboardButton:
+                id: new_game_button
+                text: "Start New Game"
+                on_press: root.start_new_game_from_resume_screen_action() 

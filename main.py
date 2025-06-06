@@ -27,18 +27,9 @@ else:  # Default to development mode (e.g., macOS, Windows)
 from kivy.core.window import Window # Ensure Window is imported AFTER Config changes
 
 import random # Added for initiative roll
-import os   # For path manipulation
 # Set default font *before* other Kivy components are imported if possible
 # Note: Paths here assume the script is run from the project root where assets/fonts exists.
 # If running from a different CWD, these paths might need to be absolute or adjusted.
-# _font_path = "assets/fonts/Inter/static/" # Removed
-# Config.set('kivy', 'default_font', [ # Removed
-#     'Inter', # Removed
-#     os.path.join(_font_path, 'Inter_18pt-Regular.ttf'), # Removed
-#     os.path.join(_font_path, 'Inter_18pt-Italic.ttf'), # Removed
-#     os.path.join(_font_path, 'Inter_18pt-Bold.ttf'), # Removed
-#     os.path.join(_font_path, 'Inter_18pt-BoldItalic.ttf') # Removed
-# ]) # Removed
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -58,24 +49,13 @@ from db.integration import reset_db_for_new_game_sync
 from websocket_server import WebSocketServer
 from screens.screensaver_screen import ScreensaverScreen
 from screens.splash_screen import SplashScreen
+from screens.first_turn_setup_screen import FirstTurnSetupScreen
 from kivy.core.image import Image as CoreImage
 
 # Register the Inter font family so it can be referred to by name 'Inter' in KV if needed.
 # This also acts as a fallback or explicit way to use it.
-# LabelBase.register( # Removed
-#     name='Inter', # Removed
-#     fn_regular=os.path.join(_font_path, 'Inter_18pt-Regular.ttf'), # Removed
-#     fn_italic=os.path.join(_font_path, 'Inter_18pt-Italic.ttf'), # Removed
-#     fn_bold=os.path.join(_font_path, 'Inter_18pt-Bold.ttf'), # Removed
-#     fn_bolditalic=os.path.join(_font_path, 'Inter_18pt-BoldItalic.ttf') # Removed
-# ) # Removed
 
 # Register NotoColorEmoji font
-# _noto_emoji_font_path = "assets/fonts/Noto_Color_Emoji/" # Removed
-# LabelBase.register( # Removed
-#     name='NotoColorEmoji', # Removed
-#     fn_regular=os.path.join(_noto_emoji_font_path, 'NotoColorEmoji-Regular.ttf') # Removed
-# ) # Removed
 
 # Register Inter Black specifically for the new design
 _inter_black_font_path = "assets/fonts/Inter/static/Inter_18pt-Black.ttf"
@@ -90,6 +70,16 @@ else:
 # Config.set('graphics', 'width', '800') # MOVED
 # Config.set('graphics', 'height', '480') # MOVED
 # Config.set('graphics', 'resizable', False) # MOVED
+
+class P1Button(Button):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_color = [1, 0, 0, 1]
+
+class P2Button(Button):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.background_color = [0, 0.349, 1, 1]
 
 # --- New Setup Screens ---
 
@@ -208,12 +198,12 @@ class DeploymentSetupScreen(Screen):
         gs["player2"]["deployment_roll"] = 0
 
         self.p1_roll_button.disabled = False
-        self.p1_roll_display_label.text = "P1 Deploy: -"
+        self.p1_roll_display_label.text = "N/A"
         self.p1_choice_box.clear_widgets()
         self.p1_choice_box.opacity = 0 
 
         self.p2_roll_button.disabled = False
-        self.p2_roll_display_label.text = "P2 Deploy: -"
+        self.p2_roll_display_label.text = "N/A"
         self.p2_choice_box.clear_widgets()
         self.p2_choice_box.opacity = 0
 
@@ -229,10 +219,10 @@ class DeploymentSetupScreen(Screen):
             gs['player1']['deployment_roll'] = roll
             self.p1_roll_button.disabled = True
             self._p1_rolled_once = True
-            self.p1_roll_display_label.text = f"P1 Rolled: {roll}"
+            self.p1_roll_display_label.text = f"{roll}"
             if not self._p2_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 2 to roll..."
-                self.p2_roll_display_label.text = "P2 To Roll"
+                self.p2_roll_display_label.text = "Roll"
             else: # P2 has already rolled
                 self.deployment_status_label.text = "Comparing rolls..."
         elif player_id == 2:
@@ -240,10 +230,10 @@ class DeploymentSetupScreen(Screen):
             gs['player2']['deployment_roll'] = roll
             self.p2_roll_button.disabled = True
             self._p2_rolled_once = True
-            self.p2_roll_display_label.text = f"P2 Rolled: {roll}"
+            self.p2_roll_display_label.text = f"{roll}"
             if not self._p1_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 1 to roll..."
-                self.p1_roll_display_label.text = "P1 To Roll"
+                self.p1_roll_display_label.text = "Roll"
             else: # P1 has already rolled
                 self.deployment_status_label.text = "Comparing rolls..."
 
@@ -258,15 +248,15 @@ class DeploymentSetupScreen(Screen):
         if self._p1_roll > self._p2_roll:
             winner_id = 1
             winner_name = p1_name
-            self.p1_roll_display_label.text = f"Deploy: Won! ({self._p1_roll})"
-            self.p2_roll_display_label.text = f"Deploy: Lost. ({self._p2_roll})"
+            self.p1_roll_display_label.text = f"Win {self._p1_roll}"
+            self.p2_roll_display_label.text = f"Lose {self._p2_roll}"
             self.p1_roll_button.disabled = True
             self.p2_roll_button.disabled = True
         elif self._p2_roll > self._p1_roll:
             winner_id = 2
             winner_name = p2_name
-            self.p1_roll_display_label.text = f"Deploy: Lost. ({self._p1_roll})"
-            self.p2_roll_display_label.text = f"Deploy: Won! ({self._p2_roll})"
+            self.p1_roll_display_label.text = f"Lose {self._p1_roll}"
+            self.p2_roll_display_label.text = f"Win {self._p2_roll}"
             self.p1_roll_button.disabled = True
             self.p2_roll_button.disabled = True
         else: # Tie
@@ -282,8 +272,31 @@ class DeploymentSetupScreen(Screen):
         
         winner_choice_box = self.p1_choice_box if winner_id == 1 else self.p2_choice_box
         winner_choice_box.clear_widgets()
-        btn_attacker = Button(text="I am Attacker", on_press=lambda x: self.player_chooses_deployment_role(True), size_hint_y=None, height=dp(35), font_size='14sp')
-        btn_defender = Button(text="I am Defender", on_press=lambda x: self.player_chooses_deployment_role(False), size_hint_y=None, height=dp(35), font_size='14sp')
+
+        if winner_id == 1:
+            btn_attacker = P1Button(text="I am Attacker", 
+                on_press=lambda x: self.player_chooses_deployment_role(True), 
+                size_hint_y=None, 
+                height=dp(35), 
+                font_size='14sp')
+            btn_defender = P1Button(text="I am Defender", 
+                on_press=lambda x: self.player_chooses_deployment_role(False), 
+                size_hint_y=None, 
+                height=dp(35), 
+                font_size='14sp')
+        else: 
+            btn_attacker = P2Button(text="I am Attacker", 
+            on_press=lambda x: self.player_chooses_deployment_role(True), 
+            size_hint_y=None, 
+            height=dp(35), 
+            font_size='14sp')
+
+            btn_defender = P2Button(text="I am Defender", 
+                on_press=lambda x: self.player_chooses_deployment_role(False), 
+                size_hint_y=None, 
+                height=dp(35), 
+                font_size='14sp')
+
         winner_choice_box.add_widget(btn_attacker)
         winner_choice_box.add_widget(btn_defender)
         winner_choice_box.opacity = 1
@@ -320,171 +333,7 @@ class DeploymentSetupScreen(Screen):
         gs['status_message'] = "Deployment roles chosen. Ready for First Turn Setup."
         
     def proceed_to_first_turn_setup(self):
-        app = App.get_running_app()
-        app.game_state['game_phase'] = 'first_turn'
-        app.save_game_state()
-        app.switch_screen('first_turn_setup')
-
-class FirstTurnSetupScreen(Screen):
-    # Player 1 UI
-    p1_name_label = ObjectProperty(None)
-    p1_ft_roll_button = ObjectProperty(None)
-    p1_ft_roll_display_label = ObjectProperty(None)
-    p1_ft_choice_box = ObjectProperty(None)
-
-    # Player 2 UI
-    p2_name_label = ObjectProperty(None)
-    p2_ft_roll_button = ObjectProperty(None)
-    p2_ft_roll_display_label = ObjectProperty(None)
-    p2_ft_choice_box = ObjectProperty(None)
-
-    # General UI
-    first_turn_status_label = ObjectProperty(None)
-    start_game_button = ObjectProperty(None)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._p1_ft_roll = 0
-        self._p2_ft_roll = 0
-        self._p1_ft_rolled_once = False
-        self._p2_ft_rolled_once = False
-
-    def on_pre_enter(self, *args):
-        gs = App.get_running_app().game_state
-        self.p1_name_label.text = gs['player1']['name']
-        self.p2_name_label.text = gs['player2']['name']
-
-        self._p1_ft_roll = 0
-        self._p2_ft_roll = 0
-        self._p1_ft_rolled_once = False
-        self._p2_ft_rolled_once = False
-        gs["first_turn_choice_winner_id"] = None
-        gs["player1"]["first_turn_roll"] = 0
-        gs["player2"]["first_turn_roll"] = 0
-        
-        self.p1_ft_roll_button.disabled = False
-        self.p1_ft_roll_display_label.text = "P1 First Turn: -"
-        self.p1_ft_choice_box.clear_widgets()
-        self.p1_ft_choice_box.opacity = 0
-
-        self.p2_ft_roll_button.disabled = False
-        self.p2_ft_roll_display_label.text = "P2 First Turn: -"
-        self.p2_ft_choice_box.clear_widgets()
-        self.p2_ft_choice_box.opacity = 0
-        
-        attacker_name = "Attacker (Unknown)"
-        if gs.get('deployment_attacker_id'):
-             attacker_name = gs[f"player{gs['deployment_attacker_id']}"]['name']
-        self.first_turn_status_label.text = f"Roll for First Turn! Attacker ({attacker_name}) decides ties."
-        self.start_game_button.disabled = True
-
-    def roll_first_turn_initiative(self, player_id):
-        roll = random.randint(1,6)
-        gs = App.get_running_app().game_state
-
-        if player_id == 1:
-            self._p1_ft_roll = roll
-            gs['player1']['first_turn_roll'] = roll
-            self.p1_ft_roll_button.disabled = True
-            self._p1_ft_rolled_once = True
-            self.p1_ft_roll_display_label.text = f"P1 Rolled: {roll}"
-            if not self._p2_ft_rolled_once:
-                self.first_turn_status_label.text = "Waiting for Player 2 to roll..."
-                self.p2_ft_roll_display_label.text = "P2 To Roll"
-            else:
-                self.first_turn_status_label.text = "Comparing rolls..."
-        elif player_id == 2:
-            self._p2_ft_roll = roll
-            gs['player2']['first_turn_roll'] = roll
-            self.p2_ft_roll_button.disabled = True
-            self._p2_ft_rolled_once = True
-            self.p2_ft_roll_display_label.text = f"P2 Rolled: {roll}"
-            if not self._p1_ft_rolled_once:
-                self.first_turn_status_label.text = "Waiting for Player 1 to roll..."
-                self.p1_ft_roll_display_label.text = "P1 To Roll"
-            else:
-                self.first_turn_status_label.text = "Comparing rolls..."
-        
-        if self._p1_ft_rolled_once and self._p2_ft_rolled_once:
-            self.determine_first_turn_winner()
-
-    def determine_first_turn_winner(self):
-        gs = App.get_running_app().game_state
-        p1_name = gs['player1']['name']
-        p2_name = gs['player2']['name']
-        
-        winner_id = 0 # This is the ID of the player who gets to CHOOSE who goes first
-        display_winner_name = "" # This is the name to display as having won the roll/tie-break
-
-        if self._p1_ft_roll > self._p2_ft_roll:
-            winner_id = 1; display_winner_name = p1_name
-            self.p1_ft_roll_display_label.text = f"First Turn: Won! ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Lost. ({self._p2_ft_roll})"
-        elif self._p2_ft_roll > self._p1_ft_roll:
-            winner_id = 2; display_winner_name = p2_name
-            self.p1_ft_roll_display_label.text = f"First Turn: Lost. ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Won! ({self._p2_ft_roll})"
-        else: # Tie
-            winner_id = gs.get("deployment_attacker_id", 1) # Attacker (winner_id) decides tie
-            display_winner_name = gs[f'player{winner_id}']['name']
-            self.first_turn_status_label.text = f"Tie! {display_winner_name} (Attacker) chooses who goes first."
-            self.p1_ft_roll_display_label.text = f"First Turn: Tie ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Tie ({self._p2_ft_roll})"
-        
-        self.p1_ft_roll_button.disabled = True # Ensure roll buttons are disabled
-        self.p2_ft_roll_button.disabled = True
-
-        gs["first_turn_choice_winner_id"] = winner_id 
-        self.first_turn_status_label.text = f"{display_winner_name} won roll/tie! {display_winner_name}, choose who takes first turn."
-
-        chooser_choice_box = self.p1_ft_choice_box if winner_id == 1 else self.p2_ft_choice_box
-        chooser_choice_box.clear_widgets()
-        btn_self_first = Button(text="I'll Go First", on_press=lambda x: self.player_decides_first_turn(True), size_hint_y=None, height=dp(35), font_size='14sp')
-        btn_opponent_first = Button(text="Opponent Goes First", on_press=lambda x: self.player_decides_first_turn(False), size_hint_y=None, height=dp(35), font_size='14sp')
-        chooser_choice_box.add_widget(btn_self_first)
-        chooser_choice_box.add_widget(btn_opponent_first)
-        chooser_choice_box.opacity = 1
-
-    def player_decides_first_turn(self, decision_is_self_goes_first: bool):
-        gs = App.get_running_app().game_state
-        chooser_id = gs.get("first_turn_choice_winner_id")
-        if chooser_id is None: return
-
-        starting_player_id = chooser_id if decision_is_self_goes_first else (1 if chooser_id == 2 else 2)
-        gs["active_player_id"] = starting_player_id
-        gs["first_player_of_game_id"] = starting_player_id
-        
-        starting_player_name = gs[f'player{starting_player_id}']["name"]
-        self.first_turn_status_label.text = f"{starting_player_name} will take the first turn!"
-
-        chooser_choice_box = self.p1_ft_choice_box if chooser_id == 1 else self.p2_ft_choice_box
-        chooser_ft_roll_display = self.p1_ft_roll_display_label if chooser_id == 1 else self.p2_ft_roll_display_label
-        other_player_id = 1 if chooser_id == 2 else 2 # Get the ID of the other player
-        other_ft_roll_display = self.p1_ft_roll_display_label if other_player_id == 1 else self.p2_ft_roll_display_label
-        
-        chooser_choice_box.clear_widgets()
-        chooser_choice_box.opacity = 0
-        
-        chooser_final_text = "Turn: First" if starting_player_id == chooser_id else "Turn: Second"
-        other_final_text = "Turn: Second" if starting_player_id == chooser_id else "Turn: First"
-        
-        chooser_ft_roll_display.text = chooser_final_text
-        other_ft_roll_display.text = other_final_text
-
-        self.start_game_button.disabled = False
-        gs['status_message'] = "First turn decided. Ready to start game."
-
-    def start_game_action(self):
-        app = App.get_running_app()
-        app.game_state['game_phase'] = 'game_play'
-        app.game_state['current_round'] = 1
-        app.save_game_state()
-
-        # Get the scorer screen and start its timers/UI updates
-        scorer_screen = app.root.get_screen('scorer_root')
-        scorer_screen.start_timers_and_ui()
-
-        app.switch_screen('scorer_root')
+        self.manager.current = 'first_turn_setup'
 
 class ScorerRootWidget(Screen):
     # Header elements from KV
@@ -1157,50 +1006,40 @@ class ScorerApp(App):
 
     def _determine_screen_from_gamestate(self):
         """
-        Determines the appropriate starting screen based on the loaded game state.
-        This is the logic that decides whether to show "Resume or New Game".
+        Determines the appropriate starting screen based on the game state.
+        This allows resuming a game in progress.
         """
-        # The 'game_phase' is the primary determinant.
-        phase = self.game_state.get('game_phase')
-
-        # If the game was in any form of setup, just start a new setup flow.
-        if phase in ['setup', 'name_entry', 'deployment', 'first_turn']:
-            return 'name_entry'
-
-        # If the game was actively being played or is over, ask the user what to do.
-        if phase in ['game_play', 'game_over']:
+        if self.game_state and self.game_state.get('game_in_progress'):
+            # If a game is in progress, go to the resume/new screen
             return 'resume_or_new'
-
-        # Default fallback if the phase is unknown or missing.
-        return 'name_entry'
+        else:
+            # Otherwise, start a new game flow
+            return 'name_entry'
 
     def build(self):
         # Determine the initial screen based on saved state BEFORE building the UI
         # This tells the splash screen where to go next.
-        if self.load_game_state():
-             self.target_screen_after_splash = self._determine_screen_from_gamestate()
-        else:
-            # If no save file, we always start a new game flow.
-            self.target_screen_after_splash = 'name_entry'
+        self.target_screen_after_splash = self._determine_screen_from_gamestate()
 
         sm = ScreenManager(transition=FadeTransition(duration=0.5))
-        sm.add_widget(Screen(name='blank_startup')) # Add a blank screen to ensure first frame is simple
+
+        # Pre-load all screens to make transitions instant after startup.
+        # The `name` property is crucial for the ScreenManager to identify screens.
+        sm.add_widget(Screen(name='startup')) # Blank startup screen
         sm.add_widget(SplashScreen(name='splash'))
+        sm.add_widget(ResumeOrNewScreen(name='resume_or_new'))
         sm.add_widget(NameEntryScreen(name='name_entry'))
         sm.add_widget(DeploymentSetupScreen(name='deployment_setup'))
         sm.add_widget(FirstTurnSetupScreen(name='first_turn_setup'))
-        sm.add_widget(ScorerRootWidget(name='scorer_root'))
+        sm.add_widget(ScorerRootWidget(name='game'))
         sm.add_widget(GameOverScreen(name='game_over'))
-        sm.add_widget(ResumeOrNewScreen(name='resume_or_new'))
-        sm.add_widget(ScreensaverScreen(name='screensaver')) # Add the screensaver screen
+        sm.add_widget(ScreensaverScreen(name='screensaver'))
 
-        # The app always starts on the splash screen
-        # sm.current = 'splash'
         return sm
 
     def transition_from_splash(self, target_screen_name, dt):
         """
-        Handles the transition from the splash screen to the determined target screen.
+        Callback from the splash screen to transition to the next screen.
         """
         if self.root.current == 'splash':
             print(f"ScorerApp: Transitioning from splash to {target_screen_name}")
@@ -1307,14 +1146,15 @@ class ScorerApp(App):
 
     def _get_screen_for_phase(self, phase):
         phase_to_screen = {
-            "setup": "name_entry",
+            "splash": "splash",
+            "resume_or_new": "resume_or_new",
             "name_entry": "name_entry",
-            "deployment": "deployment_setup",
-            "first_turn": "first_turn_setup",
-            "game_play": "scorer_root",
+            "deployment_setup": "deployment_setup",
+            "first_turn_setup": "first_turn_setup",
+            "game_play": "game",
             "game_over": "game_over"
         }
-        return phase_to_screen.get(phase, "name_entry")
+        return phase_to_screen.get(phase, "splash")  # Default to splash
 
 
 if __name__ == '__main__':

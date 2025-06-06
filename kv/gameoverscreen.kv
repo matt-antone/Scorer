@@ -1,0 +1,144 @@
+<GameOverScreen>:
+    name: 'game_over'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
+    result_status_label: result_status_lbl
+    p1_final_name_label: p1_name_final_lbl
+    p1_final_score_label: p1_score_final_lbl
+    p1_final_cp_label: p1_cp_final_lbl
+    p1_final_time_label: p1_time_final_lbl
+    p2_final_name_label: p2_name_final_lbl
+    p2_final_score_label: p2_score_final_lbl
+    p2_final_cp_label: p2_cp_final_lbl
+    p2_final_time_label: p2_time_final_lbl
+    total_game_time_label: total_time_final_lbl
+    rounds_played_label: rounds_played_final_lbl
+    exit_button: exit_btn_gos
+
+    BoxLayout: # New Main Root
+        orientation: 'vertical'
+        HeaderLayout:
+            title_text: 'Game Over' # Set the property
+        # Original Root BoxLayout for GameOverScreen content
+        BoxLayout:
+            orientation: 'vertical'
+            padding: dp(20)
+            spacing: dp(10)
+            # Old title Label removed from here
+
+            Label:
+                id: result_status_lbl
+                text: "Determining winner..."
+                font_size: '26sp'
+                italic: True
+                size_hint_y: None
+                height: dp(40)
+                halign: 'center'
+
+            GridLayout:
+                cols: 2
+                spacing: dp(10)
+                padding: dp(10)
+                size_hint_y: 0.6 # Give it some substantial height
+
+                # Player 1 Final Stats
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(5)
+                    Label:
+                        id: p1_name_final_lbl
+                        text: 'Player 1:'
+                        font_size: '20sp'
+                        bold: True
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_score_final_lbl
+                        text: 'Score: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_cp_final_lbl
+                        text: 'CP: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p1_time_final_lbl
+                        text: 'Time: 00:00:00'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+
+                # Player 2 Final Stats
+                BoxLayout:
+                    orientation: 'vertical'
+                    spacing: dp(5)
+                    Label:
+                        id: p2_name_final_lbl
+                        text: 'Player 2:'
+                        font_size: '20sp'
+                        bold: True
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_score_final_lbl
+                        text: 'Score: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_cp_final_lbl
+                        text: 'CP: 0'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+                    Label:
+                        id: p2_time_final_lbl
+                        text: 'Time: 00:00:00'
+                        font_size: '18sp'
+                        halign: 'left'
+                        text_size: self.width, None
+            
+            Label: # Spacer to push game stats and buttons down a bit
+                size_hint_y: 0.1
+
+            # Overall Game Stats
+            Label:
+                id: total_time_final_lbl
+                text: 'Total Game Time: 00:00:00'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+            Label:
+                id: rounds_played_final_lbl
+                text: 'Rounds Played: 5'
+                font_size: '18sp'
+                size_hint_y: None
+                height: dp(30)
+                halign: 'center'
+
+            Widget: # Spacer
+                size_hint_y: 0.3
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: dp(50)
+                spacing: dp(20)
+                Button:
+                    text: 'Start New Game'
+                    font_size: '20sp'
+                    on_press: root.start_new_game()
+                Button:
+                    id: exit_btn_gos
+                    text: 'Exit Application'
+                    font_size: '20sp'
+                    on_press: root.exit_app_from_game_over() 

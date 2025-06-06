@@ -1,0 +1,115 @@
+<FirstTurnSetupScreen>:
+    name: 'first_turn_setup'
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            source: 'assets/background.png'
+            pos: self.pos
+            size: self.size
+    p1_name_label: p1_name_ft_lbl
+    p1_ft_roll_button: p1_roll_ft_btn
+    p1_ft_roll_display_label: p1_roll_ft_lbl
+    p1_ft_choice_box: p1_choice_ft_box
+
+    p2_name_label: p2_name_ft_lbl
+    p2_ft_roll_button: p2_roll_ft_btn
+    p2_ft_roll_display_label: p2_roll_ft_lbl
+    p2_ft_choice_box: p2_choice_ft_box
+    
+    first_turn_status_label: first_turn_status_ft_lbl
+    start_game_button: start_game_ft_btn
+
+    BoxLayout: # Main Root
+        orientation: 'vertical'
+        padding: dp(10)
+        spacing: dp(10)
+        HeaderLayout:
+            title_text: 'First Turn Setup'
+
+        Label: # Central Status Label
+            id: first_turn_status_ft_lbl
+            text: 'Roll for First Turn!'
+            font_size: '18sp'
+            size_hint_y: None
+            height: dp(30)
+            halign: 'center'
+            valign: 'middle'
+            text_size: self.width, None
+
+        BoxLayout: # Player Columns
+            orientation: 'horizontal'
+            spacing: dp(10)
+            # Player 1 Area
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: 0.5
+                padding: dp(5)
+                spacing: dp(5)
+                Label:
+                    id: p1_name_ft_lbl
+                    text: 'Player 1'
+                    font_size: '20sp'
+                    size_hint_y: None
+                    height: dp(30)
+                Button:
+                    id: p1_roll_ft_btn
+                    text: 'Roll P1 First Turn'
+                    on_press: root.roll_first_turn_initiative(1)
+                    size_hint_y: None
+                    height: dp(40)
+                Label:
+                    id: p1_roll_ft_lbl
+                    text: 'P1 First Turn: -'
+                    size_hint_y: None
+                    height: dp(30)
+                    BoxLayout: # P1 First Turn Choice Box
+                        id: p1_choice_ft_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80) # Space for two buttons
+                        spacing: dp(5)
+                        opacity: 0 # Hidden initially
+
+            # Player 2 Area
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_x: 0.5
+                padding: dp(5)
+                spacing: dp(5)
+                Label:
+                    id: p2_name_ft_lbl
+                    text: 'Player 2'
+                    font_size: '20sp'
+                    size_hint_y: None
+                    height: dp(30)
+                Button:
+                    id: p2_roll_ft_btn
+                    text: 'Roll P2 First Turn'
+                    on_press: root.roll_first_turn_initiative(2)
+                    size_hint_y: None
+                    height: dp(40)
+                Label:
+                    id: p2_roll_ft_lbl
+                    text: 'P2 First Turn: -'
+                    size_hint_y: None
+                    height: dp(30)
+                    BoxLayout: # P2 First Turn Choice Box
+                        id: p2_choice_ft_box
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: dp(80)
+                        spacing: dp(5)
+                        opacity: 0
+            
+            Widget: # Spacer
+                size_hint_y: 1
+
+            Button:
+                id: start_game_ft_btn
+                text: 'Start Game'
+                font_size: '22sp'
+                size_hint_y: None
+                height: dp(50)
+                on_press: root.start_game_action()
+                disabled: True 

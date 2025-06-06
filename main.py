@@ -1153,6 +1153,7 @@ class ScorerApp(App):
             self.target_screen_after_splash = 'name_entry'
 
         sm = ScreenManager(transition=FadeTransition(duration=0.5))
+        sm.add_widget(Screen(name='blank_startup')) # Add a blank screen to ensure first frame is simple
         sm.add_widget(SplashScreen(name='splash'))
         sm.add_widget(NameEntryScreen(name='name_entry'))
         sm.add_widget(DeploymentSetupScreen(name='deployment_setup'))
@@ -1163,7 +1164,7 @@ class ScorerApp(App):
         sm.add_widget(ScreensaverScreen(name='screensaver')) # Add the screensaver screen
 
         # The app always starts on the splash screen
-        sm.current = 'splash'
+        # sm.current = 'splash'
         return sm
 
     def transition_from_splash(self, target_screen_name, dt):
@@ -1242,20 +1243,16 @@ class ScorerApp(App):
         """Called after build() and the root widget is created."""
         self.ws_server.start()
         Window.bind(on_touch_down=self.reset_inactivity_timer)
-        # Clock.schedule_interval(self.check_event_loop, 2)
-        # A small delay can help prevent race conditions on startup on some platforms
-        Clock.schedule_once(lambda dt: self.root.current, 0.1)
+        Window.bind(on_flip=self._on_first_frame)
 
-    def _get_screen_for_phase(self, phase):
-        phase_to_screen = {
-            "setup": "name_entry",
-            "name_entry": "name_entry",
-            "deployment": "deployment_setup",
-            "first_turn": "first_turn_setup",
-            "game_play": "scorer_root",
-            "game_over": "game_over"
-        }
-        return phase_to_screen.get(phase, "name_entry")
+    def _on_first_frame(self, *args):
+        """This event is called after the first frame is drawn."""
+        print("DIAGNOSTIC: First frame drawn, transitioning to splash screen.")
+        # Unbind this method so it doesn't get called on every frame
+        Window.unbind(on_flip=self._on_first_frame)
+        # Now it's safe to set the current screen
+        self.root.current = 'splash'
+        return True # Returning True consumes the event
 
     def reset_inactivity_timer(self, *args):
         if self.root and self.root.current == 'screensaver':
@@ -1271,6 +1268,17 @@ class ScorerApp(App):
         if self.root and self.root.current not in ['screensaver', 'splash']:
             self.last_active_screen = self.root.current
             self.root.current = 'screensaver'
+
+    def _get_screen_for_phase(self, phase):
+        phase_to_screen = {
+            "setup": "name_entry",
+            "name_entry": "name_entry",
+            "deployment": "deployment_setup",
+            "first_turn": "first_turn_setup",
+            "game_play": "scorer_root",
+            "game_over": "game_over"
+        }
+        return phase_to_screen.get(phase, "name_entry")
 
 
 if __name__ == '__main__':

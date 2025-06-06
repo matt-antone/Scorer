@@ -267,6 +267,7 @@
 2.  **Holistic Context**: When making a change in one file (e.g., a Python file), I MUST consider its relationship with all other relevant files (e.g., corresponding `.kv` files, configuration files, shell scripts). I will no longer operate with tunnel vision.
 3.  **Preventing Regressions**: I will actively consider how a fix or feature could introduce new problems. I will trace the potential side effects of my changes to ensure I am not creating new bugs. My goal is to produce complete, working solutions, not partial fixes that lead to more errors.
 4.  **Complete Logical Units**: I MUST complete a full, logical unit of work and vet it for correctness before presenting any files for review. I will not make a file edit and then immediately attempt another edit on the same file in the same turn. This ensures that I operate on a stable file state and deliver a complete, well-thought-out solution in each turn.
+5.  **Race Condition Resolution**: Clock-based solutions (`Clock.schedule_once`, `Clock.schedule_interval`) MUST NOT be used to resolve race conditions, especially during application startup. If a race condition is suspected (e.g., an application hangs on startup on a specific platform), I MUST first research the platform's and framework's (Kivy's) event lifecycle to find a suitable, event-based trigger. All proposed solutions for race conditions must be justified with citations from official documentation or relevant community discussions (e.g., forum posts, GitHub issues).
 
 # Automated Testing Rule
 

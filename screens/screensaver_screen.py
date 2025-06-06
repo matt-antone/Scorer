@@ -43,7 +43,7 @@ class ScreensaverScreen(Screen):
             # Set the initial image for the back widget to avoid a black screen on first transition
             self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
             self.image_widget_back.source = self.image_files[self.current_image_index]
-            self.slideshow_event = Clock.schedule_interval(self.next_slide, 5)
+            self.slideshow_event = Clock.schedule_interval(self.next_slide, 15)
 
     def stop_slideshow(self):
         if self.slideshow_event:
@@ -96,11 +96,11 @@ class ScreensaverScreen(Screen):
             
             # Set the counter and limit for this run
             self.images_shown = 1
-            self.max_images_to_show = len(self.image_files) * 2
+            self.max_images_to_show = len(self.image_files)
 
             # Check if we should exit immediately (e.g., only 1 image)
             if self.images_shown >= self.max_images_to_show:
-                 Clock.schedule_once(self._finish_slideshow, 5) # Show the 1 image for 5s then exit
+                 Clock.schedule_once(self._finish_slideshow, 15) # Show the 1 image for 15s then exit
             else:
                 self.start_slideshow()
         else:

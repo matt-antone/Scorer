@@ -1046,7 +1046,7 @@ class ResumeOrNewScreen(Screen):
 class ScorerApp(App):
     SAVE_FILE_NAME = "game_state.json"
     VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
-    INACTIVITY_TIMEOUT_SECONDS = 60 # 5 minutes
+    INACTIVITY_TIMEOUT_SECONDS = 300 # 5 minutes
     target_screen_after_splash = None
     last_active_screen = None # To store the screen before screensaver
 

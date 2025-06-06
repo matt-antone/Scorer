@@ -19,6 +19,7 @@ from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.recycleboxlayout import RecycleBoxLayout as KivyRecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.image import Image
+from kivy.core.image import Image as CoreImage
 
 # --- Popup Classes moved from main.py ---
 
@@ -219,17 +220,31 @@ class SplashScreen(Screen):
     def _on_qr_codes_generated(self, dt):
         """
         This runs on the main Kivy thread to safely update the UI.
+        It pre-loads the QR code images and updates the widgets on the next screen.
         """
+        app = App.get_running_app()
+
+        # Step 1: Pre-load the images into Kivy's cache to ensure they are ready.
+        CoreImage(app.p1_qr_path).texture
+        CoreImage(app.p2_qr_path).texture
+        CoreImage(app.observer_qr_path).texture
+
+        # Step 2: Get the NameEntryScreen and update its Image widgets directly.
+        name_entry_screen = app.root.get_screen('name_entry')
+        if name_entry_screen.p1_qr_code:
+            name_entry_screen.p1_qr_code.source = app.p1_qr_path
+            name_entry_screen.p1_qr_code.reload()
+        if name_entry_screen.p2_qr_code:
+            name_entry_screen.p2_qr_code.source = app.p2_qr_path
+            name_entry_screen.p2_qr_code.reload()
+        
+        # Step 3: Now that everything is loaded, show the start button.
         self.loading_indicator.opacity = 0
         self.start_button.opacity = 1
         self.start_button.disabled = False
 
 
-    def transition_to_next_screen(self):
-        """
-        Called when the 'START' button is pressed.
-        It retrieves the target screen from the app and tells the app to transition.
-        """
+    def transition_to_next_screen(self, *args):
         app = App.get_running_app()
         if app:
             target_screen = app.target_screen_after_splash

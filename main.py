@@ -136,8 +136,8 @@ class NameEntryScreen(Screen):
 
         self.player1_name_input.text = p1_name
         self.player2_name_input.text = p2_name
-        self.p1_qr_code.source = app.p1_qr_path
-        self.p2_qr_code.source = app.p2_qr_path
+        # self.p1_qr_code.source = app.p1_qr_path
+        # self.p2_qr_code.source = app.p2_qr_path
 
     def set_active_input(self, text_input):
         if text_input.focus:

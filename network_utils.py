@@ -9,28 +9,31 @@ def is_raspberry_pi():
 
 def scan_wifi_networks():
     """Scans for available Wi-Fi networks using nmcli."""
-    if not is_raspberry_pi():
-        return ["Not on Pi - WiFi 1", "Not on Pi - WiFi 2 (Secured)"]
+    # --- SIMULATING NO NETWORK ---
+    return []
+    # --- ORIGINAL CODE ---
+    # if not is_raspberry_pi():
+    #     return ["Not on Pi - WiFi 1", "Not on Pi - WiFi 2 (Secured)"]
     
-    try:
-        # Rescan first to get the most up-to-date list
-        subprocess.run(['nmcli', 'dev', 'wifi', 'rescan'], check=True, capture_output=True)
-        # Get the list of available Wi-Fi networks
-        result = subprocess.run(
-            ['nmcli', '-f', 'SSID', 'dev', 'wifi'],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        # Process the output
-        lines = result.stdout.strip().split('\n')
-        networks = [line.strip() for line in lines[1:] if line.strip()] # Skip header and empty lines
-        # Remove duplicates
-        unique_networks = sorted(list(set(networks)))
-        return unique_networks
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
-        print(f"Error scanning for Wi-Fi networks: {e}")
-        return ["Error scanning networks"]
+    # try:
+    #     # Rescan first to get the most up-to-date list
+    #     subprocess.run(['nmcli', 'dev', 'wifi', 'rescan'], check=True, capture_output=True)
+    #     # Get the list of available Wi-Fi networks
+    #     result = subprocess.run(
+    #         ['nmcli', '-f', 'SSID', 'dev', 'wifi'],
+    #         check=True,
+    #         capture_output=True,
+    #         text=True
+    #     )
+    #     # Process the output
+    #     lines = result.stdout.strip().split('\n')
+    #     networks = [line.strip() for line in lines[1:] if line.strip()] # Skip header and empty lines
+    #     # Remove duplicates
+    #     unique_networks = sorted(list(set(networks)))
+    #     return unique_networks
+    # except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    #     print(f"Error scanning for Wi-Fi networks: {e}")
+    #     return ["Error scanning networks"]
 
 def connect_to_wifi(ssid, password):
     """Connects to a Wi-Fi network using nmcli."""

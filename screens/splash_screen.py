@@ -5,6 +5,7 @@ import threading
 import socket
 import qrcode
 from kivy.clock import Clock
+import os
 
 
 def get_local_ip():
@@ -44,6 +45,12 @@ class SplashScreen(Screen):
         This runs in a background thread to avoid blocking the UI.
         """
         app = App.get_running_app()
+        
+        # Ensure the .cache directory exists
+        cache_dir = os.path.dirname(app.p1_qr_path)
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
+
         ip = get_local_ip()
         port = 6969
         

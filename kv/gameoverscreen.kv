@@ -27,14 +27,23 @@
             Label:
                 id: total_time_final_lbl
                 text: 'Total Game Time: 00:00:00'
-                font_size: '18sp'
+                font_size: '16sp'
+                bold: True
                 halign: 'center'
-                size_hint_y: None
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_x: 0.8 # Allow label to take most space
+                color: [0.5, 0.5, 0.5, 1] # Slightly different header background
             Label:
                 id: rounds_played_final_lbl
                 text: 'Rounds Played: 5'
-                font_size: '18sp'
-                size_hint_y: None
+                font_size: '16sp'
+                bold: True
+                halign: 'center'
+                valign: 'middle'
+                text_size: self.width, None
+                size_hint_x: 0.8 # Allow label to take most space
+                color: [0.5, 0.5, 0.5, 1] # Slightly different header background
         SubHeaderLayout:
             id: subhead
 

@@ -2,6 +2,7 @@
 #:import TextInput kivy.uix.textinput.TextInput
 #:import Factory kivy.factory.Factory
 #:import StringProperty kivy.properties.StringProperty
+#:import 'screens.splash_screen'
 
 # Define some global properties based on the CSS for reusability
 <InterBlack@Label>:
@@ -75,17 +76,15 @@
         text_size: self.width, None
         size_hint_x: 0.8 # Allow label to take most space
     Button:
-        text: 'Connect'
-        font_size: '16sp'
-        size_hint_x: None
-        width: dp(80)
-        on_press: app.root.get_screen('scorer_root').open_connect_popup()
-    Button:
-        text: 'X'
+        font_name: 'InterBlack'
         font_size: '20sp'
-        size_hint_x: None
-        width: dp(50) # Fixed width for the close button
-        on_press: app.stop() # Call app.stop() to exit
+        text: 'New Game'
+        on_press: root.request_new_game()
+    Button:
+        font_name: 'InterBlack'
+        font_size: '20sp'
+        text: 'Exit'
+        on_press: root.exit_app()
 
 ScreenManager:
     SplashScreen: # Added SplashScreen

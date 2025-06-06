@@ -47,16 +47,16 @@ class DeploymentSetupScreen(Screen):
         gs["player2"]["deployment_roll"] = 0
 
         self.p1_roll_button.disabled = False
-        self.p1_roll_display_label.text = "P1 Deploy: -"
+        self.p1_roll_display_label.text = ""
         self.p1_choice_box.clear_widgets()
         self.p1_choice_box.opacity = 0 
 
         self.p2_roll_button.disabled = False
-        self.p2_roll_display_label.text = "P2 Deploy: -"
+        self.p2_roll_display_label.text = ""
         self.p2_choice_box.clear_widgets()
         self.p2_choice_box.opacity = 0
 
-        self.deployment_status_label.text = "Roll for Deployment Attacker/Defender"
+        self.deployment_status_label.text = "Roll for who deploys first. Winner chooses Attacker/Defender"
         self.continue_to_first_turn_button.disabled = True
         
     def roll_deployment_initiative(self, player_id):
@@ -68,10 +68,10 @@ class DeploymentSetupScreen(Screen):
             gs['player1']['deployment_roll'] = roll
             self.p1_roll_button.disabled = True
             self._p1_rolled_once = True
-            self.p1_roll_display_label.text = roll
+            self.p1_roll_display_label.text = f"{roll}"
             if not self._p2_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 2 to roll..."
-                self.p2_roll_display_label.text = "P2 To Roll"
+                self.p2_roll_display_label.text = "Roll"
             else: # P2 has already rolled
                 self.deployment_status_label.text = "Comparing rolls..."
         elif player_id == 2:
@@ -79,10 +79,10 @@ class DeploymentSetupScreen(Screen):
             gs['player2']['deployment_roll'] = roll
             self.p2_roll_button.disabled = True
             self._p2_rolled_once = True
-            self.p2_roll_display_label.text = roll
+            self.p2_roll_display_label.text = f"{roll}"
             if not self._p1_rolled_once:
                 self.deployment_status_label.text = "Waiting for Player 1 to roll..."
-                self.p1_roll_display_label.text = "P1 To Roll"
+                self.p1_roll_display_label.text = "Roll"
             else: # P1 has already rolled
                 self.deployment_status_label.text = "Comparing rolls..."
 
@@ -112,8 +112,8 @@ class DeploymentSetupScreen(Screen):
             self.deployment_status_label.text = "Tie! Both players re-roll for deployment."
             self._p1_roll = 0; gs['player1']['deployment_roll'] = 0; self._p1_rolled_once = False
             self._p2_roll = 0; gs['player2']['deployment_roll'] = 0; self._p2_rolled_once = False
-            self.p1_roll_button.disabled = False; self.p1_roll_display_label.text = "Re-Roll!"
-            self.p2_roll_button.disabled = False; self.p2_roll_display_label.text = "Re-Roll!"
+            self.p1_roll_button.disabled = False; self.p1_roll_display_label.text = f"Tie {self._p1_roll}"
+            self.p2_roll_button.disabled = False; self.p2_roll_display_label.text = f"Tie {self._p2_roll}"
             return
 
         gs['deployment_initiative_winner_id'] = winner_id
@@ -140,7 +140,7 @@ class DeploymentSetupScreen(Screen):
 
         attacker_name = gs[f'player{attacker_id}']["name"]
         defender_name = gs[f'player{defender_id}']["name"]
-        self.deployment_status_label.text = f"Attacker: {attacker_name}, Defender: {defender_name}. Players deploy units."
+        self.deployment_status_label.text = f"Deploy your units and click \"Continue\" below."
         
         chooser_choice_box = self.p1_choice_box if chooser_id == 1 else self.p2_choice_box
         chooser_roll_display = self.p1_roll_display_label if chooser_id == 1 else self.p2_roll_display_label
@@ -149,14 +149,14 @@ class DeploymentSetupScreen(Screen):
         chooser_choice_box.clear_widgets()
         chooser_choice_box.opacity = 0
         
-        chosen_role_text = "Role: Attacker" if chooser_id == attacker_id else "Role: Defender"
-        assigned_role_text = "Role: Defender" if chooser_id == attacker_id else "Role: Attacker"
+        chosen_role_text = "Attacker" if chooser_id == attacker_id else "Defender"
+        assigned_role_text = "Defender" if chooser_id == attacker_id else "Attacker"
 
         chooser_roll_display.text = chosen_role_text
         other_roll_display.text = assigned_role_text # Update the other player's label too
 
         self.continue_to_first_turn_button.disabled = False
-        gs['status_message'] = "Deployment roles chosen. Ready for First Turn Setup."
+        gs['status_message'] = "Continue"
         
     def proceed_to_first_turn_setup(self):
         app = App.get_running_app()

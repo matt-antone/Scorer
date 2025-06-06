@@ -45,12 +45,12 @@ class FirstTurnSetupScreen(Screen):
         gs["player2"]["first_turn_roll"] = 0
         
         self.p1_ft_roll_button.disabled = False
-        self.p1_ft_roll_display_label.text = "P1 First Turn: -"
+        self.p1_ft_roll_display_label.text = ""
         self.p1_ft_choice_box.clear_widgets()
         self.p1_ft_choice_box.opacity = 0
 
         self.p2_ft_roll_button.disabled = False
-        self.p2_ft_roll_display_label.text = "P2 First Turn: -"
+        self.p2_ft_roll_display_label.text = ""
         self.p2_ft_choice_box.clear_widgets()
         self.p2_ft_choice_box.opacity = 0
         
@@ -72,7 +72,7 @@ class FirstTurnSetupScreen(Screen):
             self.p1_ft_roll_display_label.text = f"{roll}"
             if not self._p2_ft_rolled_once:
                 self.first_turn_status_label.text = "Waiting for Player 2 to roll..."
-                self.p2_ft_roll_display_label.text = "P2 To Roll"
+                self.p2_ft_roll_display_label.text = "Roll"
             else:
                 self.first_turn_status_label.text = "Comparing rolls..."
         elif player_id == 2:
@@ -83,7 +83,7 @@ class FirstTurnSetupScreen(Screen):
             self.p2_ft_roll_display_label.text = f"{roll}"
             if not self._p1_ft_rolled_once:
                 self.first_turn_status_label.text = "Waiting for Player 1 to roll..."
-                self.p1_ft_roll_display_label.text = "P1 To Roll"
+                self.p1_ft_roll_display_label.text = "Roll"
             else:
                 self.first_turn_status_label.text = "Comparing rolls..."
         
@@ -100,18 +100,18 @@ class FirstTurnSetupScreen(Screen):
 
         if self._p1_ft_roll > self._p2_ft_roll:
             winner_id = 1; display_winner_name = p1_name
-            self.p1_ft_roll_display_label.text = f"First Turn: Won! ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Lost. ({self._p2_ft_roll})"
+            self.p1_ft_roll_display_label.text = f"Win {self._p1_ft_roll}"
+            self.p2_ft_roll_display_label.text = f"Lose {self._p2_ft_roll}"
         elif self._p2_ft_roll > self._p1_ft_roll:
             winner_id = 2; display_winner_name = p2_name
-            self.p1_ft_roll_display_label.text = f"First Turn: Lost. ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Won! ({self._p2_ft_roll})"
+            self.p1_ft_roll_display_label.text = f"Lose {self._p1_ft_roll}"
+            self.p2_ft_roll_display_label.text = f"Win {self._p2_ft_roll}"
         else: # Tie
             winner_id = gs.get("deployment_attacker_id", 1) # Attacker (winner_id) decides tie
             display_winner_name = gs[f'player{winner_id}']['name']
             self.first_turn_status_label.text = f"Tie! {display_winner_name} (Attacker) chooses who goes first."
-            self.p1_ft_roll_display_label.text = f"First Turn: Tie ({self._p1_ft_roll})"
-            self.p2_ft_roll_display_label.text = f"First Turn: Tie ({self._p2_ft_roll})"
+            self.p1_ft_roll_display_label.text = f"Tie {self._p1_ft_roll}"
+            self.p2_ft_roll_display_label.text = f"Tie {self._p2_ft_roll}"
         
         self.p1_ft_roll_button.disabled = True # Ensure roll buttons are disabled
         self.p2_ft_roll_button.disabled = True
@@ -147,8 +147,8 @@ class FirstTurnSetupScreen(Screen):
         chooser_choice_box.clear_widgets()
         chooser_choice_box.opacity = 0
         
-        chooser_final_text = "Turn: First" if starting_player_id == chooser_id else "Turn: Second"
-        other_final_text = "Turn: Second" if starting_player_id == chooser_id else "Turn: First"
+        chooser_final_text = "First" if starting_player_id == chooser_id else "Second"
+        other_final_text = "Second" if starting_player_id == chooser_id else "First"
         
         chooser_ft_roll_display.text = chooser_final_text
         other_ft_roll_display.text = other_final_text

@@ -56,40 +56,38 @@
         Rectangle:
             pos: self.pos
             size: self.size
-    Image:
-        source: 'assets/icon_64.png'
-        size_hint_x: None
-        width: self.height # Keep it square based on header height
     Label:
         id: header_title
         text: root.title_text # root.title_text will be provided when HeaderLayout is used
         font_size: '22sp'
         bold: True
-        halign: 'left'
+        halign: 'center'
         valign: 'middle'
         text_size: self.width, None
         size_hint_x: 0.8 # Allow label to take most space
 
-<SubHeaderLayout@BoxLayout>:
+<SubHeaderLayout@BoxLayout>
+    id: 'subheader'
     orientation: 'horizontal'
     size_hint_y: None
     height: dp(30) # Adjusted height slightly
     padding: dp(5)
     spacing: dp(10)
-    title_text: ''
+    text: ''
     canvas.before:
         Color:
-            rgba: 0.1, 0.1, 0.15, 1 # Slightly different header background
+            rgba: 0.2, 0.2, 0.2, 1 # Slightly different header background
         Rectangle:
             pos: self.pos
             size: self.size
     Label:
         id: header_title
-        text: root.title_text # root.title_text will be provided when HeaderLayout is used
+        text: root.text # root.text will be provided when HeaderLayout is used
         font_size: '16sp'
         bold: True
         halign: 'center'
         valign: 'middle'
         text_size: self.width, None
         size_hint_x: 0.8 # Allow label to take most space
+        color: [0.5, 0.5, 0.5, 1] # Slightly different header background
 

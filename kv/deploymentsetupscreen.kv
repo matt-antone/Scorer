@@ -1,3 +1,4 @@
+# This screen is complete and should not be changed
 <DeploymentSetupScreen>:
     name: 'deployment_setup'
     p1_name_label: p1_name_dsp_lbl
@@ -10,7 +11,7 @@
     p2_roll_display_label: p2_roll_dsp_lbl
     p2_choice_box: p2_choice_dsp_box
 
-    deployment_status_label: deployment_status_dsp_lbl
+    deployment_status_label: subheader
     continue_to_first_turn_button: continue_to_ft_btn
 
     canvas.before:
@@ -26,22 +27,12 @@
         HeaderLayout:
             title_text: 'Deployment - Time to move em out'
         SubHeaderLayout:
-            title_text: 'Roll for who deploys first. Winner chooses Attacker/Defender'
-        Label: # Central Status Label
-            id: deployment_status_dsp_lbl
-            text: 'Roll for Deployment Attacker/Defender'
-            font_size: '18sp'
-            size_hint_y: None
-            height: dp(30)
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.width, None
+            id: subheader
+            text: 'Roll for who deploys first. Winner chooses Attacker/Defender'
         GridLayout:
             cols: 2
             padding: dp(20)
             spacing: dp(20)
-            size_hint_y: None
-            height: self.minimum_height
 
            # Player 1 Area
             BoxLayout:
@@ -52,14 +43,14 @@
 
                 Label:
                     id: p1_name_dsp_lbl
-                    text: 'Player 1 Roll'
+                    text: 'Player 1'
                     font_name: 'InterBlack'
                     font_size: '20sp'
                     size_hint_y: None
                     height: dp(30)
                 Label:
                     id: p1_roll_dsp_lbl
-                    text: 'None'
+                    text: '-'
                     font_name: 'InterBlack'
                     font_size: '72sp'
                     size_hint_y: None
@@ -71,19 +62,6 @@
                     height: dp(80) # Space for two buttons
                     spacing: dp(5)
                     opacity: 0 # Hidden initially
-                    Player1Button:
-                        id: p1_roll_dsp_btn
-                        text: 'Roll'
-                        on_press: root.roll_deployment_initiative(1)
-                        size_hint_y: None
-                        height: dp(40)
-                    Player1Button:
-                        id: p1_roll_dsp_btn
-                        text: 'Roll'
-                        on_press: root.roll_deployment_initiative(1)
-                        size_hint_y: None
-                        height: dp(40)
-                    
                 Player1Button:
                     id: p1_roll_dsp_btn
                     text: 'Roll'
@@ -118,17 +96,7 @@
                     size_hint_y: None
                     height: dp(80)
                     spacing: dp(5)
-                    Player2Button:
-                        id: somebutton
-                        text: 'Attacker'
-                        size_hint_y: None
-                        height: dp(40)
-                    Player2Button:
-                        id: somebutton2
-                        text: 'Defender'
-                        size_hint_y: None
-                        height: dp(40)
-
+                    opacity: 0 # Hidden initially
                 Player2Button:
                     id: p2_roll_dsp_btn
                     text: 'Roll'
@@ -141,7 +109,7 @@
 
         Button:
             id: continue_to_ft_btn
-            text: 'Units Deployed - Continue to First Turn Roll'
+            text: 'Continue'
             font_size: '20sp'
             size_hint_y: None
             height: dp(50)

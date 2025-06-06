@@ -19,7 +19,8 @@
         orientation: 'vertical'
         HeaderLayout:
             title_text: 'Roll Call - Enter your names and connect your phone.'
-
+        SubHeaderLayout:
+            text: 'Connect your phone to update your stats durning the game and more features.'
         ScrollView:
             do_scroll_x: False
             GridLayout:
@@ -86,7 +87,6 @@
         BoxLayout:
             size_hint_y: None
             height: dp(60)
-            padding: [dp(20), 0, dp(20), dp(10)]
             Button:
                 id: continue_button
                 text: 'Continue'

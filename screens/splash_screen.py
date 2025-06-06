@@ -2,7 +2,6 @@ from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 import threading
-import socket
 import qrcode
 from kivy.clock import Clock
 import os

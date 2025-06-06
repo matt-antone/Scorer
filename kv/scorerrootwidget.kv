@@ -86,32 +86,51 @@
                         size_hint_y: None
                         height: self.texture_size[1] + dp(5)
                     InterBlack:
-                        id: p1_score_label_id
-                        text: '0'
-                        font_size: '96sp'
+                        id: p1_name_label_id
+                        text: 'Attacker'
+                        font_size: '12sp'
                         text_size: self.width, None
                         halign: 'left' # Align left as requested
                         valign: 'top'
                         size_hint_y: None
                         height: self.texture_size[1] + dp(5)
-                    InterBlack:
-                        id: p1_cp_label_id
-                        text: 'Command Points: 0'
-                        font_size: '18sp'
-                        text_size: self.width, None
-                        halign: 'left' # Align left as requested
-                        valign: 'top'
+                    BoxLayout:
+                        orientation: 'vertical'
+                        valign: 'bottom'
                         size_hint_y: None
-                        height: self.texture_size[1] + dp(5)
-                    InterBlack:
-                        id: p1_player_timer_label_id
-                        text: '00:00:00'
-                        font_size: '18sp'
-                        text_size: self.width, None
-                        halign: 'left' # Align left as requested
-                        valign: 'top'
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(5)
+                        height: self.minimum_height
+                        InterBlack:
+                            id: p1_score_label_id
+                            text: '0'
+                            font_size: '96sp'
+                            text_size: self.width, None
+                            halign: 'left' # Align left as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+                            width: self.texture_size[0]
+                        BoxLayout:
+                            orientation: 'horizontal'
+                            size_hint_y: None
+                            height: self.minimum_height
+                            InterBlack:
+                                id: p1_cp_label_id
+                                text: 'Command Points: 0'
+                                font_size: '18sp'
+                                text_size: self.width, None
+                                halign: 'left' # Align left as requested
+                                valign: 'top'
+                                size_hint_y: None
+                                height: self.texture_size[1] + dp(5)
+                            InterBlack:
+                                id: p1_player_timer_label_id
+                                text: '00:00:00'
+                                font_size: '18sp'
+                                text_size: self.width, None
+                                halign: 'left' # Align left as requested
+                                valign: 'top'
+                                size_hint_y: None
+                                height: self.texture_size[1] + dp(5)
                     Player1Button:
                         id: p1_concede_button_id
                         text: "Concede"
@@ -179,37 +198,55 @@
                         text: 'Player 2'
                         font_size: '24sp'
                         text_size: self.width, None
-                        halign: 'right' # Align right as requested
+                        halign: 'right'
                         valign: 'top'
                         size_hint_y: None
                         height: self.texture_size[1] + dp(5)
                     InterBlack:
-                        id: p2_score_label_id
-                        text: '0'
-                        font_size: '96sp'
+                        id: p2_name_label_id
+                        text: 'Attacker'
+                        font_size: '12sp'
                         text_size: self.width, None
-                        halign: 'right' # Align right as requested
+                        halign: 'right'
                         valign: 'top'
                         size_hint_y: None
                         height: self.texture_size[1] + dp(5)
-                    InterBlack:
-                        id: p2_cp_label_id
-                        text: 'Command Points: 0'
-                        font_size: '18sp'
-                        text_size: self.width, None
-                        halign: 'right' # Align right as requested
-                        valign: 'top'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        valign: 'bottom'
                         size_hint_y: None
-                        height: self.texture_size[1] + dp(5)
-                    InterBlack:
-                        id: p2_player_timer_label_id
-                        text: '00:00:00'
-                        font_size: '18sp'
-                        text_size: self.width, None
-                        halign: 'right' # Align right as requested
-                        valign: 'top'
-                        size_hint_y: None
-                        height: self.texture_size[1] + dp(5)
+                        height: self.minimum_height
+                        InterBlack:
+                            id: p2_cp_label_id
+                            text: 'Command Points: 0'
+                            font_size: '18sp'
+                            text_size: self.width, None
+                            halign: 'right' # Align right as requested
+                            valign: 'top'
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(5)
+                        BoxLayout:
+                            orientation: 'vertical'
+                            size_hint_y: None
+                            height: self.minimum_height
+                            InterBlack:
+                                id: p2_score_label_id
+                                text: '0'
+                                font_size: '96sp'
+                                text_size: self.width, None
+                                halign: 'right' # Align right as requested
+                                valign: 'top'
+                                size_hint_y: None
+                                height: self.texture_size[1] + dp(5)
+                            InterBlack:
+                                id: p2_player_timer_label_id
+                                text: '00:00:00'
+                                font_size: '18sp'
+                                text_size: self.width, None
+                                halign: 'right' # Align right as requested
+                                valign: 'top'
+                                size_hint_y: None
+                                height: self.texture_size[1] + dp(5)
                     Player2Button:
                         id: p2_concede_button_id
                         text: "Concede"

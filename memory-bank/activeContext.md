@@ -18,6 +18,11 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 - **Bug Fix:** Resolved a startup crash (`TypeError`) caused by a refactoring mismatch between `main.py` and `websocket_server.py`. The `WebSocketServer`'s constructor was updated to accept the necessary callbacks directly, improving the code's robustness.
 - **Splash Screen Rework:** The splash screen has been changed from a timed, automatic transition to a manual one. It now features a large, styled "START" button that the user must press to enter the application. The logic for the splash screen has also been refactored into its own dedicated file (`screens/splash_screen.py`) for better code organization.
 - **Race Condition Fix**: Resolved a crash on the `ResumeOrNewScreen` by implementing the robust widget initialization pattern. This prevents an `AttributeError` that occurred when the screen's `on_enter` event fired before the UI widgets were fully loaded and ready.
+- **Client Connection UX**: Implemented a robust and user-friendly method for connecting clients.
+  - The app now generates QR codes for Player 1, Player 2, and a general observer client.
+  - On the `NameEntryScreen`, QR codes are displayed directly under the name inputs for easy setup.
+  - On the main `ScorerRootWidget`, a "Connect" button in the header opens a popup displaying all three QR codes.
+  - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button. This prevents UI freezes and race conditions.
 
 ## Active Decisions
 

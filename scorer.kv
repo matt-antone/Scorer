@@ -75,6 +75,12 @@
         text_size: self.width, None
         size_hint_x: 0.8 # Allow label to take most space
     Button:
+        text: 'Connect'
+        font_size: '16sp'
+        size_hint_x: None
+        width: dp(80)
+        on_press: app.root.get_screen('scorer_root').open_connect_popup()
+    Button:
         text: 'X'
         font_size: '20sp'
         size_hint_x: None
@@ -881,6 +887,8 @@ ScreenManager:
 
 <SplashScreen>:
     name: 'splash_screen'
+    loading_indicator: loading_indicator
+    start_button: start_button
 
     FloatLayout:
         canvas.before:
@@ -898,7 +906,15 @@ ScreenManager:
             size: dp(256), dp(256)
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
 
+        Label:
+            id: loading_indicator
+            text: 'Checking network and preparing for launch...'
+            font_name: 'InterBlack'
+            font_size: '20sp'
+            pos_hint: {'center_x': 0.5, 'center_y': 0.25}
+
         Button:
+            id: start_button
             text: 'START'
             font_name: 'InterBlack'
             color: 1, 1, 1, 1 # White text
@@ -908,6 +924,8 @@ ScreenManager:
             pos_hint: {'center_x': 0.5, 'center_y': 0.123} # Lowered from 0.165
             background_color: 0, 0, 0, 0 # Transparent
             on_press: root.transition_to_next_screen()
+            opacity: 0
+            disabled: True
             canvas.before:
                 Color:
                     rgba: 0, 0, 0, 1 # Black background
@@ -956,4 +974,25 @@ ScreenManager:
                 on_press: root.start_new_game_from_resume_screen_action()
 
 <ScreensaverScreen>:
-    name: 'screensaver' 
+    name: 'screensaver'
+
+<WifiRecycleView>:
+    viewclass: 'SelectableLabel'
+    SelectableGridLayout:
+        cols: 1
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+        multiselect: False
+        touch_multiselect: False
+
+<SelectableLabel>:
+    # Draw a background to indicate selection
+    canvas.before:
+        Color:
+            rgba: (0.2, 0.2, 0.2, 1) if self.selected else (0.1, 0.1, 0.1, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size 

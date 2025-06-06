@@ -156,4 +156,11 @@ cython_debug/
 Thumbs.db
 
 # VS Code
-.vscode/ 
+.vscode/
+
+# Cache files
+.cache/
+
+# QR code images
+p1_qr.png
+p2_qr.png 

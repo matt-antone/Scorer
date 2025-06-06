@@ -17,8 +17,8 @@ class ScreensaverScreen(Screen):
         self.slideshow_event = None
 
         layout = FloatLayout()
-        self.image_widget_front = Image(allow_stretch=True, keep_ratio=False, opacity=1)
-        self.image_widget_back = Image(allow_stretch=True, keep_ratio=False, opacity=0)
+        self.image_widget_front = Image(fit_mode='fill', opacity=1)
+        self.image_widget_back = Image(fit_mode='fill', opacity=0)
         layout.add_widget(self.image_widget_back)
         layout.add_widget(self.image_widget_front)
         self.add_widget(layout)

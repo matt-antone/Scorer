@@ -1242,6 +1242,10 @@ class ScorerApp(App):
         """Called after build() and the root widget is created."""
         self.ws_server.start()
         Window.bind(on_touch_down=self.reset_inactivity_timer)
+        Clock.schedule_interval(self.check_event_loop, 2)
+
+    def check_event_loop(self, dt):
+        print("DIAGNOSTIC: Kivy event loop is running...")
 
     def _get_screen_for_phase(self, phase):
         phase_to_screen = {

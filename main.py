@@ -1008,9 +1008,26 @@ class ResumeOrNewScreen(Screen):
     resume_info_label = ObjectProperty(None)
     resume_button = ObjectProperty(None)
     new_game_button = ObjectProperty(None)
+    _is_initialized = False
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.bind(
+            resume_info_label=self._check_and_initialize,
+            resume_button=self._check_and_initialize,
+            new_game_button=self._check_and_initialize
+        )
+
+    def _check_and_initialize(self, instance, value):
+        if self.resume_info_label and self.resume_button and self.new_game_button and not self._is_initialized:
+            self._is_initialized = True
+            self._initialize_screen()
 
     def on_enter(self, *args):
-        # Optional: Update the label text with more specific info if needed
+        if self._is_initialized:
+            self._initialize_screen()
+
+    def _initialize_screen(self):
         app = App.get_running_app()
         phase = app.game_state.get('game_phase')
         p1_name = app.game_state.get('player1', {}).get('name', 'P1')
@@ -1019,7 +1036,8 @@ class ResumeOrNewScreen(Screen):
 
     def resume_game_action(self):
         app = App.get_running_app()
-        app.root.current = app._get_screen_for_phase(app.game_state.get('game_phase', 'game_play'))
+        screen_to_resume = app._get_screen_for_phase(app.game_state.get('game_phase', 'game_play'))
+        app.switch_screen(screen_to_resume)
 
     def start_new_game_from_resume_screen_action(self):
         app = App.get_running_app()

@@ -1,8 +1,15 @@
-// Export all screen functions
-import * as gameOver from "./gameOver.js";
-import * as nameEntry from "./nameEntry.js";
-import * as noConnection from "./noConnection.js";
+import * as gameModule from "./game.js";
+import * as gameOverModule from "./gameOver.js";
+import * as nameEntryModule from "./nameEntry.js";
+import * as noConnectionModule from "./noConnection.js";
+import * as splashModule from "./splash.js";
 
-export { splash } from "./splash.js";
-export { game } from "./game.js";
-export { gameOver, nameEntry, noConnection };
+const screens = {
+  game: gameModule.game,
+  gameOver: gameOverModule.gameOver,
+  nameEntry: nameEntryModule.nameEntry,
+  noConnection: noConnectionModule.noConnection,
+  splash: splashModule.splash,
+};
+
+export default screens;

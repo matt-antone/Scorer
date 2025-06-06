@@ -43,7 +43,12 @@ class WebSocketServer:
         @self.socketio.on('connect')
         def handle_connect():
             logger.info(f"Client connected: {request.sid}")
-            emit('connection_response', {'data': 'Connected'})
+            # Immediately send the current game state to the newly connected client
+            if self.get_game_state_callback:
+                game_state = self.get_game_state_callback()
+                emit('game_state_update', game_state)
+            else:
+                logger.warning("No game state callback registered, cannot send initial state.")
 
         @self.socketio.on('disconnect')
         def handle_disconnect():

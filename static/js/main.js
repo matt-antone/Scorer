@@ -1,20 +1,26 @@
 // Main application logic and initialization
 import { socket } from "./socket.js";
 import { getGameState } from "./gameState.js";
-import * as screens from "./screens/index.js";
+import screens from "./screens/index.js";
 
 let isConnected = true;
+let hasInitialStateBeenSet = false;
 
 const screenMappings = {
   splash: screens.splash,
   setup: screens.splash,
   name_entry: screens.nameEntry,
-  deployment: screens.nameEntry,
-  first_turn: screens.nameEntry,
+  deployment_setup: screens.splash,
+  first_turn_setup: screens.splash,
   game_play: screens.game,
   game_over: screens.gameOver,
   default: screens.splash,
 };
+
+export function setInitialState() {
+  hasInitialStateBeenSet = true;
+  handleGameStateChange();
+}
 
 function handleConnectionStatusChange(event) {
   const { status } = event.detail;
@@ -40,8 +46,8 @@ function handleConnectionStatusChange(event) {
 }
 
 function handleGameStateChange() {
-  // Do not change screens if the connection is lost
-  if (!isConnected) {
+  // Do not change screens if the connection is lost OR if we haven't received the first state
+  if (!isConnected || !hasInitialStateBeenSet) {
     return;
   }
 
@@ -79,7 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("gameStateChanged", handleGameStateChange);
 
   // Set the initial screen state (defaults to splash)
-  handleGameStateChange();
+  // This will be triggered by setInitialState after the first game state is received
+  // handleGameStateChange();
 
   document.addEventListener(
     "connectionStatusChanged",

@@ -190,6 +190,15 @@ body {
   text-align: left;
 }
 
+.player_role {
+  font-family: Inter;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 1);
+  font-size: 18px;
+  opacity: 1;
+  text-align: left;
+}
+
 .player_score {
   color: rgba(255, 255, 255, 1);
   font-family: Inter;

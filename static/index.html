@@ -21,11 +21,23 @@
 
     <!-- Name Entry Screen -->
     <div id="name_entry_screen" class="screen" style="display: none">
-      <div class="splash_content">
-        <img src="./logo-original.png" alt="logo" class="splash_logo" />
-        <p>Enter Player Names</p>
-        <!-- This screen is currently a placeholder -->
-        <!-- It will be made interactive in a future step -->
+      <div class="header">
+        <div class="logo"><img src="./logo-original.png" alt="logo" /></div>
+        <div class="header-title">Scan to Join</div>
+      </div>
+      <div class="qr-container">
+        <div class="qr-code-wrapper">
+          <p>Player 1</p>
+          <img id="p1_qr_code" src="" alt="Player 1 QR Code" />
+        </div>
+        <div class="qr-code-wrapper">
+          <p>Observer</p>
+          <img id="observer_qr_code" src="" alt="Observer QR Code" />
+        </div>
+        <div class="qr-code-wrapper">
+          <p>Player 2</p>
+          <img id="p2_qr_code" src="" alt="Player 2 QR Code" />
+        </div>
       </div>
     </div>
 
@@ -40,6 +52,7 @@
         <div class="red_panel">
           <div class="player_red_panel">
             <div class="player_name" id="player1_name">Player 1</div>
+            <div class="player_role" id="player1_role"></div>
             <div class="player_score" id="player1_score">90</div>
             <div class="player_cp" id="player1_cp">Command Points: 2</div>
             <div class="player_time" id="player1_time">00:00:00</div>
@@ -48,6 +61,7 @@
         <div class="blue_panel">
           <div class="player_blue_panel">
             <div class="player_name" id="player2_name">Player 2</div>
+            <div class="player_role" id="player2_role"></div>
             <div class="player_score" id="player2_score">90</div>
             <div class="player_cp" id="player2_cp">Command Points: 2</div>
             <div class="player_time" id="player2_time">00:00:00</div>
@@ -69,14 +83,18 @@
         <div class="red_panel">
           <div class="player_red_panel">
             <div class="player_name" id="game_over_player1_name">Player 1</div>
+            <div class="player_role" id="game_over_player1_role"></div>
             <div class="player_score" id="game_over_player1_score">0</div>
+            <div class="player_cp" id="game_over_player1_cp"></div>
             <div class="player_time" id="game_over_player1_time">00:00:00</div>
           </div>
         </div>
         <div class="blue_panel">
           <div class="player_blue_panel">
             <div class="player_name" id="game_over_player2_name">Player 2</div>
+            <div class="player_role" id="game_over_player2_role"></div>
             <div class="player_score" id="game_over_player2_score">0</div>
+            <div class="player_cp" id="game_over_player2_cp"></div>
             <div class="player_time" id="game_over_player2_time">00:00:00</div>
           </div>
         </div>

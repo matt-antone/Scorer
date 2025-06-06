@@ -1,7 +1,9 @@
 // WebSocket connection and event handlers
 import { setGameState } from "./gameState.js";
+import { setInitialState } from "./main.js";
 
 let connectionState = "disconnected";
+let isFirstUpdate = true;
 
 // Connect to WebSocket server
 const socket = io("http://localhost:6969");
@@ -35,7 +37,15 @@ socket.on("game_state_update", (gameState) => {
     "Game state update received:",
     JSON.stringify(gameState, null, 2)
   );
+
+  // Set the state first, so that the initial render has data
   setGameState(gameState);
+
+  if (isFirstUpdate) {
+    isFirstUpdate = false;
+    // Now trigger the first render
+    setInitialState();
+  }
 });
 
 // The 'game_phase_update' is also redundant if 'game_state_update' is comprehensive.

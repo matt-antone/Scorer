@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, request
+from flask import Flask, send_from_directory, request, render_template
 from flask_socketio import SocketIO, emit
 import json
 import threading
@@ -26,6 +26,14 @@ class WebSocketServer:
         @self.app.route('/')
         def index():
             return send_from_directory(self.app.static_folder, 'index.html')
+
+        @self.app.route('/p1')
+        def player1_client():
+            return render_template('player1.html')
+
+        @self.app.route('/p2')
+        def player2_client():
+            return render_template('player2.html')
 
         @self.app.route('/<path:path>')
         def serve_static(path):

@@ -95,6 +95,8 @@ ScreenManager:
     name: 'name_entry'
     player1_name_input: player1_name_input
     player2_name_input: player2_name_input
+    p1_qr_code: p1_qr_code
+    p2_qr_code: p2_qr_code
     continue_button: continue_button
 
     canvas.before:
@@ -141,6 +143,12 @@ ScreenManager:
                         multiline: False
                         on_focus: root.set_active_input(self)
                         on_text_validate: root.on_text_validate_p1()
+                    Image:
+                        id: p1_qr_code
+                        size_hint_y: None
+                        height: dp(150)
+                        width: dp(150)
+                        allow_stretch: True
 
                 # Player 2 Column
                 BoxLayout:
@@ -163,6 +171,12 @@ ScreenManager:
                         multiline: False
                         on_focus: root.set_active_input(self)
                         on_text_validate: root.on_text_validate_p2()
+                    Image:
+                        id: p2_qr_code
+                        size_hint_y: None
+                        height: dp(150)
+                        width: dp(150)
+                        allow_stretch: True
 
         BoxLayout:
             size_hint_y: None

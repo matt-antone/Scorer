@@ -2,6 +2,9 @@ import platform # For OS detection
 import os # Import os
 import json # For saving/loading game state
 import time # Added for timer
+import socket
+import qrcode
+import io
 
 from kivy.config import Config # Ensure Config is imported AFTER env vars are set
 
@@ -55,6 +58,7 @@ from db.integration import reset_db_for_new_game_sync
 from websocket_server import WebSocketServer
 from screens.screensaver_screen import ScreensaverScreen
 from screens.splash_screen import SplashScreen
+from kivy.core.image import Image as CoreImage
 
 # Register the Inter font family so it can be referred to by name 'Inter' in KV if needed.
 # This also acts as a fallback or explicit way to use it.
@@ -87,11 +91,25 @@ else:
 # Config.set('graphics', 'height', '480') # MOVED
 # Config.set('graphics', 'resizable', False) # MOVED
 
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 # --- New Setup Screens ---
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
     player2_name_input = ObjectProperty(None)
+    p1_qr_code = ObjectProperty(None)
+    p2_qr_code = ObjectProperty(None)
     continue_button = ObjectProperty(None)
     active_input = ObjectProperty(None, allownone=True)
 
@@ -103,6 +121,8 @@ class NameEntryScreen(Screen):
         self.bind(
             player1_name_input=self._check_and_initialize,
             player2_name_input=self._check_and_initialize,
+            p1_qr_code=self._check_and_initialize,
+            p2_qr_code=self._check_and_initialize,
             continue_button=self._check_and_initialize
         )
 
@@ -112,7 +132,7 @@ class NameEntryScreen(Screen):
         It checks if all necessary widgets are available before running
         the main initialization logic for the screen.
         """
-        if self.player1_name_input and self.player2_name_input and self.continue_button:
+        if self.player1_name_input and self.player2_name_input and self.continue_button and self.p1_qr_code and self.p2_qr_code:
             if not self._is_initialized:
                 self._is_initialized = True
                 self._initialize_screen()
@@ -128,6 +148,27 @@ class NameEntryScreen(Screen):
 
         self.player1_name_input.text = p1_name
         self.player2_name_input.text = p2_name
+        self._generate_qr_codes()
+
+    def _generate_qr_codes(self):
+        ip = get_local_ip()
+        port = 6969
+        
+        # Player 1
+        p1_url = f"http://{ip}:{port}/p1"
+        p1_qr_img = qrcode.make(p1_url)
+        p1_bytes = io.BytesIO()
+        p1_qr_img.save(p1_bytes, format='png')
+        p1_bytes.seek(0)
+        self.p1_qr_code.texture = CoreImage(p1_bytes, ext='png').texture
+
+        # Player 2
+        p2_url = f"http://{ip}:{port}/p2"
+        p2_qr_img = qrcode.make(p2_url)
+        p2_bytes = io.BytesIO()
+        p2_qr_img.save(p2_bytes, format='png')
+        p2_bytes.seek(0)
+        self.p2_qr_code.texture = CoreImage(p2_bytes, ext='png').texture
 
     def set_active_input(self, text_input):
         if text_input.focus:

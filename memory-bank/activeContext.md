@@ -21,19 +21,22 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 - **Client Connection UX**: Implemented a robust and user-friendly method for connecting clients.
   - The app now generates QR codes for Player 1, Player 2, and a general observer client.
   - On the `NameEntryScreen`, QR codes are displayed directly under the name inputs for easy setup.
-  - On the main `ScorerRootWidget`, a "Connect" button in the header opens a popup displaying all three QR codes.
-  - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button. This prevents UI freezes and race conditions.
+  - A popup was previously available from the main game screen, but this was removed in favor of a more robust pre-game network check.
+  - On a Raspberry Pi, the splash screen will now check for a network connection and present a connection manager popup if disconnected, ensuring QR codes can be generated with a valid IP.
+  - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button.
+- **QR Code Race Condition Fix**: Resolved a critical bug where QR codes would fail to display. The fix involves a new robust pattern for loading runtime-generated images: preventing premature loads, pre-caching the image texture on a loading screen, and then explicitly calling `.reload()` on the target `Image` widget before it's displayed. This pattern has been documented in `.cursorrules`.
 
 ## Active Decisions
 
 - **Automated First-Time Setup:** The project philosophy is that a user should be able to clone the repository and run a single `install.sh` script to get a fully working application, including the database.
 - **Self-Contained Dependencies:** The application aims to be as self-contained as possible, with SQLite being a key part of that strategy.
+- **Reliable Image Loading**: All runtime-generated images must be loaded using the pattern documented in `.cursorrules` to prevent race conditions.
 
 ## Next Steps
 
-1. **Finalize Documentation:** Complete the updates to `progress.md` and any other necessary files to conclude this documentation cycle.
-2. **Verify Pi Functionality:** Perform a final check of all features on the Raspberry Pi to ensure the recent changes have not introduced regressions.
-3. **Plan Next Feature Sprint:** Begin planning the implementation of the next set of features, such as the dedicated "Player Client" for score updates.
+1.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
+2.  **Feature Implementation**: Begin work on the "New Game" and "Exit" functionality from the `GameOverScreen`.
+3.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
 
 ## Next Immediate Steps
 

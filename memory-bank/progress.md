@@ -11,6 +11,7 @@ This document tracks the current working state of the Scorer application, what's
 - **Name Entry Screen**: The "Continue" button is now always enabled, removing the validation that required users to input names. This simplifies the flow for users who accept the default names.
 - **Screensaver**: The application now includes a screensaver that activates after a period of inactivity. It displays a slideshow of images from the `assets/billboards` directory and deactivates upon user interaction, returning to the previous screen. The slideshow order is randomized, and images transition with a slow fade effect.
 - **Game Resume Flow**: The `ResumeOrNewScreen` now uses a robust initialization pattern, fixing a race condition and ensuring that saved games can be resumed reliably without crashing.
+- **QR Code Display**: QR codes for player and observer clients are now generated and displayed reliably on the `NameEntryScreen`. The system uses a robust loading pattern that prevents race conditions by pre-caching images and reloading widgets before they are displayed.
 
 ## What's Left to Build
 
@@ -25,7 +26,7 @@ This document tracks the current working state of the Scorer application, what's
 
 ## Known Issues
 
-- **None**: All major bugs related to installation, game state, UI initialization, and the recent startup crash have been resolved.
+- **None**: All major bugs related to installation, game state, UI initialization, and the QR code display have been resolved.
 
 ## Blockers
 
@@ -34,5 +35,5 @@ This document tracks the current working state of the Scorer application, what's
 ## Next Steps
 
 - Perform final testing on the Raspberry Pi to ensure touch interactions are smooth.
+- Add "New Game" and "Exit" functionality to the Game Over screen.
 - Document the "New Game" and "Exit" features in `productContext.md`.
-- Update `.cursorrules` with the robust Kivy initialization pattern as a permanent reference.

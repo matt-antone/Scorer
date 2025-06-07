@@ -87,7 +87,10 @@ class ScorerApp(App):
         self.game_state = self._get_default_game_state()
         self.ws_server = WebSocketServer(
             get_game_state_callback=self.get_game_state,
-            broadcast_callback=self.save_game_state # Use save_game_state to trigger broadcasts
+            update_score_callback=self.handle_web_score_update,
+            increment_cp_callback=self.handle_web_increment_cp,
+            end_turn_callback=self.handle_web_end_turn,
+            concede_game_callback=self.handle_web_concede_game,
         )
 
     def _get_default_game_state(self):
@@ -325,6 +328,72 @@ class ScorerApp(App):
             "game_over": "game_over"
         }
         return phase_to_screen.get(phase, "splash")  # Default to splash
+
+    # --- Web Client Callback Handlers ---
+    def handle_web_score_update(self, data):
+        """Handles score updates received from a web client."""
+        player_id = data.get("player_id")
+        score_type = data.get("score_type")  # 'primary' or 'secondary'
+        value = data.get("value")
+
+        if not all([player_id, score_type, value is not None]):
+            print(f"Invalid score update data received: {data}")
+            return
+
+        player_key = f"player{player_id}"
+        score_key = f"{score_type}_score"
+
+        if player_key in self.game_state and score_key in self.game_state[player_key]:
+            self.game_state[player_key][score_key] = int(value)
+            # Recalculate total score
+            self.game_state[player_key]["total_score"] = (
+                self.game_state[player_key]["primary_score"]
+                + self.game_state[player_key]["secondary_score"]
+            )
+            self.save_game_state()
+            print(f"Updated {score_key} for {player_key} to {value}")
+
+    def handle_web_increment_cp(self, data):
+        """Handles CP increment requests from a web client."""
+        player_id = data.get("player_id")
+        if not player_id:
+            return
+
+        player_key = f"player{player_id}"
+        if player_key in self.game_state:
+            self.game_state[player_key]["cp"] += 1
+            self.save_game_state()
+            print(f"Incremented CP for {player_key}")
+
+    def handle_web_end_turn(self, data):
+        """Handles end turn requests from a web client."""
+        player_id = data.get("player_id")
+        if not player_id:
+            return
+
+        # Ensure it's actually this player's turn before ending it
+        if self.game_state.get("active_player_id") == player_id:
+            # Find the game screen and call its end_turn method
+            if self.root and self.root.has_screen("game"):
+                game_screen = self.root.get_screen("game")
+                game_screen.end_turn()  # This will handle state changes and saving
+                print(f"Player {player_id} ended their turn via web client.")
+            else:
+                print("Could not end turn: Game screen not found.")
+        else:
+            print(f"Player {player_id} tried to end turn, but it is not their turn.")
+
+    def handle_web_concede_game(self, data):
+        """Handles a concession from a web client."""
+        player_id = data.get("player_id")
+        if not player_id:
+            return
+
+        print(f"Player {player_id} has conceded the game.")
+        # Set the game phase to game_over
+        self.game_state["game_phase"] = "game_over"
+        self.save_game_state()
+        self.switch_screen("game_over")
 
 
 if __name__ == '__main__':

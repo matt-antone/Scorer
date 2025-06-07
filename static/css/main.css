@@ -22,8 +22,6 @@ body {
 }
 
 .splash_screen {
-  width: 800px;
-  height: 480px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -88,22 +86,20 @@ body {
 }
 
 .screen {
-  width: 800px;
-  height: 480px;
-  background: url("./background.png") no-repeat center center;
+  background-image: url("../background.png");
   background-size: cover;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  background-position: center;
+  background-repeat: no-repeat;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100%;
 }
 
 .header {
   width: 100%;
   height: 48px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 1);
   opacity: 1;
   position: relative;
   z-index: 100;
@@ -136,32 +132,20 @@ body {
 }
 
 .players {
+  width: 100%;
+  height: 100%;
   display: grid;
-  grid-template-columns: 400px 400px;
+  grid-template-columns: 1fr 1fr;
   flex: 1;
-  background-image: url("/background.png"); /* this is the background image do not change it*/
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 }
 
 .red_panel {
-  width: 400px;
+  width: 100%;
   height: 100%;
   position: relative;
-  /* background: rgba(255, 0, 0, 0.1); don't put this back in */
-}
-
-.blue_panel {
-  width: 400px;
-  height: 100%;
-  position: relative;
-  /* background: rgba(0, 0, 255, 0.1); don't put this back in */
-}
-
-.player_red_panel {
-  width: 380px;
-  height: 100%;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -170,9 +154,10 @@ body {
   gap: 10px;
 }
 
-.player_blue_panel {
-  width: 380px;
+.blue_panel {
+  width: 100%;
   height: 100%;
+  position: relative;
   padding: 20px;
   display: flex;
   flex-direction: column;

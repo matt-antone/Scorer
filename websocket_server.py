@@ -11,14 +11,26 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class WebSocketServer:
-    def __init__(self, get_game_state_callback=None, broadcast_callback=None, host: str = '0.0.0.0', port: int = 6969):
-        self.app = Flask(__name__, static_folder='static')
+    def __init__(
+        self,
+        get_game_state_callback=None,
+        update_score_callback=None,
+        increment_cp_callback=None,
+        end_turn_callback=None,
+        concede_game_callback=None,
+        host: str = "0.0.0.0",
+        port: int = 6969,
+    ):
+        self.app = Flask(__name__, static_folder="static")
         self.socketio = SocketIO(self.app, cors_allowed_origins="*")
         self.host = host
         self.port = port
         self.server_thread: Optional[threading.Thread] = None
         self.get_game_state_callback = get_game_state_callback
-        self.broadcast_callback = broadcast_callback
+        self.update_score_callback = update_score_callback
+        self.increment_cp_callback = increment_cp_callback
+        self.end_turn_callback = end_turn_callback
+        self.concede_game_callback = concede_game_callback
         self._setup_routes()
         self._setup_socket_handlers()
 
@@ -27,13 +39,11 @@ class WebSocketServer:
         def index():
             return send_from_directory(self.app.static_folder, 'index.html')
 
-        @self.app.route('/p1')
-        def player1_client():
-            return render_template('player1.html')
-
-        @self.app.route('/p2')
-        def player2_client():
-            return render_template('player2.html')
+        @self.app.route('/player/<int:player_id>')
+        def player_client(player_id):
+            if player_id not in [1, 2]:
+                return "Invalid Player ID", 404
+            return render_template('player.html', player_id=player_id)
 
         @self.app.route('/<path:path>')
         def serve_static(path):
@@ -58,35 +68,41 @@ class WebSocketServer:
         def handle_game_state_request():
             if self.get_game_state_callback:
                 game_state = self.get_game_state_callback()
-                emit('game_state_update', game_state)
+                emit("game_state_update", game_state)
             else:
                 logger.warning("No game state callback registered")
 
-        @self.socketio.on('update_score')
+        @self.socketio.on("update_score")
         def handle_score_update(data):
-            if self.get_game_state_callback:
-                game_state = self.get_game_state_callback()
-                player_id = data.get('player_id')
-                new_score = data.get('score')
-                if player_id and new_score is not None:
-                    player_key = f"player{player_id}"
-                    if player_key in game_state:
-                        game_state[player_key]["total_score"] = new_score
-                        self.broadcast_score_update(player_id, new_score)
-                        logger.info(f"Score updated for player {player_id}: {new_score}")
+            if self.update_score_callback:
+                logger.info(f"Received score update event: {data}")
+                self.update_score_callback(data)
+            else:
+                logger.warning("No score update callback registered.")
 
-        @self.socketio.on('update_cp')
+        @self.socketio.on("increment_cp")
         def handle_cp_update(data):
-            if self.get_game_state_callback:
-                game_state = self.get_game_state_callback()
-                player_id = data.get('player_id')
-                new_cp = data.get('cp')
-                if player_id and new_cp is not None:
-                    player_key = f"player{player_id}"
-                    if player_key in game_state:
-                        game_state[player_key]["cp"] = new_cp
-                        self.broadcast_cp_update(player_id, new_cp)
-                        logger.info(f"CP updated for player {player_id}: {new_cp}")
+            if self.increment_cp_callback:
+                logger.info(f"Received CP increment event: {data}")
+                self.increment_cp_callback(data)
+            else:
+                logger.warning("No CP increment callback registered.")
+
+        @self.socketio.on("end_turn")
+        def handle_end_turn(data):
+            if self.end_turn_callback:
+                logger.info(f"Received end turn event: {data}")
+                self.end_turn_callback(data)
+            else:
+                logger.warning("No end turn callback registered.")
+
+        @self.socketio.on("concede_game")
+        def handle_concede_game(data):
+            if self.concede_game_callback:
+                logger.info(f"Received concede game event: {data}")
+                self.concede_game_callback(data)
+            else:
+                logger.warning("No concede game callback registered.")
 
         @self.socketio.on('update_game_phase')
         def handle_game_phase_update(data):
@@ -152,10 +168,7 @@ class WebSocketServer:
 
     def broadcast_score_update(self, player_id: int, new_score: int):
         """Broadcast score update to all connected clients"""
-        self.socketio.emit('score_update', {
-            'player_id': player_id,
-            'score': new_score
-        })
+        self.socketio.emit("score_update", {"player_id": player_id, "score": new_score})
 
     def broadcast_cp_update(self, player_id: int, new_cp: int):
         """Broadcast CP update to all connected clients"""
@@ -174,4 +187,4 @@ class WebSocketServer:
 
     def broadcast_game_phase_update(self, phase: str):
         """Broadcast game phase update to all connected clients"""
-        self.socketio.emit('game_phase_update', {'phase': phase}) 
+        self.socketio.emit("game_phase_update", {"phase": phase}) 

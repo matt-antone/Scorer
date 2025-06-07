@@ -70,12 +70,12 @@ class SplashScreen(Screen):
         observer_qr_img.save(app.observer_qr_path)
 
         # Player 1
-        p1_url = f"http://{ip}:{port}/p1"
+        p1_url = f"http://{ip}:{port}/player/1"
         p1_qr_img = qrcode.make(p1_url)
         p1_qr_img.save(app.p1_qr_path)
 
         # Player 2
-        p2_url = f"http://{ip}:{port}/p2"
+        p2_url = f"http://{ip}:{port}/player/2"
         p2_qr_img = qrcode.make(p2_url)
         p2_qr_img.save(app.p2_qr_path)
         

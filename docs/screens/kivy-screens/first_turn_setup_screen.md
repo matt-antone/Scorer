@@ -2,36 +2,68 @@
 
 ## 1. Purpose
 
-The `FirstTurnSetupScreen` manages the final roll-off to determine which player takes the first turn of the game. This screen follows the deployment roll-off and is the last step before gameplay begins.
+The `FirstTurnSetupScreen` is a flexible, interactive screen that manages the final roll-off to determine which player takes the first turn. It allows the Attacker to make choices directly on the host application while also reflecting actions taken on the player web clients in real-time.
 
 ## 2. Behavior & Flow
 
-### Initialization
+### Appearance Condition
 
-- The screen prompts the winner of the previous deployment roll-off (the "Attacker") to decide who will roll first for the first turn.
-- It presents two buttons: "Player 1 Rolls First" and "Player 2 Rolls First".
+- This screen appears on the Kivy host after the setup flow advances from the `DeploymentSetupScreen`.
+- Player names and roles (Attacker/Defender) are displayed from the previous phase.
 
-### User Interaction & Logic
+### UI Components & Interaction
 
-1.  **Role Choice**: The Attacker chooses which player will roll first by pressing the corresponding button. Let's say Player 1 is chosen to roll first.
-2.  **First Roll**: The screen updates. The "Roll" button for Player 1 becomes active. Player 2's "Roll" button is disabled.
-3.  **Player 1 Rolls**: Player 1 presses their "Roll" button. Their D6 result is displayed, and their button is disabled. Player 2's "Roll" button now becomes active.
-4.  **Player 2 Rolls**: Player 2 presses their "Roll" button. Their D6 result is displayed, and their button is disabled.
-5.  **Determine Winner**:
-    - The application automatically compares the scores.
-    - **If there is a tie**: The process resets. The instructional text reverts to prompting the Attacker to choose who rolls first, and the "Player 1 Rolls First" / "Player 2 Rolls First" buttons reappear.
-    - **If there is a clear winner**: The instructional text announces which player won the roll (e.g., "Player 2 Wins!").
-6.  **First Turn Decision**: The winner of the roll-off now has the choice to either take the first turn or pass it to their opponent. The screen displays two new buttons: "Take First Turn" and "Pass First Turn".
-7.  **Final Selection**: The player makes their choice. A "Start Game" button appears.
+- The screen is divided into two columns for Player 1 (Red) and Player 2 (Blue).
+- **Player Names & Roles**: Displayed from the previous phase (not updated in real-time).
+- **Attacker Choice Section**:
+  - **Instructional Text**: "Choose who rolls first".
+  - **"Player 1 Rolls First" Button**.
+  - **"Player 2 Rolls First" Button**.
+- **Roll Buttons**: Each player has a "Roll" button (initially disabled).
+- **Roll Displays**: Areas to display each player's D6 result.
+- **First Turn Choice Section** (Hidden by default):
+  - **Instructional Text**: "Choose whether to take first turn".
+  - **"Take First Turn" Button**.
+  - **"Pass First Turn" Button**.
+- **"Start Game" Button**: A button to begin gameplay, enabled only after the first turn decision is made.
+
+### Interaction Logic (Dual Control)
+
+This screen functions as both a controller and a real-time display.
+
+1.  **Choosing Who Rolls First**:
+
+    - The Attacker can make this choice on this screen. This disables the choice buttons on **both** the Kivy app and their web client.
+    - If the Attacker makes the choice on their web client first, the choice buttons on this screen will become disabled.
+    - The chosen player's "Roll" button becomes enabled on all clients.
+
+2.  **Rolling the Dice**:
+
+    - The chosen player can roll from their client. This disables their button on **both** the Kivy app and their web client and shows the result.
+    - If they roll on their web client first, the "Roll" button for them on this screen will become disabled, and the result will appear here automatically.
+    - After the first roll, the other player's "Roll" button becomes enabled.
+
+3.  **Determining the Winner**:
+
+    - Once both players have rolled, the application determines the winner.
+    - **If there is a tie**: The Attacker must choose who rolls first again. The choice buttons reappear, and the process repeats.
+    - **If there is a clear winner**: The winner's "First Turn Choice Section" appears on this screen **AND** on their web client.
+
+4.  **Choosing First Turn**:
+
+    - The winner can press either "Take First Turn" or "Pass First Turn" on this screen or their web client.
+    - If the choice is made on the web client first, the choice section on this screen will disappear.
+    - If the choice is made using the buttons on this screen, the same outcome occurs.
+
+5.  **Start Game**: Once the first turn decision is made, the "Start Game" button is enabled, allowing the host user to begin gameplay.
 
 ## 3. Screen Transition
 
-- Upon pressing the "Start Game" button, the application sets the `game_phase` to `'game_play'` and transitions to the main `ScorerRootWidget`, officially starting the game.
+- Upon pressing the "Start Game" button, the application transitions to the `ScorerRootWidget` and sets `game_phase` to `'game_play'`.
 
 ## 4. Key Implementation Details
 
 - **File Location**: `screens/first_turn_setup_screen.py`
-- **Consolidated Logic**: This screen's logic was consolidated from a previous implementation where a duplicate class definition in `main.py` caused a `KeyError`. The correct logic now resides entirely within its own file and the `ScorerApp` controller.
-- **Controller-Responder Pattern**: Like the previous setup screen, this screen strictly adheres to the Controller-Responder pattern. It delegates all user actions (role choices, rolls, turn decisions) to handler methods in `ScorerApp` and updates its view based on the resulting changes to the central `game_state`.
-- **State-Driven Complexity**: This screen manages a more complex sequence of states than the deployment screen (choosing who rolls, rolling, determining the winner, choosing who goes first). This entire flow is managed cleanly by reading from and writing to the `game_state` dictionary, demonstrating the power of a state-driven UI.
-- **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+- **Dual Functionality**: This screen must be able to both send actions (choices, rolling) and passively receive state updates initiated from player clients, updating its UI in real-time.
+- **State-Driven UI**: The entire state of the screen—button status, roll results, visibility of choice sections—is derived directly from the central `game_state`.
+- **Tie Resolution**: Unlike the deployment phase, ties in the first turn roll-off result in the Attacker choosing who rolls first again, rather than both players rolling again.

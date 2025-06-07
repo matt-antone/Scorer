@@ -34,7 +34,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button # Import Button
-from kivy.properties import StringProperty # Removed BooleanProperty, DictProperty, NumericProperty, ObjectProperty
+from kivy.properties import StringProperty, DictProperty # Removed BooleanProperty, DictProperty, NumericProperty, ObjectProperty
 from kivy.uix.popup import Popup # Import Popup
 from kivy.metrics import dp # Import dp from kivy.metrics
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition # Added ScreenManager, Screen, FadeTransition
@@ -73,6 +73,7 @@ else:
 # --- New Setup Screens ---
 
 class ScorerApp(App):
+    game_state = DictProperty({})
     SAVE_FILE_NAME = "game_state.json"
     VISIBLE_SPLASH_TIME = 4 # Desired visible time for the splash screen
     INACTIVITY_TIMEOUT_SECONDS = 60 # 5 minutes
@@ -137,6 +138,94 @@ class ScorerApp(App):
         # Switch to the name entry screen
         if self.root:
             self.switch_screen('name_entry')
+
+    def start_deployment_phase(self):
+        """Resets deployment state and transitions to the screen."""
+        gs = self.game_state
+        gs['deployment_initiative_winner_id'] = None
+        gs['deployment_attacker_id'] = None
+        gs['deployment_defender_id'] = None
+        gs['player1']['deployment_roll'] = 0
+        gs['player2']['deployment_roll'] = 0
+        gs['game_phase'] = 'deployment_setup'
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+        self.switch_screen('deployment_setup')
+
+    def start_first_turn_phase(self):
+        """Resets first turn state and transitions to the screen."""
+        gs = self.game_state
+        gs['first_turn_initiative_winner_id'] = None
+        gs['first_turn_player_id'] = None
+        gs['player1']['first_turn_roll'] = 0
+        gs['player2']['first_turn_roll'] = 0
+        gs['game_phase'] = 'first_turn_setup'
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+        self.switch_screen('first_turn_setup')
+
+    def handle_first_turn_roll(self, player_id):
+        """Handles the logic for a single player's first turn roll."""
+        if self.game_state.get("first_turn_initiative_winner_id") is not None:
+            return
+
+        roll = random.randint(1, 6)
+        self.game_state[f'player{player_id}']['first_turn_roll'] = roll
+
+        p1_roll = self.game_state['player1'].get('first_turn_roll', 0)
+        p2_roll = self.game_state['player2'].get('first_turn_roll', 0)
+
+        if p1_roll > 0 and p2_roll > 0:
+            if p1_roll > p2_roll:
+                self.game_state['first_turn_initiative_winner_id'] = 1
+            elif p2_roll > p1_roll:
+                self.game_state['first_turn_initiative_winner_id'] = 2
+            else: # Tie goes to the attacker
+                winner = self.game_state.get('deployment_attacker_id')
+                if winner is None:
+                    # This is a fallback in case the attacker isn't set, which would stall the game.
+                    # Default to Player 1.
+                    print("Warning: deployment_attacker_id not set on first turn tie. Defaulting to Player 1.")
+                    winner = 1
+                self.game_state['first_turn_initiative_winner_id'] = winner
+
+        self._update_current_screen()
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+
+    def handle_first_turn_choice(self, chooser_id, chose_self):
+        """Handles the winner's choice of who takes the first turn."""
+        if chooser_id is None:
+            return
+
+        if chose_self:
+            self.game_state['first_turn_player_id'] = chooser_id
+        else:
+            self.game_state['first_turn_player_id'] = 2 if chooser_id == 1 else 1
+        
+        self.game_state['first_player_of_game_id'] = self.game_state['first_turn_player_id']
+
+        self._update_current_screen()
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+
+    def start_game(self):
+        """Finalizes state and transitions to the main game screen."""
+        gs = self.game_state
+        gs['active_player_id'] = gs.get('first_turn_player_id')
+        if not gs['active_player_id']:
+            self.show_error_popup("Error", "First turn player not set.")
+            return
+
+        gs['game_phase'] = 'game_play'
+        gs['current_round'] = 1
+        
+        # We save here *before* the transition to ensure the game screen has the latest state
+        self.save_game_state() 
+
+        # It's better to get the screen and call a method on it
+        # than to have the screen listen for a state change.
+        scorer_screen = self.root.get_screen('game')
+        if hasattr(scorer_screen, 'start_timers_and_ui'):
+            scorer_screen.start_timers_and_ui()
+
+        self.switch_screen('game')
 
     def get_save_file_path(self):
         """Returns the full path to the save file in the user's data directory."""
@@ -264,19 +353,29 @@ class ScorerApp(App):
 
     def get_game_state(self):
         """
-        Designated callback for the WebSocket server.
-        Returns a sanitized version of the application's game_state.
+        Returns a copy of the game state, enriched with live timer data.
+        This prevents other parts of the app from accidentally modifying the state.
         """
-        client_state = json.loads(json.dumps(self.game_state))
-        current_screen = self.root.current if self.root else ''
-        if current_screen == 'resume_or_new':
-            client_state['game_phase'] = 'setup'
-        if client_state.get('current_round', 0) > 5:
-            client_state['current_round'] = 5
-        if client_state.get('game_phase') == 'game_over':
-            client_state['last_round_played'] = 5
-            client_state['current_round'] = 5
-        return client_state
+        # Return a copy to prevent mutation
+        state_copy = self.game_state.copy()
+        
+        # Enrich with live timer data if the timer is running
+        if state_copy.get('game_timer', {}).get('status') == 'running':
+            time_now = time.time()
+            start_time = state_copy['game_timer'].get('start_time', time_now)
+            state_copy['game_timer']['elapsed_seconds'] = time_now - start_time
+            
+            active_player_id = state_copy.get('active_player_id')
+            if active_player_id:
+                player_key = f'player{active_player_id}'
+                player_data = state_copy.get(player_key, {})
+                segment_start_time = state_copy['game_timer'].get('turn_segment_start_time', time_now)
+                base_elapsed = player_data.get('player_elapsed_time_seconds', 0)
+                
+                # This is the crucial live value for the active player
+                player_data['live_elapsed_seconds'] = base_elapsed + (time_now - segment_start_time)
+                
+        return state_copy
 
     def switch_screen(self, screen_name):
         if self.root:
@@ -344,26 +443,36 @@ class ScorerApp(App):
         score_key = f"{score_type}_score"
 
         if player_key in self.game_state and score_key in self.game_state[player_key]:
-            self.game_state[player_key][score_key] = int(value)
-            # Recalculate total score
-            self.game_state[player_key]["total_score"] = (
-                self.game_state[player_key]["primary_score"]
-                + self.game_state[player_key]["secondary_score"]
+            # This is not a simple gatekeeper. This logic needs to move.
+            # The App class should not be making game logic decisions.
+            # It should delegate to the active screen.
+            game_screen = self.root.get_screen('game')
+            game_screen.process_numpad_value(
+                score_value=int(value),
+                player_id=player_id,
+                score_type=score_type
             )
-            self.save_game_state()
-            print(f"Updated {score_key} for {player_key} to {value}")
+            print(f"Web score update for P{player_id} delegated to ScorerRootWidget.")
 
     def handle_web_increment_cp(self, data):
-        """Handles CP increment requests from a web client."""
+        """Handles CP increment/decrement requests from a web client by delegating to the game screen."""
         player_id = data.get("player_id")
-        if not player_id:
-            return
+        action = data.get("action") # "add" or "remove"
 
-        player_key = f"player{player_id}"
-        if player_key in self.game_state:
-            self.game_state[player_key]["cp"] += 1
-            self.save_game_state()
-            print(f"Incremented CP for {player_key}")
+        if not player_id or not action:
+            print(f"Invalid CP update data received: {data}")
+            return
+        
+        if self.root and self.root.has_screen("game"):
+            game_screen = self.root.get_screen("game")
+            if action == "add":
+                game_screen.add_cp(player_id)
+                print(f"Player {player_id} CP increment delegated via web client.")
+            elif action == "remove":
+                game_screen.remove_cp(player_id)
+                print(f"Player {player_id} CP decrement delegated via web client.")
+        else:
+            print("Could not update CP: Game screen not found.")
 
     def handle_web_end_turn(self, data):
         """Handles end turn requests from a web client."""
@@ -394,6 +503,65 @@ class ScorerApp(App):
         self.game_state["game_phase"] = "game_over"
         self.save_game_state()
         self.switch_screen("game_over")
+
+    def handle_deployment_roll(self, player_id):
+        """Handles the logic for a single player's deployment roll."""
+        # Prevent rolling if a winner has already been decided
+        if self.game_state.get("deployment_initiative_winner_id") is not None:
+            return
+
+        roll = random.randint(1, 6)
+        player_key = f"player{player_id}"
+        self.game_state[player_key]['deployment_roll'] = roll
+
+        # Check if both players have now rolled
+        p1_roll = self.game_state['player1']['deployment_roll']
+        p2_roll = self.game_state['player2']['deployment_roll']
+
+        if p1_roll > 0 and p2_roll > 0:
+            if p1_roll > p2_roll:
+                self.game_state['deployment_initiative_winner_id'] = 1
+            elif p2_roll > p1_roll:
+                self.game_state['deployment_initiative_winner_id'] = 2
+            else:  # Tie
+                # Reset rolls and let them try again
+                self.game_state['player1']['deployment_roll'] = 0
+                self.game_state['player2']['deployment_roll'] = 0
+        
+        self._update_current_screen()
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+
+    def handle_deployment_role_choice(self, chooser_id, chose_attacker):
+        """Handles the winner's choice of being Attacker or Defender."""
+        if chooser_id is None:
+            return
+
+        if chose_attacker:
+            attacker_id = chooser_id
+            defender_id = 2 if chooser_id == 1 else 1
+        else:
+            defender_id = chooser_id
+            attacker_id = 2 if chooser_id == 1 else 1
+
+        self.game_state['deployment_attacker_id'] = attacker_id
+        self.game_state['deployment_defender_id'] = defender_id
+        self._update_current_screen()
+        Clock.schedule_once(lambda dt: self.save_game_state(), 0)
+
+    def proceed_to_first_turn_from_deployment(self):
+        """Transitions the game state to the first turn setup phase."""
+        self.start_first_turn_phase()
+
+    def _update_current_screen(self):
+        """Safely calls update_view_from_state on the current screen if it exists."""
+        current_screen = self.root.current_screen
+        if current_screen and hasattr(current_screen, 'update_view_from_state'):
+            current_screen.update_view_from_state()
+
+    def update_game_phase(self, phase):
+        """Updates the game phase and saves the state."""
+        self.game_state['game_phase'] = phase
+        self.save_game_state()
 
 
 if __name__ == '__main__':

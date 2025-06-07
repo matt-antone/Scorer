@@ -204,6 +204,162 @@ sequenceDiagram
 7.  **Sanitization on Broadcast**: The server again asks the Kivy app for the state via the `get_game_state()` callback, ensuring that even broadcasted data is always sanitized.
 8.  **State Push to All Clients**: The server pushes the newly sanitized state to every connected client, ensuring all viewers are synchronized.
 
+## 9. Kivy State Management: Controller-Responder Pattern
+
+To manage the flow between screens and handle game logic robustly, the Kivy application employs a centralized state management pattern, moving away from having logic spread across individual screen classes.
+
+**Core Principles**:
+
+1.  **Centralized Controller**: The main `ScorerApp` class acts as the single controller for all game state modifications. All logic for handling user actions (like dice rolls or role choices) resides in methods within this class (e.g., `handle_deployment_roll`, `handle_first_turn_choice`).
+2.  **Single Source of Truth**: The `game_state` dictionary within the `ScorerApp` instance is the authoritative model for the application's current state. No other class should modify this dictionary directly.
+3.  **Simple Responder Screens**: The `Screen` subclasses (e.g., `DeploymentSetupScreen`) are treated as simple "responders" or views. Their primary responsibilities are:
+    - To display data based on the central `game_state`.
+    - To delegate user actions to the appropriate handler method in the `ScorerApp` controller. They contain no game logic themselves.
+4.  **Explicit Update Cycle**: To ensure the UI is always in sync with the state and to avoid race conditions or recursion errors, a clear, one-way data flow is enforced:
+    - A user action on a screen triggers a method call to the `ScorerApp` controller.
+    - The controller method updates the `game_state` dictionary.
+    - Immediately after updating the state, the controller calls a helper method (`_update_current_screen()`).
+    - This helper method calls the `update_view_from_state()` method on the currently active screen.
+    - The screen's `update_view_from_state()` method reads the new data from the `game_state` dictionary and redraws its widgets accordingly.
+
+**Workflow Diagram**:
+
+```mermaid
+graph TD
+    subgraph "Screen (View)"
+        A["User Action <br/> e.g., Button Press"] --> B{"on_press: app.handle_roll()"};
+    end
+
+    subgraph "ScorerApp (Controller)"
+        B --> C["handle_roll(player_id)"];
+        C --> D{"Update game_state"};
+        D --> E["_update_current_screen()"];
+        E --> F["current_screen.update_view_from_state()"];
+    end
+
+    subgraph "Game State (Model)"
+        D -- "writes to" --> G[game_state dictionary];
+    end
+
+    subgraph "Screen (View)"
+        F -- "triggers" --> H{"Read New State"};
+        G -- "is read by" --> H;
+        H --> I["UI Elements Updated <br/> e.g., Labels, Buttons"];
+    end
+```
+
+This pattern ensures that the application state is predictable, easy to debug, and decoupled from the UI, making the entire system more maintainable and robust.
+
+## 10. Client-Side Timer Synchronization
+
+**Problem**: Web clients need to display a smooth, "live" ticking timer. Relying solely on periodic `game_state_update` events from the server would make the timer appear to jump or lag. However, a purely client-side timer (`setInterval`) will inevitably drift from the server's authoritative time.
+
+**Solution**: A hybrid approach is used where the client runs its own timer but constantly corrects it based on server data. This provides a smooth visual experience while ensuring the server remains the single source of truth for time.
+
+**Pattern**:
+
+1.  **Server Provides Truth**: The `get_game_state()` sanitization method is responsible for providing all necessary timer data to the client.
+    - If the timer `status` is `'running'`, it calculates and includes the current raw `elapsed_seconds` based on the `start_time`.
+    - If the timer `status` is `'stopped'`, it includes the final `elapsed_seconds` and the formatted `elapsed_display` string.
+2.  **Client Initializes/Corrects**: When the client receives a `game_state_update`:
+    - It immediately stops any existing `setInterval` timer to prevent multiple loops.
+    - If the new state's `game_timer.status` is `'running'`, it stores the `elapsed_seconds` from the server and the current client timestamp (`Date.now()`). It then starts a new `setInterval` loop.
+    - If the status is `'stopped'`, it simply displays the final `elapsed_display` time from the server and does not start a timer.
+3.  **Client-Side Loop**: The `setInterval` loop (running every second) calculates the new display time by adding the time passed on the client _since the last update_ to the authoritative `elapsed_seconds` received from that update.
+4.  **Correction Cycle**: This process repeats with every `game_state_update`. The client's timer is destroyed and recreated with the new, authoritative `elapsed_seconds` from the server, effectively correcting any drift that may have occurred.
+
+```mermaid
+sequenceDiagram
+    participant WebClient as Web Client
+    participant WSServer as WebSocket Server
+    participant KivyApp as Kivy App (Truth)
+
+    WSServer->>KivyApp: Request for state
+    KivyApp-->>WSServer: Returns state (status: 'running', elapsed_seconds: 120)
+    WSServer-->>WebClient: game_state_update
+
+    Note over WebClient: Receives state (t=120s).<br/>Clears old timer.<br/>Starts new `setInterval` loop.
+
+    loop Every second on Client
+        WebClient->>WebClient: Recalculate & display time (e.g., 121s, 122s, 123s...)
+    end
+
+    Note over KivyApp, WebClient: ...5 seconds pass...
+
+    KivyApp->>WSServer: Spontaneous state broadcast
+    WSServer->>KivyApp: Request for state
+    KivyApp-->>WSServer: Returns state (status: 'running', elapsed_seconds: 125)
+    WSServer-->>WebClient: game_state_update (Correction)
+
+    Note over WebClient: Receives state (t=125s).<br/>Clears old timer.<br/>Starts new `setInterval` loop with corrected time.
+```
+
+## 11. State Management and Event Flow Philosophy
+
+This section codifies the core philosophy for managing the application's state and handling events from different sources (Kivy UI, Web Sockets). Adhering to this pattern is critical for preventing race conditions, UI corruption, and synchronization bugs.
+
+### The Three Tiers of Truth
+
+The application's state is understood in three distinct tiers, each with a specific role:
+
+1.  **The "Now" (In-Memory `game_state`):**
+
+    - **What:** The `self.game_state` dictionary within the main `ScorerApp` class.
+    - **Role:** This is the **absolute source of truth** for the live, running application. All UI elements on the Kivy screen are a direct reflection of the data in this dictionary. The `update_ui_from_state()` method is the designated function for synchronizing the UI with this state.
+
+2.  **The "Permanent Record" (`scorer.db` / `game_state.json`):**
+
+    - **What:** The persisted data on disk.
+    - **Role:** This is the application's long-term memory. Its only jobs are to save the `game_state` when the app closes (or on significant events) and to populate the `game_state` dictionary when the app starts. It does not dictate the live UI directly.
+
+3.  **The "Messengers" (Events & Sockets):**
+    - **What:** Triggers from user interaction, such as a Kivy `on_press` event or a `socket.io` message from a web client.
+    - **Role:** To deliver a message indicating that an action has occurred. Messengers **do not** modify the UI or the application state directly. They only initiate a request for a state change.
+
+### The Righteous Flow of an Event
+
+All state-changing events must follow this sequence to ensure stability and predictability:
+
+```mermaid
+sequenceDiagram
+    participant Source as Event Source (Kivy UI or Web Client)
+    participant Handler as Event Handler (e.g., @socketio.on, on_press)
+    participant Logic as Business Logic (in Screen/App Class)
+    participant State as In-Memory game_state
+    participant UI as Kivy UI Thread
+
+    Source->>+Handler: 1. User action creates an event
+    Handler->>+Logic: 2. Handler calls method with event data
+    Logic->>+State: 3. Business logic modifies the In-Memory State
+    Logic->>UI: 4. Schedules UI update (Clock.schedule_once)
+    UI-->>-Logic: (Returns immediately)
+    State-->>-Logic:
+    Logic-->>-Handler:
+    Handler-->>-Source:
+
+    Note right of UI: A moment later...
+    UI->>UI: 5. Kivy main thread runs the scheduled UI update
+    UI->>State: Reads from In-Memory State to redraw widgets
+```
+
+**Example Flow for "End Turn" from Web Client:**
+
+1.  **The Spark**: The web client emits `socket.emit('end_turn', ...)`.
+2.  **The Messenger Arrives**: The `@socketio.on('end_turn')` handler in `websocket_server.py` fires.
+3.  **Pass the Message**: The handler calls the appropriate callback in `main.py` (e.g., `handle_web_end_turn`).
+4.  **The Gatekeeper**: The `main.py` method identifies the correct screen (`game_screen`) and calls its logic method (`game_screen.end_turn(...)`).
+5.  **The Doer (The Correct Pattern)**: The `end_turn` method in `scorer_root_widget.py` performs its two critical duties:
+    a. **Modify State**: It changes the values in the `game_state` dictionary (e.g., `active_player_id`, timer values).
+    b. **Schedule UI Update**: It calls `Clock.schedule_once(self.update_ui_from_state)`. It **does not** call the update method directly.
+6.  **The Artist Paints**: A moment later, safely on the main Kivy thread, the `update_ui_from_state` method executes, redrawing the UI based on the new reality in the `game_state` dictionary.
+
+### The Golden Rules
+
+1.  **The `game_state` Dictionary is King**: All UI is a reflection of this state.
+2.  **Only Kivy App/Screen Methods Change State**: No outside force (like a web handler) should ever modify `game_state` directly. They must call a method on the `App` or `Screen` instance.
+3.  **Web Clients Only Send _Requests_**: They ask for a change; they do not dictate it.
+4.  **Always `Clock.schedule_once` for External Triggers**: Any UI update that originates from an external source (especially a WebSocket event) **MUST** be scheduled. This is non-negotiable for preventing UI corruption.
+
 ## 9. Master Game State Schema
 
 This section defines the canonical data model for the application's `game_state`. This is the internal, server-side "source of truth". The client-facing model is a sanitized version of this master schema.
@@ -285,3 +441,71 @@ This is the definitive structure of the JSON object that the web client receives
   "status_message": "string"
 }
 ```
+
+## 12. Client-Side State Management: The Dumb Terminal Pattern
+
+The architecture for the web client is designed for simplicity and robustness by adhering to a strict, one-way data flow. This pattern ensures the client remains in sync with the server with minimal complexity.
+
+**Core Principles**:
+
+1.  **Server is the Single Source of Truth**: The Kivy application and its WebSocket server are the undisputed authority on the game state. The client never modifies its own state directly.
+2.  **Receive the Whole Truth**: When the state changes, the server broadcasts the _entire, complete_ game state object to all clients. It does not send small deltas or partial updates.
+3.  **The Great Refresh**: Upon receiving a `game_state_update` event from the server, the client does not attempt to merge or patch its local data. It discards its old state entirely and redraws its UI from scratch based on the new, complete state object.
+4.  **Phase-Driven Views**: A central router in the client's JavaScript code listens for state updates and uses only the `game_phase` property to determine which "screen" or view to display (e.g., Setup, Gameplay, Game Over). Individual views are simple and only know how to render themselves based on the data they are given.
+5.  **Sanitized State**: The Python server is responsible for "sanitizing" the game state before broadcasting it. It translates any internal-only states into a clean, simple, client-friendly format. This allows the client-side logic to remain simple and free of edge-case handling.
+
+**Workflow Diagram**:
+
+```mermaid
+graph TD
+    subgraph "Browser Client"
+        A["WebSocket Receives 'game_state_update'"];
+        A --> B{"Central Router <br/> Reads game_state.game_phase"};
+
+        B -- "'setup'" --> C["Show SetupScreen"];
+        B -- "'game_play'" --> D["Show GamePlayScreen"];
+        B -- "'game_over'" --> E["Show GameOverScreen"];
+
+        subgraph "UI Screens (Views)"
+            C --> F{"Update View <br/> from game_state"};
+            D --> F;
+            E --> F;
+        end
+    end
+```
+
+This "Dumb Terminal" approach makes the client lightweight, resilient, and easy to maintain, as all complex logic resides on the server.
+
+### End-to-End State Update Flow
+
+This diagram shows how the Kivy "Controller-Responder" pattern and the client's "Dumb Terminal" pattern work together in harmony.
+
+```mermaid
+sequenceDiagram
+    participant KivyScreen as Kivy Screen (View)
+    participant ScorerApp as ScorerApp (Controller)
+    participant WSServer as WebSocket Server
+    participant BrowserClient as Browser Client
+
+    KivyScreen->>ScorerApp: on_press: handle_roll(1)
+
+    Note over ScorerApp: 1. Update game_state dict
+    ScorerApp->>ScorerApp: game_state['player1']['roll'] = 5
+
+    Note over ScorerApp: 2. Update its own UI
+    ScorerApp->>KivyScreen: _update_current_screen()
+
+    Note over ScorerApp: 3. Trigger broadcast
+    ScorerApp->>WSServer: broadcast_game_state()
+
+    WSServer->>ScorerApp: Request fresh, sanitized state
+    ScorerApp-->>WSServer: Returns complete game_state
+
+    WSServer->>BrowserClient: emit('game_state_update', complete_game_state)
+
+    Note over BrowserClient: 4. Receive complete state & redraw
+    BrowserClient->>BrowserClient: Router shows correct view based on game_phase
+    BrowserClient->>BrowserClient: View updates its labels, etc.
+```
+
+The output of the Kivy state management system is the perfect input for the client-side system, creating a clean and predictable flow from end to end.

@@ -50,7 +50,7 @@
                     height: dp(30)
                 Label:
                     id: p1_roll_dsp_lbl
-                    text: '-'
+                    text: ''
                     font_name: 'InterBlack'
                     font_size: '72sp'
                     size_hint_y: None
@@ -85,7 +85,7 @@
                     height: dp(30)
                 Label:
                     id: p2_roll_dsp_lbl
-                    text: 'None'
+                    text: ''
                     font_name: 'InterBlack'
                     font_size: '72sp'
                     size_hint_y: None
@@ -105,13 +105,13 @@
                     height: dp(40)
 
         Widget: # Spacer
-            size_hint_y: 0.1
+            size_hint_y: 1
 
         Button:
             id: continue_to_ft_btn
-            text: 'Continue'
+            text: 'Continue to First Turn'
             font_size: '20sp'
             size_hint_y: None
             height: dp(50)
-            on_press: root.proceed_to_first_turn_setup()
+            on_press: root.proceed_to_first_turn()
             disabled: True 

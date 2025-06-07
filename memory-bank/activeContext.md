@@ -26,7 +26,8 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
   - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button.
 - **QR Code Race Condition Fix**: Resolved a critical bug where QR codes would fail to display. The fix involves a new robust pattern for loading runtime-generated images: preventing premature loads, pre-caching the image texture on a loading screen, and then explicitly calling `.reload()` on the target `Image` widget before it's displayed. This pattern has been documented in `.cursorrules`.
 - **Refactoring and Bug Fix**: Resolved a `KeyError` crash on the `FirstTurnSetupScreen` by removing a duplicate class definition from `main.py` and consolidating the correct logic into `screens/first_turn_setup_screen.py`. This fix also involved correcting the game state handling to ensure the `first_turn_player_id` was set and read properly before starting the game.
-- **macOS Stability Fix**: Resolved a significant dependency conflict on macOS where bundled versions of SDL2 and FFmpeg from `kivy` and `ffpyplayer` caused runtime instability and warnings. The fix involves using Homebrew to install shared versions of `sdl2` and `ffmpeg@6`, then building the Python packages from source against them. This procedure has been documented in `techContext.md`.
+- **macOS Dependency Stability**: After a lengthy investigation, resolved a major dependency conflict on macOS where bundled versions of SDL2 from `kivy` and `ffpyplayer` caused runtime instability and visual artifacts. The fix involves using Homebrew to install `ffmpeg@6` and building `ffpyplayer` from source against it, which stabilizes the development environment. This procedure is now documented in `techContext.md`.
+- **UI Button Fix**: Resolved the bug where button text would disappear upon being disabled. This was fixed by setting the `disabled_color` property in the button's style definition.
 
 ## Active Decisions
 
@@ -61,12 +62,12 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 - Target deployment on Raspberry Pi
 - Virtual environment management
 - Dependencies:
+  - Kivy
   - Flask-SocketIO
   - python-socketio
-  - python-dotenv
-  - asyncpg
   - SQLAlchemy
   - aiosqlite
+  - ffpyplayer
 
 ## Tomorrow's Tasks
 

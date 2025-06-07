@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     round: document.getElementById("round"),
     totalTime: document.getElementById("total_time"),
     p1: {
-      panel: document.querySelector(".red-panel"),
+      panel: document.querySelector(".red_panel"),
       name: document.getElementById("player1_name"),
       role: document.getElementById("player1_role"),
       score: document.getElementById("player1_score"),
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
       time: document.getElementById("player1_time"),
     },
     p2: {
-      panel: document.querySelector(".blue-panel"),
+      panel: document.querySelector(".blue_panel"),
       name: document.getElementById("player2_name"),
       role: document.getElementById("player2_role"),
       score: document.getElementById("player2_score"),
@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- State ---
   let currentPlayerId = null;
   let activeNumpadTarget = null; // 'primary' or 'secondary'
+  let totalTimerInterval, playerTimerInterval;
 
   // --- Functions ---
   function getPlayerIdFromUrl() {
@@ -51,13 +52,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!isNaN(playerId)) {
       currentPlayerId = playerId;
       console.log(`Current player ID set to: ${currentPlayerId}`);
+      document.body.classList.add(playerId === 1 ? "player-1" : "player-2");
     } else {
       console.error("Could not determine player ID from URL.");
     }
   }
 
+  function formatTime(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600)
+      .toString()
+      .padStart(2, "0");
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor(totalSeconds % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
   function updateUI(state) {
     if (!state) return;
+
+    // Stop any existing timers before updating the UI
+    clearInterval(totalTimerInterval);
+    clearInterval(playerTimerInterval);
 
     const {
       player1,
@@ -69,9 +88,18 @@ document.addEventListener("DOMContentLoaded", () => {
     } = state;
 
     elements.round.textContent = `Round ${current_round}`;
-    elements.totalTime.textContent = `${
-      game_timer.elapsed_display || "00:00:00"
-    }`;
+
+    // --- Live Total Timer ---
+    if (game_timer && game_timer.status === "running") {
+      let totalSeconds = game_timer.elapsed_seconds;
+      elements.totalTime.textContent = formatTime(totalSeconds);
+      totalTimerInterval = setInterval(() => {
+        totalSeconds++;
+        elements.totalTime.textContent = formatTime(totalSeconds);
+      }, 1000);
+    } else {
+      elements.totalTime.textContent = game_timer.elapsed_display || "00:00:00";
+    }
 
     // Update P1
     elements.p1.name.textContent = player1.name;
@@ -88,6 +116,22 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.p2.score.textContent = player2.total_score;
     elements.p2.cp.textContent = `CP: ${player2.cp}`;
     elements.p2.time.textContent = player2.player_time_display || "00:00:00";
+
+    // --- Live Player Timer ---
+    if (game_timer && game_timer.status === "running" && active_player_id) {
+      const activePlayer = active_player_id === 1 ? player1 : player2;
+      const activePlayerElement =
+        active_player_id === 1 ? elements.p1 : elements.p2;
+
+      if (activePlayer && activePlayer.live_elapsed_seconds !== undefined) {
+        let playerSeconds = activePlayer.live_elapsed_seconds;
+        activePlayerElement.time.textContent = formatTime(playerSeconds);
+        playerTimerInterval = setInterval(() => {
+          playerSeconds++;
+          activePlayerElement.time.textContent = formatTime(playerSeconds);
+        }, 1000);
+      }
+    }
 
     // Update player-specific controls
     if (currentPlayerId === 1) {
@@ -177,11 +221,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Socket Listeners ---
   socket.on("connect", () => {
     console.log("Player client connected to server");
-    socket.emit("request_game_state");
+    // No longer requesting state, waiting for game_start or update
   });
 
   socket.on("disconnect", () => {
     console.log("Player client disconnected");
+  });
+
+  socket.on("game_start", (state) => {
+    console.log("Game start event received:", state);
+    updateUI(state);
   });
 
   socket.on("game_state_update", (state) => {

@@ -5,6 +5,11 @@ from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 from kivy.uix.vkeyboard import VKeyboard
 
+# Behavor of this screen:
+# 1. When the screen is entered, the names of the players are displayed in the input fields.
+# 2. When the user taps on an input field, the virtual keyboard is displayed. if on Linux, and the virtual keyboard is not already displayed, then display it.
+# 3. When the user taps on the continue button, the names of the players are saved and the game starts.
+# 4. continue button is always enabled.
 
 class NameEntryScreen(Screen):
     player1_name_input = ObjectProperty(None)
@@ -73,4 +78,4 @@ class NameEntryScreen(Screen):
         app = App.get_running_app()
         app.set_player_name(1, self.player1_name_input.text.strip())
         app.set_player_name(2, self.player2_name_input.text.strip())
-        app.root.current = 'deployment_setup' 
+        app.start_deployment_phase() 

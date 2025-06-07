@@ -163,4 +163,35 @@ Thumbs.db
 
 # QR code images
 p1_qr.png
+p2_qr.png
+
+# Unused database drivers
+asyncpg/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Cache files
+.cache/
+
+# QR code images
+p1_qr.png
 p2_qr.png 

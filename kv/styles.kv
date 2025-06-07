@@ -14,7 +14,7 @@
     # To get a solid color, we draw on the canvas.
     canvas.before:
         Color:
-            rgba: 1, 1, 1, 1            # Explicitly white for the RoundedRectangle
+            rgba: self.background_color
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -22,26 +22,17 @@
     # Reset Kivy's default button image backgrounds
     background_normal: ''
     background_down: ''
+    background_disabled_normal: ''
 
 <Player1Button@ScoreboardButton>:
-    color: 1, 1, 1, 1 # White text
-    canvas.before:
-        Color:
-            rgba: 1, 0, 0, 1 # Red background (#FF0000)
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: [dp(10)]
+    background_color: (1, 0, 0, 1) if self.state == 'normal' else (0.5, 0, 0, 1) # Darker red when disabled
+    color: 1, 1, 1, 1 # White text for player 1
+    disabled_color: 1, 1, 1, 1 # Keep text white when disabled
 
 <Player2Button@ScoreboardButton>:
-    color: 1, 1, 1, 1 # White text
-    canvas.before:
-        Color:
-            rgba: 0, 0.349, 1, 1 # Blue background (#0059FF)
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: [dp(10)]
+    background_color: (0, 0.349, 1, 1) if self.state == 'normal' else (0, 0.17, 0.5, 1) # Darker blue when disabled
+    color: 1, 1, 1, 1 # White text for player 2
+    disabled_color: 1, 1, 1, 1 # Keep text white when disabled
 
 <HeaderLayout@BoxLayout>:
     orientation: 'horizontal'
@@ -90,4 +81,3 @@
         text_size: self.width, None
         size_hint_x: 0.8 # Allow label to take most space
         color: [0.5, 0.5, 0.5, 1] # Slightly different header background
-

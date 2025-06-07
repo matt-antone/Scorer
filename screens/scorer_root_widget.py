@@ -265,60 +265,59 @@ class ScorerRootWidget(Screen):
         if self.p2_player_timer_label: 
             self.p2_player_timer_label.text = f"{gs[p2_key]['player_time_display']}"
 
-    def end_turn(self):
+    def end_turn(self, outgoing_player_id=None):
+        """Handles the logic for ending a player's turn."""
+        print("--- End Turn Button Pressed ---")
         gs = App.get_running_app().game_state
-        print(f"--- End Turn Button Pressed ---")
-        print(f"Initial state: active_player_id={gs.get('active_player_id')}, game_phase={gs.get('game_phase')}, round={gs.get('current_round')}")
-
-        if gs["game_phase"] != "game_play":
-            print("End Turn: Game not in 'playing' phase. No action.")
-            return
-
-        time_now = time.time()
-        outgoing_player_id = gs["active_player_id"]
-        print(f"End Turn: Outgoing player_id = {outgoing_player_id}")
         
-        if gs['game_timer']['status'] == 'running':
-            turn_duration = time_now - gs['game_timer']['turn_segment_start_time']
-            gs[f'player{outgoing_player_id}']['player_elapsed_time_seconds'] += turn_duration
-            gs[f'player{outgoing_player_id}']['player_time_display'] = self._format_seconds_to_hms(
-                gs[f'player{outgoing_player_id}']['player_elapsed_time_seconds']
-            )
-            print(f"End Turn: Player {outgoing_player_id} turn_duration={turn_duration:.2f}s, total_elapsed={gs[f'player{outgoing_player_id}']['player_elapsed_time_seconds']:.2f}s")
+        if outgoing_player_id is None:
+            outgoing_player_id = gs.get('active_player_id')
 
-        next_player_id = 2 if outgoing_player_id == 1 else 1
-        gs["active_player_id"] = next_player_id
-        print(f"End Turn: Active player_id changed to {gs['active_player_id']}")
-        newly_active_player_name = gs[f'player{gs["active_player_id"]}']["name"]
-
-        first_player_of_game_id = gs.get("first_player_of_game_id")
-        is_second_player_turn_end = (first_player_of_game_id is not None and outgoing_player_id != first_player_of_game_id)
-
-        # Game Over Check: This is the absolute end condition.
-        if gs["current_round"] == 5 and is_second_player_turn_end:
-            gs["game_phase"] = "game_over"
-            gs["last_round_played"] = 5
-            gs["status_message"] = "Game Over - Round 5 complete"
-            print("End Turn: Game Over. Final turn of Round 5 has ended.")
-            self.stop_timer()
-            App.get_running_app().switch_screen('game_over')
-            App.get_running_app().save_game_state() # Save final state
+        print(f"Initial state: active_player_id={gs.get('active_player_id')}, game_phase={gs.get('game_phase')}, round={gs.get('current_round')}")
+        
+        if gs['game_phase'] != 'game_play' or outgoing_player_id != gs.get('active_player_id'):
+            print(f"End Turn: Aborted. Phase is '{gs['game_phase']}' or incoming player_id {outgoing_player_id} doesn't match active {gs.get('active_player_id')}.")
             return
 
-        # Round Advancement: Only happens if the game is not over.
-        if is_second_player_turn_end:
-            gs["current_round"] += 1
-            print(f"End Turn: Round advanced to {gs['current_round']}")
+        print(f"End Turn: Outgoing player_id = {outgoing_player_id}")
 
-        gs["status_message"] = f"Round {gs['current_round']} - {newly_active_player_name}'s Turn"
-        gs['game_timer']['turn_segment_start_time'] = time_now 
+        # Finalize the outgoing player's time
+        time_now = time.time()
+        turn_duration = time_now - gs['game_timer']['turn_segment_start_time']
+        player_key = f"player{outgoing_player_id}"
+        gs[player_key]['player_elapsed_time_seconds'] += turn_duration
+        print(f"End Turn: Player {outgoing_player_id} turn_duration={turn_duration:.2f}s, total_elapsed={gs[player_key]['player_elapsed_time_seconds']:.2f}s")
+        
+        # Switch active player
+        incoming_player_id = 2 if outgoing_player_id == 1 else 1
+        gs['active_player_id'] = incoming_player_id
+        print(f"End Turn: Active player_id changed to {incoming_player_id}")
+
+        # Update round if P2 just finished their turn
+        if outgoing_player_id == 2:
+            gs['current_round'] += 1
+            # Check for game end condition
+            if gs['current_round'] > 5:
+                gs['game_phase'] = 'game_over'
+                gs['last_round_played'] = 5
+                print("End Turn: Game over, max rounds reached.")
+                self.stop_timer()
+                Clock.schedule_once(lambda dt: self.update_ui_from_state())
+                Clock.schedule_once(lambda dt: App.get_running_app().switch_screen('game_over'))
+                App.get_running_app().save_game_state()
+                return
+
+        # Reset the turn segment timer for the incoming player
+        gs['game_timer']['turn_segment_start_time'] = time_now
         print(f"End Turn: New turn segment start_time = {time_now:.2f}")
+
+        gs['status_message'] = f"Round {gs['current_round']} - Player {incoming_player_id}'s Turn"
         print(f"End Turn: Status message = {gs['status_message']}")
-            
-        print("End Turn: Calling self.update_ui_from_state()")
-        self.update_ui_from_state()
-        self.update_timer_display(0)
-        App.get_running_app().save_game_state() # Save state after turn ends
+
+        # This is the critical change: schedule the UI update on the main thread.
+        Clock.schedule_once(lambda dt: self.update_ui_from_state())
+        
+        App.get_running_app().save_game_state()
         print(f"--- End Turn Processing Complete. Active player: {gs['active_player_id']} ---")
 
     def player_concedes(self, conceding_player_id):
@@ -345,8 +344,14 @@ class ScorerRootWidget(Screen):
         self.stop_timer()
         self.update_ui_from_state() # Update UI to hide buttons, show game over state on labels
         App.get_running_app().switch_screen('game_over')
+        App.get_running_app().save_game_state() # Save state after turn ends
+        print(f"--- End Turn Processing Complete. Active player: {gs['active_player_id']} ---")
+
+        # This is the critical change: schedule the UI update on the main thread.
+        # This prevents crashes and UI corruption when the event comes from the web client.
+        Clock.schedule_once(lambda dt: self.update_ui_from_state())
+
         App.get_running_app().save_game_state()
-        print(f"--- Concession Processing Complete ---")
 
     def open_score_numpad(self, player_id_to_score):
         gs = App.get_running_app().game_state
@@ -376,11 +381,13 @@ class ScorerRootWidget(Screen):
             gs[player_key]["primary_score"] = score_value 
             gs[player_key]["total_score"] = gs[player_key]["primary_score"] + gs[player_key].get("secondary_score", 0) 
             gs["status_message"] = f"{gs[player_key]['name']} Score Updated"
-            self.update_ui_from_state()
-            App.get_running_app().save_game_state() # Save after processing numpad value
         else:
             gs["status_message"] = f"Error: Invalid player ID"
-            self.update_ui_from_state()
+        
+        # Schedule the UI update to run on the main thread, making it safe
+        # for calls from both the Kivy UI and external web clients.
+        Clock.schedule_once(lambda dt: self.update_ui_from_state())
+        App.get_running_app().save_game_state() # Save after processing numpad value
 
     def add_cp(self, player_id, amount=1):
         gs = App.get_running_app().game_state
@@ -389,7 +396,7 @@ class ScorerRootWidget(Screen):
         if player_key in gs:
             gs[player_key]["cp"] = max(0, gs[player_key]["cp"] + amount)
             gs["status_message"] = f"{gs[player_key]['name']} CP Updated"
-            self.update_ui_from_state()
+            Clock.schedule_once(lambda dt: self.update_ui_from_state())
             App.get_running_app().save_game_state() # Save after adding CP
 
     def remove_cp(self, player_id, amount=1): 
@@ -402,7 +409,7 @@ class ScorerRootWidget(Screen):
                 gs["status_message"] = f"{gs[player_key]['name']} CP Updated"
             else:
                 gs["status_message"] = f"{gs[player_key]['name']} CP is 0"
-            self.update_ui_from_state()
+            Clock.schedule_once(lambda dt: self.update_ui_from_state())
             App.get_running_app().save_game_state() # Save after removing CP
     
     def request_new_game(self):

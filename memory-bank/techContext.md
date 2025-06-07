@@ -46,31 +46,40 @@ This document lists the technologies, development setup, technical constraints, 
   - **FFmpeg Libraries**: `libavcodec-dev`, `libavformat-dev`, `libswscale-dev`, etc., required for building the `ffpyplayer` wheel.
   - **Other Kivy Dependencies**: Libraries for audio, video, and input.
 
-### 3.3. macOS Dependency Management
+### 3.3. macOS Dependency Management & Troubleshooting
 
-**Problem**: On macOS, both `kivy` and its dependency `ffpyplayer` can cause stability issues due to bundling their own separate versions of the SDL2 and FFmpeg libraries. When installed from pre-compiled wheels, these can conflict, leading to Objective-C warnings at runtime and potential for random crashes.
+**Problem**: On macOS, both `kivy` and its dependency `ffpyplayer` can cause stability issues due to bundling their own separate versions of the SDL2 and FFmpeg libraries. When installed from pre-compiled wheels, these can conflict, leading to `objc[...]: Class ... is implemented in both ...` warnings at runtime, visual artifacts like flashes/blinks, and random application crashes.
 
-**Solution**: The stable solution is to prevent `pip` from using pre-compiled wheels for these packages. Instead, we use Homebrew to install shared system versions of the required libraries (`sdl2` and `ffmpeg@6`) and then instruct `pip` to build `kivy` and `ffpyplayer` from source, linking against these shared libraries.
+**Solution**: The stable solution is to prevent `pip` from using pre-compiled wheels for `ffpyplayer` and force it to build from source, linking against a shared system version of the required FFmpeg library installed via Homebrew.
+
+**Version Incompatibility Warning**: As of this writing, the latest version of `ffpyplayer` (4.5.2) is **not** compatible with the latest version of `ffmpeg` (7.x) from Homebrew. Building against FFmpeg 7 will fail with errors related to deprecated functions (e.g., `av_get_channel_layout_nb_channels`). The correct, stable combination is `ffpyplayer==4.5.2` and `ffmpeg@6`.
 
 The following procedure creates a stable development environment on macOS:
 
-1.  **Uninstall Conflicting Pip Packages**:
+1.  **Uninstall Conflicting Packages** (If they exist):
 
     ```bash
-    pip uninstall kivy ffpyplayer -y
+    pip uninstall -y ffpyplayer
+    brew uninstall ffmpeg # Also uninstall the newer version if it's present
     ```
 
-2.  **Install Shared Libraries with Homebrew**:
+2.  **Install Compatible Shared Libraries with Homebrew**:
 
     ```bash
-    brew install sdl2
     brew install ffmpeg@6
     ```
 
-3.  **Build Kivy and FFPyPlayer from Source**: This command uses an environment variable to tell the `ffpyplayer` build where to find the `ffmpeg@6` libraries and instructs pip to not use pre-built wheels for `kivy` or `ffpyplayer`.
+3.  **Set Environment Variables and Build `ffpyplayer` from Source**:
+
+    This command uses `LDFLAGS` and `CPPFLAGS` to tell the compiler where to find the `ffmpeg@6` libraries and headers. It also uses `USE_SYSTEM_LIBS=1` as an extra measure to encourage the use of system libraries and `--no-binary` to force the build.
+
     ```bash
-    export PKG_CONFIG_PATH="/opt/homebrew/opt/ffmpeg@6/lib/pkgconfig" && pip install --no-binary=kivy,ffpyplayer "kivy[full]"
+    export LDFLAGS="-L/opt/homebrew/opt/ffmpeg@6/lib"
+    export CPPFLAGS="-I/opt/homebrew/opt/ffmpeg@6/include"
+    USE_SYSTEM_LIBS=1 pip install --no-binary ffpyplayer ffpyplayer
     ```
+
+4.  **Verify Installation**: After these steps, Kivy and ffpyplayer should coexist peacefully, and the runtime warnings about duplicate SDL2 symbols should disappear.
 
 ## 4. Installation & Setup
 

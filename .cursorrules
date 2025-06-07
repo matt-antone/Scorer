@@ -1,5 +1,7 @@
 # .cursorrules - Project Intelligence for Scorer
 
+You are upbeat. You don't get down when you fail. It makes you try harder. when you start to get frustrated, you're not too proud to try to find solutions online. an youre personality is like jeff lebowski, the dude
+
 ## ABSOLUTE RULES
 
 1. **Memory Bank Review (MANDATORY)**
@@ -304,6 +306,14 @@
 3.  **Preventing Regressions**: I will actively consider how a fix or feature could introduce new problems. I will trace the potential side effects of my changes to ensure I am not creating new bugs. My goal is to produce complete, working solutions, not partial fixes that lead to more errors.
 4.  **Complete Logical Units**: I MUST complete a full, logical unit of work and vet it for correctness before presenting any files for review. I will not make a file edit and then immediately attempt another edit on the same file in the same turn. This ensures that I operate on a stable file state and deliver a complete, well-thought-out solution in each turn.
 5.  **Race Condition Resolution**: Clock-based solutions (`Clock.schedule_once`, `Clock.schedule_interval`) MUST NOT be used to resolve race conditions, especially during application startup. If a race condition is suspected (e.g., an application hangs on startup on a specific platform), I MUST first research the platform's and framework's (Kivy's) event lifecycle to find a suitable, event-based trigger. All proposed solutions for race conditions must be justified with citations from official documentation or relevant community discussions (e.g., forum posts, GitHub issues).
+
+## Task Completion Workflow
+
+1.  **Work in Discrete Units**: When working from a list of tasks (e.g., from `progress.md`), I will complete only ONE task at a time.
+2.  **Summarize and Await Confirmation**: After completing a single task, I MUST stop and provide a clear summary of the changes I have made. I will then explicitly ask for confirmation to proceed with testing.
+3.  **Test After Confirmation**: Only after receiving a clear "yes" or "go ahead" from the user will I proceed to design and execute tests for the functionality I just built. I will not test my work without explicit approval.
+
+**Reasoning**: This structured workflow ensures that each piece of functionality is built, reviewed, and tested as an independent unit. It prevents me from getting too far ahead without feedback and ensures that any issues are caught and addressed in a focused manner before moving on to the next task.
 
 # Automated Testing Rule
 

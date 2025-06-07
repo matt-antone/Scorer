@@ -1,10 +1,28 @@
-import random
-
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.properties import ObjectProperty
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.metrics import dp
+
+# Behavior of this screen (mirrors DeploymentSetupScreen):
+# 1. Default visual state:
+#   - Player names displayed.
+#   - Roll buttons enabled.
+#   - Status label shows initial roll instruction.
+#   - Start Game button disabled.
+#   - Roll displays are blank.
+# 2. Button Visual States:
+#   - Tapping roll button shows the number in the display label and disables the button.
+#   - Winner's choice buttons appear after a winner is decided.
+#   - Tapping choice button shows "First" or "Second" in the display label.
+#   - Start Game button enabled only when first turn is decided.
+# 3. Status Messages:
+#   - "Roll for First Turn. Winner chooses who goes first." -> Initial state.
+#   - "Tie! {attacker_name} (Attacker) chooses who goes first." -> Tie state.
+#   - "Waiting for {player_name} to roll..." -> One player has rolled.
+#   - "{winner_name} wins! Choose who takes the first turn." -> Winner decided.
+#   - "{player_name} will take the first turn! Click 'Start Game' below." -> Turn decided.
 
 
 class FirstTurnSetupScreen(Screen):
@@ -24,152 +42,92 @@ class FirstTurnSetupScreen(Screen):
     first_turn_status_label = ObjectProperty(None)
     start_game_button = ObjectProperty(None)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self._p1_ft_roll = 0
-        self._p2_ft_roll = 0
-        self._p1_ft_rolled_once = False
-        self._p2_ft_rolled_once = False
-
     def on_pre_enter(self, *args):
-        gs = App.get_running_app().game_state
+        """Called every time the screen is shown. Does an initial draw."""
+        self.update_view_from_state()
+
+    def update_view_from_state(self, *args):
+        """Updates the entire screen based on the central game_state."""
+        app = App.get_running_app()
+        if not app:
+            return
+        gs = app.game_state
+
         self.p1_name_label.text = gs['player1']['name']
         self.p2_name_label.text = gs['player2']['name']
 
-        self._p1_ft_roll = 0
-        self._p2_ft_roll = 0
-        self._p1_ft_rolled_once = False
-        self._p2_ft_rolled_once = False
-        gs["first_turn_choice_winner_id"] = None
-        gs["player1"]["first_turn_roll"] = 0
-        gs["player2"]["first_turn_roll"] = 0
-        
-        self.p1_ft_roll_button.disabled = False
-        self.p1_ft_roll_display_label.text = ""
+        p1_roll = gs['player1'].get('first_turn_roll', 0)
+        p2_roll = gs['player2'].get('first_turn_roll', 0)
+        winner_id = gs.get('first_turn_initiative_winner_id')
+        first_turn_player_id = gs.get('first_turn_player_id')
+
+        # Clean state
+        self.p1_ft_roll_button.text = "Roll"
+        self.p2_ft_roll_button.text = "Roll"
         self.p1_ft_choice_box.clear_widgets()
         self.p1_ft_choice_box.opacity = 0
-
-        self.p2_ft_roll_button.disabled = False
-        self.p2_ft_roll_display_label.text = ""
         self.p2_ft_choice_box.clear_widgets()
         self.p2_ft_choice_box.opacity = 0
         
-        attacker_name = "Attacker (Unknown)"
-        if gs.get('deployment_attacker_id'):
-             attacker_name = gs[f"player{gs['deployment_attacker_id']}"]['name']
-        self.first_turn_status_label.text = f"Roll for First Turn! Attacker ({attacker_name}) decides ties."
-        self.start_game_button.disabled = True
+        self.p1_ft_roll_display_label.text = str(p1_roll) if p1_roll > 0 else ""
+        self.p2_ft_roll_display_label.text = str(p2_roll) if p2_roll > 0 else ""
+
+        self.p1_ft_roll_button.disabled = p1_roll > 0 or winner_id is not None
+        self.p2_ft_roll_button.disabled = p2_roll > 0 or winner_id is not None
+
+        if winner_id is None:
+            # --- State: Before a winner is decided ---
+            if p1_roll > 0:
+                self.first_turn_status_label.text = f"Waiting for {gs['player2']['name']} to roll..."
+            elif p2_roll > 0:
+                self.first_turn_status_label.text = f"Waiting for {gs['player1']['name']} to roll..."
+            else:
+                self.first_turn_status_label.text = "Roll for First Turn. Winner chooses who goes first."
+        elif first_turn_player_id is None:
+            # --- State: Winner decided, but turn not chosen ---
+            winner_name = gs[f'player{winner_id}']['name']
+            if p1_roll == p2_roll:
+                attacker_name = gs[f"player{gs['deployment_attacker_id']}"]['name']
+                self.first_turn_status_label.text = f"Tie! {attacker_name} (Attacker) chooses who goes first."
+            else:
+                self.first_turn_status_label.text = f"{winner_name} wins! Choose who takes the first turn."
+
+            # Show choice buttons for the winner
+            winner_choice_box = self.p1_ft_choice_box if winner_id == 1 else self.p2_ft_choice_box
+            winner_choice_box.opacity = 1
+            self._setup_choice_buttons(winner_choice_box, winner_id)
+        else:
+            # --- State: First turn player decided ---
+            p1_turn_text = "First" if first_turn_player_id == 1 else "Second"
+            p2_turn_text = "First" if first_turn_player_id == 2 else "Second"
+            self.p1_ft_roll_display_label.text = p1_turn_text
+            self.p2_ft_roll_display_label.text = p2_turn_text
+
+            starting_player_name = gs[f'player{first_turn_player_id}']["name"]
+            self.first_turn_status_label.text = f"{starting_player_name} will take the first turn! Click 'Start Game' below."
+        
+        self.start_game_button.disabled = first_turn_player_id is None
+
+    def _setup_choice_buttons(self, choice_box, winner_id):
+        """Helper to create and add first turn choice buttons."""
+        app = App.get_running_app()
+        btn_self_first = Button(
+            text="I'll Go First",
+            on_press=lambda x: app.handle_first_turn_choice(winner_id, True),
+            size_hint_y=None, height=dp(35), font_size='14sp'
+        )
+        btn_opponent_first = Button(
+            text="They Go First",
+            on_press=lambda x: app.handle_first_turn_choice(winner_id, False),
+            size_hint_y=None, height=dp(35), font_size='14sp'
+        )
+        choice_box.add_widget(btn_self_first)
+        choice_box.add_widget(btn_opponent_first)
 
     def roll_first_turn_initiative(self, player_id):
-        roll = random.randint(1,6)
-        gs = App.get_running_app().game_state
-
-        if player_id == 1:
-            self._p1_ft_roll = roll
-            gs['player1']['first_turn_roll'] = roll
-            self.p1_ft_roll_button.disabled = True
-            self._p1_ft_rolled_once = True
-            self.p1_ft_roll_display_label.text = f"{roll}"
-            if not self._p2_ft_rolled_once:
-                self.first_turn_status_label.text = "Waiting for Player 2 to roll..."
-                self.p2_ft_roll_display_label.text = "Roll"
-            else:
-                self.first_turn_status_label.text = "Comparing rolls..."
-        elif player_id == 2:
-            self._p2_ft_roll = roll
-            gs['player2']['first_turn_roll'] = roll
-            self.p2_ft_roll_button.disabled = True
-            self._p2_ft_rolled_once = True
-            self.p2_ft_roll_display_label.text = f"{roll}"
-            if not self._p1_ft_rolled_once:
-                self.first_turn_status_label.text = "Waiting for Player 1 to roll..."
-                self.p1_ft_roll_display_label.text = "Roll"
-            else:
-                self.first_turn_status_label.text = "Comparing rolls..."
-        
-        if self._p1_ft_rolled_once and self._p2_ft_rolled_once:
-            self.determine_first_turn_winner()
-
-    def determine_first_turn_winner(self):
-        gs = App.get_running_app().game_state
-        p1_name = gs['player1']['name']
-        p2_name = gs['player2']['name']
-        
-        winner_id = 0 # This is the ID of the player who gets to CHOOSE who goes first
-        display_winner_name = "" # This is the name to display as having won the roll/tie-break
-
-        if self._p1_ft_roll > self._p2_ft_roll:
-            winner_id = 1; display_winner_name = p1_name
-            self.p1_ft_roll_display_label.text = f"Win {self._p1_ft_roll}"
-            self.p2_ft_roll_display_label.text = f"Lose {self._p2_ft_roll}"
-        elif self._p2_ft_roll > self._p1_ft_roll:
-            winner_id = 2; display_winner_name = p2_name
-            self.p1_ft_roll_display_label.text = f"Lose {self._p1_ft_roll}"
-            self.p2_ft_roll_display_label.text = f"Win {self._p2_ft_roll}"
-        else: # Tie
-            winner_id = gs.get("deployment_attacker_id", 1) # Attacker (winner_id) decides tie
-            display_winner_name = gs[f'player{winner_id}']['name']
-            self.first_turn_status_label.text = f"Tie! {display_winner_name} (Attacker) chooses who goes first."
-            self.p1_ft_roll_display_label.text = f"Tie {self._p1_ft_roll}"
-            self.p2_ft_roll_display_label.text = f"Tie {self._p2_ft_roll}"
-        
-        self.p1_ft_roll_button.disabled = True # Ensure roll buttons are disabled
-        self.p2_ft_roll_button.disabled = True
-
-        gs["first_turn_choice_winner_id"] = winner_id 
-        self.first_turn_status_label.text = f"{display_winner_name} won roll/tie! {display_winner_name}, choose who takes first turn."
-
-        chooser_choice_box = self.p1_ft_choice_box if winner_id == 1 else self.p2_ft_choice_box
-        chooser_choice_box.clear_widgets()
-        btn_self_first = Button(text="I'll Go First", on_press=lambda x: self.player_decides_first_turn(True), size_hint_y=None, height=dp(35), font_size='14sp')
-        btn_opponent_first = Button(text="Opponent Goes First", on_press=lambda x: self.player_decides_first_turn(False), size_hint_y=None, height=dp(35), font_size='14sp')
-        chooser_choice_box.add_widget(btn_self_first)
-        chooser_choice_box.add_widget(btn_opponent_first)
-        chooser_choice_box.opacity = 1
-
-    def player_decides_first_turn(self, decision_is_self_goes_first: bool):
-        gs = App.get_running_app().game_state
-        chooser_id = gs.get("first_turn_choice_winner_id")
-        if chooser_id is None: return
-
-        starting_player_id = chooser_id if decision_is_self_goes_first else (1 if chooser_id == 2 else 2)
-        gs["first_turn_player_id"] = starting_player_id
-        gs["first_player_of_game_id"] = starting_player_id
-        
-        starting_player_name = gs[f'player{starting_player_id}']["name"]
-        self.first_turn_status_label.text = f"{starting_player_name} will take the first turn!"
-
-        chooser_choice_box = self.p1_ft_choice_box if chooser_id == 1 else self.p2_ft_choice_box
-        chooser_ft_roll_display = self.p1_ft_roll_display_label if chooser_id == 1 else self.p2_ft_roll_display_label
-        other_player_id = 1 if chooser_id == 2 else 2 # Get the ID of the other player
-        other_ft_roll_display = self.p1_ft_roll_display_label if other_player_id == 1 else self.p2_ft_roll_display_label
-        
-        chooser_choice_box.clear_widgets()
-        chooser_choice_box.opacity = 0
-        
-        chooser_final_text = "First" if starting_player_id == chooser_id else "Second"
-        other_final_text = "Second" if starting_player_id == chooser_id else "First"
-        
-        chooser_ft_roll_display.text = chooser_final_text
-        other_ft_roll_display.text = other_final_text
-
-        self.start_game_button.disabled = False
-        gs['status_message'] = "First turn decided. Ready to start game."
+        """Called from KV. Delegates the action to the main app."""
+        App.get_running_app().handle_first_turn_roll(player_id)
 
     def start_game_action(self):
-        app = App.get_running_app()
-        gs = app.game_state
-        
-        gs['active_player_id'] = gs.get('first_turn_player_id')
-        if not gs['active_player_id']:
-            app.show_error_popup("Error", "First turn player not set.")
-            return
-
-        gs['game_phase'] = 'game_play'
-        gs['current_round'] = 1
-        app.save_game_state()
-
-        scorer_screen = app.root.get_screen('game')
-        scorer_screen.start_timers_and_ui()
-
-        app.switch_screen('game') 
+        """Called from KV. Delegates the action to the main app."""
+        App.get_running_app().start_game() 

@@ -14,20 +14,35 @@ The `GamePlayScreen` is the main game interface of the application. It serves as
 ### UI Components & Interaction
 
 - **Player Name Labels**: Displays the names of Player 1 and Player 2.
-- **Primary Score**:
-  - Displays the current primary score for each player.
-  - Has `+` and `-` buttons to increment or decrement the score. The score is capped between 0 and 50.
-- **Secondary Score**:
-  - Displays the current secondary score for each player.
-  - Has `+` and `-` buttons to increment or decrement the score. The score is capped between 0 and 40.
-- **Total Score**: A large, prominent label that automatically displays the sum of the primary and secondary scores.
+- **Score**:
+  - Displays the current total score for each player (sum of primary and secondary objectives).
+  - Score is displayed as a button that, when pressed, launches a number pad popup.
+  - The number pad popup includes:
+    - Numeric keypad (0-9)
+    - Red "C" button for clearing input
+    - Green "OK" button for confirming the new score
+  - Always enabled for both players.
+  - Internally tracks:
+    - Primary objective score
+    - Secondary objective score
+    - Total score (sum of both)
 - **Command Points (CP)**:
   - Displays the current CP for each player.
-  - Has `+` and `-` buttons to adjust the CP value.
+  - Layout: `<button>-<button> CP <button>+<button>`
+  - The CP value is displayed between the increment/decrement buttons.
+  - Always enabled for both players.
 - **Round Tracker**: A central display at the top of the screen shows the current game round (1-5).
 - **Active Player Indicator**: The side of the currently active player is visually highlighted to indicate whose turn it is.
 - **End Turn Button**: A button at the bottom of the screen allows the current player to end their turn.
-- **Settings/Menu Button**: Provides access to application settings or other options (e.g., concede game - future feature).
+- **Concede Button**:
+  - Located at the bottom of the screen.
+  - When pressed, launches a custom confirmation popup.
+  - The confirmation popup includes:
+    - Warning message: "Are you sure you want to concede?"
+    - Red "Cancel" button
+    - Green "Confirm" button
+  - Styled to match the number pad popup design.
+  - Always enabled for both players.
 - **Game Timer**: This screen displays and controls the main game timer. For full details on its behavior and state management, see the [Game Timer System documentation](../../game_timer.md).
 - **Player Timers**: This screen displays the individual time elapsed for each player. For details, see the [Player Timer System documentation](../../player_timer.md).
 

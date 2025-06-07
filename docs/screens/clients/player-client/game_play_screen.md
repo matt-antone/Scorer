@@ -15,16 +15,33 @@ The `GamePlayScreen` is the player client's primary interface during gameplay. I
 ### UI Components & Interaction
 
 - **Player Identification**: A clear label indicates which player this client controls (e.g., "Player 1 Controls").
-- **Primary Score Controls**:
-  - Displays the player's current primary score.
-  - `+` and `-` buttons to modify the score (enabled only when it's your turn).
-- **Secondary Score Controls**:
-  - Displays the player's current secondary score.
-  - `+` and `-` buttons to modify the score (enabled only when it's your turn).
+- **Score**:
+  - Displays the player's current total score (sum of primary and secondary objectives).
+  - Score is displayed as a button that, when pressed, launches a number pad popup.
+  - The number pad popup includes:
+    - Numeric keypad (0-9)
+    - Red "C" button for clearing input
+    - Green "OK" button for confirming the new score
+  - Always enabled.
+  - Internally tracks:
+    - Primary objective score
+    - Secondary objective score
+    - Total score (sum of both)
 - **Command Point (CP) Controls**:
   - Displays the player's current CP.
-  - `+` and `-` buttons to modify the CP count (enabled only when it's your turn).
+  - Layout: `<button>-<button> CP <button>+<button>`
+  - The CP value is displayed between the increment/decrement buttons.
+  - Always enabled.
 - **End Turn Button**: Available only when it's your turn.
+- **Concede Button**:
+  - Located at the bottom of the screen.
+  - When pressed, launches a custom confirmation popup.
+  - The confirmation popup includes:
+    - Warning message: "Are you sure you want to concede?"
+    - Red "Cancel" button
+    - Green "Confirm" button
+  - Styled to match the number pad popup design.
+  - Always enabled.
 - **Game Timer Display**: Displays the synchronized value of the main game timer. This is a read-only view. See the [Game Timer System documentation](../../../game_timer.md) for more details.
 - **Player Timer Display**: Displays the synchronized value of the player's individual timer. This is a read-only view. See the [Player Timer System documentation](../../../player_timer.md) for more details.
 

@@ -1,8 +1,8 @@
-# Screen: Scorer Root Widget
+# Screen: Main Interface Screen
 
 ## 1. Purpose
 
-The Scorer Root Widget is the main game interface that displays the current game state, scores, and controls. It integrates with the settings system to handle game state changes, screen saver activation, and player interactions.
+The Main Interface Screen is the primary game interface for player clients, displaying the current game state, scores, and controls. It integrates with the settings system to handle game state changes, screen saver activation, and player interactions.
 
 ## 2. Behavior & Flow
 
@@ -10,22 +10,23 @@ The Scorer Root Widget is the main game interface that displays the current game
 
 - Monitors game state (Active/Paused)
 - Updates display based on current state
-- Handles pause/resume transitions
+- Handles pause/resume during player's turn
 - Manages screen saver activation
 
 ### Player Controls
 
-- Score adjustment
-- CP management
-- Turn tracking
-- Game state controls
+- Score display
+- CP display
+- Turn indicator
+- Pause/Resume during turn
+- Concede game option
 
 ### Settings Integration
 
 - Respects pause/resume state
 - Handles screen saver activation
 - Updates display based on settings
-- Manages player name changes
+- Shows player names
 
 ### Layout
 
@@ -44,13 +45,13 @@ CP: 12                       CP: 10
 ## 3. Screen Transition
 
 - **Settings Button**: Opens settings screen
-- **Pause Button**: Toggles game state
+- **Pause Button**: Toggles game state (during turn)
 - **Screen Saver**: Activates based on settings
 - **Game State Change**: Updates display
 
 ## 4. Key Implementation Details
 
-- **File Location**: `screens/scorer_root_widget.py`
+- **File Location**: `client/src/screens/MainInterfaceScreen.js`
 - **State Management**:
   - Monitors game state
   - Updates display in real-time
@@ -60,7 +61,7 @@ CP: 12                       CP: 10
   - Updates display based on settings
   - Manages screen saver activation
 - **Player Interaction**:
-  - Handles score changes
-  - Manages CP adjustments
-  - Tracks turn changes
-  - Updates player names
+  - Displays score changes
+  - Shows CP adjustments
+  - Indicates turn changes
+  - Shows player names

@@ -2,37 +2,115 @@
 
 ## 1. Purpose
 
-The `ScreensaverScreen` is designed to prevent screen burn-in on the DSI display and add visual interest during periods of inactivity. It automatically takes over the screen and displays a slideshow of images.
+The Screensaver Screen provides a simple display mode that shows either the default or a custom uploaded picture. It helps prevent screen burn-in during periods of inactivity.
 
 ## 2. Behavior & Flow
 
 ### Activation
 
-- An inactivity timer runs continuously in the background while the application is on the `ScorerRootWidget`.
-- If no touch input is detected for a set period (e.g., 5 minutes), the `ScorerApp` controller automatically switches the screen to the `ScreensaverScreen`.
-- The name of the previously active screen (`ScorerRootWidget`) is stored so the application knows where to return.
+- Enabled/Disabled via settings
+- Shows when enabled and no activity detected
+- Touch anywhere to exit
 
-### Slideshow
+### Display
 
-- Upon activation, the screen begins a slideshow of all images found in the `assets/billboards/` directory.
-- **Randomization**: The order of the images is randomized at the start of each slideshow to ensure variety.
-- **Transitions**: The screen uses a slow, two-second fade animation (`Animation(opacity=0, d=2)`) to create a smooth and visually appealing transition between images.
-- The slideshow loops indefinitely until it is interrupted.
+- Shows either:
+  - Default picture
+  - Custom uploaded picture
+- Picture is scaled to fit screen while maintaining aspect ratio
+- Centered on screen
 
-### Deactivation
+### Layout
 
-- The screensaver is deactivated by any touch input on the screen (`on_touch_down` event).
-- When a touch is detected, the `ScorerApp` controller switches the view back to the previously active screen (which is almost always the `ScorerRootWidget`).
+```
+[Picture Display]
+[Touch anywhere to exit]
+```
 
 ## 3. Screen Transition
 
-- **To this screen**: Transitions automatically from `ScorerRootWidget` after a period of user inactivity.
-- **From this screen**: Transitions back to `ScorerRootWidget` (or whichever screen was active before) immediately upon user touch input.
+- **Touch Anywhere**: Returns to the previous screen
+- **Settings Change**: Updates when enabled/disabled or picture changes
 
 ## 4. Key Implementation Details
 
 - **File Location**: `screens/screensaver_screen.py`
-- **Inactivity Logic**: The inactivity timer and the logic for switching to and from the screensaver are managed globally by the `ScorerApp` class.
-- **Image Loading**: The screen dynamically loads all `.png` and `.jpg` files from the target directory.
-- **Animation**: Uses Kivy's `Animation` class to handle the fading effect between slides, providing a more polished user experience than an abrupt image switch.
-- **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+- **State Management**:
+  - Monitors enabled/disabled state
+  - Updates when picture changes
+- **Picture Handling**:
+  - Loads from assets directory
+  - Maintains aspect ratio
+  - Optimizes for display
+- **Settings Integration**:
+  - Reads enabled/disabled state
+  - Loads current picture
+  - Updates when settings change
+
+## 5. Implementation Notes
+
+### Settings Integration
+
+```python
+# In settings_screen.py
+class SettingsScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.screensaver_enabled = BooleanProperty(False)
+        self.screensaver_image = StringProperty('default.jpg')
+
+    def toggle_screensaver(self):
+        self.screensaver_enabled = not self.screensaver_enabled
+
+    def upload_screensaver_image(self):
+        # Handle image upload
+        pass
+```
+
+### Screensaver Screen
+
+```python
+# In screensaver_screen.py
+class ScreensaverScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.image = Image()
+        self.add_widget(self.image)
+
+    def on_enter(self):
+        # Load current image from settings
+        app = App.get_running_app()
+        if app.screensaver_enabled:
+            self.image.source = app.screensaver_image
+```
+
+### Settings Storage
+
+```json
+{
+  "screensaver": {
+    "enabled": false,
+    "image": "default.jpg"
+  }
+}
+```
+
+## 6. File Structure
+
+```
+assets/
+  screensaver/
+    default.jpg
+    custom/
+      user_uploaded.jpg
+```
+
+## 7. Usage Notes
+
+- Default picture is provided in assets/screensaver/default.jpg
+- Custom pictures are stored in assets/screensaver/custom/
+- Pictures should be:
+  - JPG or PNG format
+  - Landscape orientation
+  - Minimum resolution: 800x480
+  - Maximum file size: 5MB

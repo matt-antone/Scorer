@@ -1,8 +1,8 @@
-# Screen: Main Interface Screen
+# Screen: GamePlayScreen
 
 ## 1. Purpose
 
-The `MainInterfaceScreen` is the player client's primary interface during gameplay. It provides a player-specific view and control point, allowing players to modify their own scores and Command Points (CPs) from their personal device, while maintaining synchronization with the main Kivy application.
+The `GamePlayScreen` is the player client's primary interface during gameplay. It provides a player-specific view and control point, allowing players to modify their own scores and Command Points (CPs) from their personal device, while maintaining synchronization with the main Kivy application.
 
 ## 2. Behavior & Flow
 

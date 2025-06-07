@@ -1,6 +1,6 @@
 # .cursorrules - Project Intelligence for Scorer
 
-You are upbeat. You don't get down when you fail. It makes you try harder. when you start to get frustrated, you're not too proud to try to find solutions online. an youre personality is like jeff lebowski, the dude
+You are upbeat. You don't get down when you fail. It makes you try harder. when you start to get frustrated, you're not too proud to try to find solutions online.
 
 ## ABSOLUTE RULES
 
@@ -19,14 +19,71 @@ You are upbeat. You don't get down when you fail. It makes you try harder. when 
    - After reading, MUST verify understanding before proceeding
    - If unsure about any aspect, MUST ask for clarification
 
-2. **Documentation Updates**
+2. **Component Documentation Review (MANDATORY)**
 
-   - After ANY changes, MUST update relevant Memory Bank files
+   - Before making code changes to a specific component that has dedicated documentation (e.g., a Kivy screen in `screens/`), MUST first read its corresponding documentation file (e.g., in `docs/`).
+   - This is to ensure that any proposed changes are in alignment with the established behavior, flow, and architecture of that component.
+   - **Example**: Before editing `screens/splash_screen.py`, you MUST read `docs/splash_screen.md`.
+   - If documentation for a component is missing, you should consider creating it first, especially for complex components.
+
+3. **Development Workflow (MANDATORY)**
+
+   This is the required, documentation-first workflow for all changes.
+
+   - **Step 1: Pre-Change Analysis & Documentation (MANDATORY)**
+
+     - Before making any code changes, first update all relevant documentation (`docs/*.md`, `memory-bank/*.md`) to reflect the _planned_ changes. The documentation must describe the desired state of the application _after_ the changes are complete.
+     - **Changelog**: If a documentation file is modified, a dated entry MUST be added to a "Changelog" section at the end of that file.
+       - **Format**: `---<br/>**Changelog**<br/>*YYYY-MM-DD*: Description of change.`
+
+   - **Step 2: Implementation (MANDATORY)**
+
+     - Write or modify the code to perfectly match the updated documentation.
+     - Adhere to all established system patterns and development philosophies.
+
+   - **Step 3: Post-Change Verification (MANDATORY)**
+     - **Unit Test**: Run all relevant unit tests to verify the correctness of the code change.
+     - **Documentation Cross-Check**: Perform a final review of the code against the documentation to ensure they are in perfect alignment. Any discrepancy must be resolved before the task is considered complete.
+
+4. **Documentation Updates**
+
+   - After ANY changes, MUST update relevant Memory Bank files AND any relevant component documentation (e.g., in `docs/`).
    - Focus on `activeContext.md` and `progress.md` for immediate updates
    - Update `techContext.md` for technical changes
    - Update `systemPatterns.md` for architectural changes
 
-3. **Command Sequences**
+5. **Layout & Design Changes (MANDATORY)**
+
+   - I am NOT permitted to make changes to application layouts or visual designs. This includes, but is not limited to:
+
+     - Modifying widget positions
+     - Changing widget sizes
+     - Altering colors
+     - Adding/removing visual elements
+     - Changing fonts or font sizes
+     - Modifying padding/margin values
+     - Adjusting layout hierarchies
+     - Changing widget properties that affect visual appearance
+
+   - I AM permitted to:
+
+     - Update text content of labels and buttons
+     - Modify widget functionality (e.g., button callbacks, event handlers)
+     - Change widget states (enabled/disabled)
+     - Update widget IDs and property bindings
+     - Modify widget behavior that doesn't affect visual appearance
+
+   - If a task requires a visual design change, I MUST:
+     1. First, add a TODO section to the corresponding documentation file (e.g., `docs/screens/kivy-screens/deployment_setup_screen.md`) that includes:
+        - Clear description of the required visual changes
+        - Specific widgets that need modification
+        - Exact code changes needed (including `.kv` and Python code)
+        - Expected visual outcome
+        - Any dependencies or related changes needed
+     2. Only after documenting the changes, ask you to perform the layout update
+     3. Reference the TODO section in my request to you
+
+6. **Command Sequences**
 
    - NEVER provide partial command sequences
    - ALWAYS include ALL required steps in order
@@ -45,7 +102,7 @@ You are upbeat. You don't get down when you fail. It makes you try harder. when 
      python script.py
      ```
 
-4. **Bash Script Execution Environment**
+7. **Bash Script Execution Environment**
 
    - MUST explicitly specify where a bash script is intended to run (macOS, Raspberry Pi, or both)
    - MUST include platform detection in scripts that need to run on multiple platforms
@@ -66,7 +123,7 @@ You are upbeat. You don't get down when you fail. It makes you try harder. when 
      fi
      ```
 
-5. **SDL2 Testing Pattern**
+8. **SDL2 Testing Pattern**
 
    - ALWAYS verify SDL2 installation before testing:
      ```bash
@@ -93,7 +150,7 @@ You are upbeat. You don't get down when you fail. It makes you try harder. when 
      groups $USER | grep render
      ```
 
-6. **Installation Scripts**
+9. **Installation Scripts**
    - ALWAYS use `install.sh` for SDL2 builds - it has the correct configuration
    - NEVER use `install_on_pi.sh` for SDL2 builds - it doesn't build SDL2 from source
    - After running `install.sh`, ALWAYS verify SDL2 build:
@@ -306,14 +363,6 @@ You are upbeat. You don't get down when you fail. It makes you try harder. when 
 3.  **Preventing Regressions**: I will actively consider how a fix or feature could introduce new problems. I will trace the potential side effects of my changes to ensure I am not creating new bugs. My goal is to produce complete, working solutions, not partial fixes that lead to more errors.
 4.  **Complete Logical Units**: I MUST complete a full, logical unit of work and vet it for correctness before presenting any files for review. I will not make a file edit and then immediately attempt another edit on the same file in the same turn. This ensures that I operate on a stable file state and deliver a complete, well-thought-out solution in each turn.
 5.  **Race Condition Resolution**: Clock-based solutions (`Clock.schedule_once`, `Clock.schedule_interval`) MUST NOT be used to resolve race conditions, especially during application startup. If a race condition is suspected (e.g., an application hangs on startup on a specific platform), I MUST first research the platform's and framework's (Kivy's) event lifecycle to find a suitable, event-based trigger. All proposed solutions for race conditions must be justified with citations from official documentation or relevant community discussions (e.g., forum posts, GitHub issues).
-
-## Task Completion Workflow
-
-1.  **Work in Discrete Units**: When working from a list of tasks (e.g., from `progress.md`), I will complete only ONE task at a time.
-2.  **Summarize and Await Confirmation**: After completing a single task, I MUST stop and provide a clear summary of the changes I have made. I will then explicitly ask for confirmation to proceed with testing.
-3.  **Test After Confirmation**: Only after receiving a clear "yes" or "go ahead" from the user will I proceed to design and execute tests for the functionality I just built. I will not test my work without explicit approval.
-
-**Reasoning**: This structured workflow ensures that each piece of functionality is built, reviewed, and tested as an independent unit. It prevents me from getting too far ahead without feedback and ensures that any issues are caught and addressed in a focused manner before moving on to the next task.
 
 # Automated Testing Rule
 

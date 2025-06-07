@@ -11,7 +11,7 @@ Scorer will be a Python application with two main components running concurrentl
 
 **Data Flow & State Management:**
 
-- **Central Game State**: The `ScorerApp` (Kivy application main class) maintains the authoritative current game state (Player 1 Score, P1 CPs, Player 2 Score, P2 CPs, Current Round, Timer status, game phase, etc.). This state is held in a Python dictionary (`game_state`).
+- **Central Game State**: The `ScorerApp` (Kivy application main class) maintains the authoritative current game state (Player 1 Score, P1 CPs, Player 2 Score, P2 CPs, Current Round, Timer status, game phase, etc.). This state is held in a Python dictionary (`game_state`). This state now includes more detailed setup properties like `p1_name`, `p2_name`, `p1_deployment_roll`, `p2_deployment_roll`, and `attacker_player_id`.
 - **Data Persistence**: The `ScorerApp` is responsible for saving the current `game_state` to `game_state.json` (in the user's Kivy app data directory) on significant changes (like round advance, score update - to be fully verified for all cases) and on application exit. It also loads from this file on startup.
 - **Startup Flow with `ResumeOrNewScreen`**:
   - On startup, `ScorerApp.load_game_state()` attempts to load `game_state.json`.
@@ -93,11 +93,15 @@ This provides a high-level view. Specific implementation details of the Kivy UI 
 
 - **Centralized Screen Controller**: The web client's UI is divided into distinct "screens". A central controller listens for game state updates from the server and uses the `game_phase` property as the single source of truth to show the appropriate screen. The defined client-facing phases are: `'setup'` (for all pre-game states), `'game_play'`, and `'game_over'`.
 - **State-Driven UI**: Individual screen modules should not manage their own visibility. They should only be responsible for updating their internal content based on the game state they receive. The central controller handles the show/hide logic. This prevents state conflicts where, for example, the "Game Over" screen fails to hide when a new game starts.
-- **Player Client (Future)**: A second, distinct web client will be created for players. It will be a minimal interface focused only on letting a player modify their own score/CP. It will be accessed via a player-specific QR code from the Kivy `NameEntryScreen` and will not contain the full splash/game/game-over flow.
+- **Player Client**: A second, distinct web client is created for players. It allows players to connect via a QR code and provides an interactive path for game setup:
+  - Players can submit their own names.
+  - Players can perform their deployment roll-off.
+  - The winner of the roll-off can choose to be the Attacker or Defender.
+    This makes the Player Client a key part of the setup process, not just a viewer.
 
 ## 6. High-Level Game Workflow
 
-The application follows a defined sequence of states, or `game_phase`s, which dictate the application's current screen and behavior. This workflow is managed by the Kivy application and mirrored by the web client.
+The application follows a defined sequence of states, or `game_phase`s, which dictate the application's current screen and behavior. This workflow is managed by the Kivy application, but key parts of the setup are now driven by the player clients.
 
 ```mermaid
 flowchart TD
@@ -110,11 +114,23 @@ flowchart TD
 
     C -- "No" --> E;
 
-    subgraph "New Game Setup"
+    subgraph "New Game Setup (Client & Host)"
         direction LR
-        E["setup"] --> F["name_entry"];
-        F --> F2["deployment"];
-        F2 --> F3["first_turn"];
+        E[Kivy: NameEntryScreen] --> F{Wait for Player Inputs};
+        subgraph Player Clients
+            direction TB
+            P1[P1: Enters Name] --> P1R[P1: Rolls Die];
+            P2[P2: Enters Name] --> P2R[P2: Rolls Die];
+        end
+        F -- Both players submit names --> F2["deployment"];
+        F -- Kivy user presses 'Continue' --> F2;
+        KivyRolls["Kivy Host can also initiate rolls"] --o P1R & P2R;
+
+        P1R & P2R --> W{Winner chooses Attacker/Defender};
+        W -- "Choice made on Client" --> F2;
+        KivyChoice["Kivy Host can also make choice"] --o W;
+        KivyChoice -- "Choice made on Host" --> F2
+        F2[Deployment: Display Results] --> F3[Kivy: FirstTurnSetupScreen];
     end
 
     F3 --> G["game_play"];
@@ -135,10 +151,17 @@ flowchart TD
 
 - **Startup & Resume Logic**: On launch, the app checks for a saved game. If a meaningful game state is found, it presents a "Resume/New Game" choice. Otherwise, it proceeds directly to the new game setup.
 - **New Game Setup**:
-  - `setup`: Initializes a new game object.
-  - `name_entry`: Players provide their names (Kivy & Web).
-  - `deployment`: Players set up their pieces. The main game UI becomes visible.
-  - `first_turn`: A player is selected to go first.
+  - `setup`: Initializes a new game object. The Kivy host displays the `NameEntryScreen`.
+  - `name_entry`: This phase is now highly interactive.
+    - Players can enter their names on their web clients.
+    - The Kivy host can also be used to enter names.
+    - The phase advances automatically when both players have submitted their names, OR when the Kivy host user presses "Continue".
+  - `deployment`: After names are entered, the system moves to the deployment roll-off.
+    - Players can roll from their web client OR from the Kivy host screen.
+    - Once a winner is determined, the "Attacker"/"Defender" choice is presented on both the Kivy host AND the winning player's client.
+    - The first interface to register the choice updates the state for all clients.
+    - The Kivy `DeploymentSetupScreen` acts as both a controller and a real-time display of this entire process.
+  - `first_turn`: After the roles are set, the Kivy host displays the `FirstTurnSetupScreen` where the Attacker chooses who goes first.
 - **Gameplay Loop**:
   - `game_play`: The core state where players take turns, score points, and use the timer. The app cycles through rounds 1-5.
 - **Game End**:
@@ -509,3 +532,51 @@ sequenceDiagram
 ```
 
 The output of the Kivy state management system is the perfect input for the client-side system, creating a clean and predictable flow from end to end.
+
+## Kivy Development Patterns
+
+1.  **`ObjectProperty` to KV `id` Mapping:**
+    // ... existing code ...
+
+2.  **Robust Widget Initialization (NO `Clock.schedule_once` for init):**
+    // ... existing code ...
+
+3.  **Application Structure: `App` Class vs. `Screen` Subclasses:**
+    // ... existing code ...
+
+4.  **Reliable Runtime Image Loading:**
+    // ... existing code ...
+
+5.  **Layout & Design Changes (MANDATORY):**
+
+    - I am NOT permitted to make changes to application layouts or visual designs. This includes, but is not limited to:
+
+      - Modifying widget positions
+      - Changing widget sizes
+      - Altering colors
+      - Adding/removing visual elements
+      - Changing fonts or font sizes
+      - Modifying padding/margin values
+      - Adjusting layout hierarchies
+      - Changing widget properties that affect visual appearance
+
+    - I AM permitted to:
+
+      - Update text content of labels and buttons
+      - Modify widget functionality (e.g., button callbacks, event handlers)
+      - Change widget states (enabled/disabled)
+      - Update widget IDs and property bindings
+      - Modify widget behavior that doesn't affect visual appearance
+
+    - If a task requires a visual design change, I MUST:
+      1. First, add a TODO section to the corresponding documentation file (e.g., `docs/screens/kivy-screens/deployment_setup_screen.md`) that includes:
+         - Clear description of the required visual changes
+         - Specific widgets that need modification
+         - Exact code changes needed (including `.kv` and Python code)
+         - Expected visual outcome
+         - Any dependencies or related changes needed
+      2. Only after documenting the changes, ask you to perform the layout update
+      3. Reference the TODO section in my request to you
+
+6.  **Remote Machine Command Execution:**
+    // ... existing code ...

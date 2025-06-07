@@ -6,6 +6,33 @@ The primary focus is ensuring the application is robust and user-friendly on the
 
 The most recent change was to simplify the user flow on the `NameEntryScreen` by removing the validation logic that required users to enter text before proceeding. The "Continue" button is now always enabled, allowing for faster setup when default player names are acceptable.
 
+The current focus is on implementing the deployment roll-off phase, which includes:
+
+1. **Dual Control Environment**
+
+   - Rolls can be initiated from either Kivy host or player clients
+   - Role choice (Attacker/Defender) can be made from either Kivy host or winning player's client
+   - First press wins model for role choice
+   - Real-time state synchronization across all interfaces
+
+2. **Name Display**
+
+   - Player names are displayed from the previous name entry phase
+   - Names are not updated in real-time during the deployment phase
+   - All clients (Kivy host, player clients, observer client) show names from name entry phase
+
+3. **Real-time Updates**
+
+   - Roll results update in real-time across all clients
+   - Role choices update in real-time across all clients
+   - Button states (enabled/disabled) sync across all clients
+   - Status messages update in real-time
+
+4. **Platform Considerations**
+   - Optimizations for Raspberry Pi
+   - Touch-friendly UI elements
+   - Clear visual feedback for all actions
+
 ## Recent Changes
 
 - **Automated Installation Script (`install.sh`):** Overhauled the installation process into a single, robust script. It now handles system dependencies, Python packages, and programmatically creates the entire database structure, including source files and initializing the SQLite database with Alembic.
@@ -28,6 +55,10 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 - **Refactoring and Bug Fix**: Resolved a `KeyError` crash on the `FirstTurnSetupScreen` by removing a duplicate class definition from `main.py` and consolidating the correct logic into `screens/first_turn_setup_screen.py`. This fix also involved correcting the game state handling to ensure the `first_turn_player_id` was set and read properly before starting the game.
 - **macOS Dependency Stability**: After a lengthy investigation, resolved a major dependency conflict on macOS where bundled versions of SDL2 from `kivy` and `ffpyplayer` caused runtime instability and visual artifacts. The fix involves using Homebrew to install `ffmpeg@6` and building `ffpyplayer` from source against it, which stabilizes the development environment. This procedure is now documented in `techContext.md`.
 - **UI Button Fix**: Resolved the bug where button text would disappear upon being disabled. This was fixed by setting the `disabled_color` property in the button's style definition.
+- **Timer System Documentation**: Created comprehensive documentation for a new, robust, timestamp-based timer system.
+  - `docs/game_timer.md`: Defines the main game timer, which simplifies state management by using a start timestamp and accumulated duration, eliminating the need for constant "tick" updates.
+  - `docs/player_timer.md`: Defines a "chess-clock" style timer to track individual player turn times, also using a timestamp-based model for synchronization. All related screen documents were updated to reference these new, authoritative timer guides.
+- **Client-Driven Setup Flow**: Overhauled the documentation to reflect a new, interactive setup process. Player clients can now submit their own names and perform the deployment roll-off, with the Kivy host updating in real-time and providing a manual override. This was a major documentation update involving the creation of new screen docs and changes to `systemPatterns.md`.
 
 ## Active Decisions
 
@@ -37,15 +68,16 @@ The most recent change was to simplify the user flow on the `NameEntryScreen` by
 
 ## Next Steps
 
-1.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
-2.  **Feature Implementation**: Begin work on the "New Game" and "Exit" functionality from the `GameOverScreen`.
-3.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
+1.  **Implement Client-Driven Setup**: Begin implementing the newly documented interactive setup flow.
+2.  **Implement Timer Systems**: Implement the newly documented main game timer and player timer systems.
+3.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
+4.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
 
 ## Next Immediate Steps
 
-1.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
-2.  **Documentation**: Update the `.cursorrules` file to permanently capture the robust Kivy widget initialization pattern that was discovered. This is a critical piece of project intelligence to prevent future bugs.
-3.  **Feature Implementation**: Begin work on the "New Game" and "Exit" functionality from the `GameOverScreen`.
+1.  **Implement Client-Driven Setup**: Begin implementation of the new interactive setup flow as detailed in the updated documentation.
+2.  **Implement Timer Systems**: Begin implementing the newly documented main game timer and player timer systems based on `docs/game_timer.md` and `docs/player_timer.md`.
+3.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
 
 ## Open Questions
 

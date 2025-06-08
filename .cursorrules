@@ -405,3 +405,125 @@ Performance, especially on lower-powered devices like the Raspberry Pi, is criti
 - **Use `on_` Events and Properties**: Leverage Kivy's property and event system. Instead of manually checking if a value has changed in an update loop, bind callbacks to property changes (e.g., `on_press` for a `Button`, or a custom `on_game_state` event). This is the foundation of Kivy's event-driven nature.
 - **Draw on the Canvas for Performance**: For highly repetitive or custom graphics, drawing directly onto a widget's `canvas` with instructions like `Rectangle` or `Line` is much faster than creating and managing many small, individual widgets.
 - **Use Explicit Imports**: Avoid `import kivy`. Instead, use `from kivy.uix.button import Button`. This slightly improves startup time and makes dependency tracking clearer.
+
+# Memory Bank Documentation Requirements
+
+## File Structure Requirements
+
+1. **Version History (MANDATORY)**
+
+   - Each file MUST have a version history section at the top
+   - Format:
+     ```markdown
+     # Version History
+
+     - v1.0.0 (YYYY-MM-DD): Initial version
+     - v1.0.1 (YYYY-MM-DD): Description of changes
+     ```
+   - Version numbers follow semantic versioning (MAJOR.MINOR.PATCH)
+   - Each version MUST include date and description
+
+2. **Last Updated (MANDATORY)**
+
+   - Each file MUST have a last updated timestamp
+   - Format:
+     ```markdown
+     Last Updated: YYYY-MM-DD HH:MM UTC
+     ```
+   - Place after version history
+   - Update on ANY content change
+
+3. **Change Log (MANDATORY)**
+
+   - Each file MUST have a change log section at the bottom
+   - Format:
+     ```markdown
+     # Change Log
+
+     ## YYYY-MM-DD
+
+     - Change 1
+     - Change 2
+     ```
+   - Include ALL changes, even minor ones
+   - Group by date
+   - Most recent changes at top
+
+4. **Cross-Referencing (MANDATORY)**
+   - Each file MUST reference related files
+   - Format:
+     ```markdown
+     # Related Files
+
+     - [filename.md](path/to/file.md): Brief description of relationship
+     ```
+   - Place after version history
+   - Update when relationships change
+
+## File Update Process
+
+1. **Before Making Changes**
+
+   - Read ALL related files
+   - Check cross-references
+   - Review version history
+   - Plan necessary updates
+
+2. **During Changes**
+
+   - Update version number if needed
+   - Update last updated timestamp
+   - Add to change log
+   - Update cross-references
+
+3. **After Changes**
+   - Verify all requirements met
+   - Check cross-references valid
+   - Update related files if needed
+   - Document any new relationships
+
+## Example File Structure
+
+```markdown
+# File Title
+
+# Version History
+
+- v1.0.0 (2024-03-20): Initial version
+- v1.0.1 (2024-03-21): Added cross-referencing
+
+Last Updated: 2024-03-21 14:30 UTC
+
+# Related Files
+
+- [projectbrief.md](../projectbrief.md): Core requirements
+- [techContext.md](../techContext.md): Technical details
+
+# Content
+
+[Main content here]
+
+# Change Log
+
+## 2024-03-21
+
+- Added cross-referencing section
+- Updated version history
+
+## 2024-03-20
+
+- Initial file creation
+```
+
+## Validation Checklist
+
+Before considering a file complete, verify:
+
+1. Version history present and up-to-date
+2. Last updated timestamp current
+3. Change log includes all changes
+4. Cross-references valid and complete
+5. All related files updated if needed
+6. No broken links or references
+7. Format consistent with requirements
+8. Content matches version history

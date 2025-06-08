@@ -2,39 +2,17 @@
 
 ## Current Focus
 
-The primary focus is ensuring the application is robust and user-friendly on the target Raspberry Pi platform. The immediate past work involved resolving a series of complex bugs related to the Kivy application lifecycle, specifically on the `NameEntryScreen`. A significant amount of effort went into creating a reliable, event-driven initialization pattern to prevent race conditions.
-
-The most recent change was to simplify the user flow on the `NameEntryScreen` by removing the validation logic that required users to enter text before proceeding. The "Continue" button is now always enabled, allowing for faster setup when default player names are acceptable.
-
-The current focus is on implementing the deployment roll-off phase, which includes:
-
-1. **Dual Control Environment**
-
-   - Rolls can be initiated from either Kivy host or player clients
-   - Role choice (Attacker/Defender) can be made from either Kivy host or winning player's client
-   - First press wins model for role choice
-   - Real-time state synchronization across all interfaces
-
-2. **Name Display**
-
-   - Player names are displayed from the previous name entry phase
-   - Names are not updated in real-time during the deployment phase
-   - All clients (Kivy host, player clients, observer client) show names from name entry phase
-
-3. **Real-time Updates**
-
-   - Roll results update in real-time across all clients
-   - Role choices update in real-time across all clients
-   - Button states (enabled/disabled) sync across all clients
-   - Status messages update in real-time
-
-4. **Platform Considerations**
-   - Optimizations for Raspberry Pi
-   - Touch-friendly UI elements
-   - Clear visual feedback for all actions
+The primary focus is on refining the user experience of the core gameplay screen. The most recent work has centered on the `NumberPadPopup` used for score entry. The goal is to make it more intuitive and compact.
 
 ## Recent Changes
 
+- **Number Pad UX Improvement**: Overhauled the `NumberPadPopup` widget.
+  - The current score is now displayed as a placeholder (`hint_text`) in the input field, rather than being an editable value. This clarifies that the user should enter a new, updated score.
+  - If a user closes the popup without entering a value, the score remains unchanged.
+  - The popup's title is now dynamic, clearly stating which score is being updated (e.g., "Enter the updated Primary score").
+  - The redundant helper text label within the popup has been removed, and this information is now conveyed in the title.
+  - The popup has been resized to be narrower and more compact, fitting the width of the number pad itself.
+- **Kivy Environment Fix (macOS)**: Re-resolved the `SDL2` dependency issue on macOS. A crash indicated that the `libSDL2` library, which Kivy's window provider depends on, was missing. This occurs because the `install.sh` script intentionally uninstalls it to prevent conflicts with `ffpyplayer`. Re-running `./install.sh` successfully restored the library and fixed the application launch. This confirms the procedure for fixing environment-related launch failures on macOS.
 - **Automated Installation Script (`install.sh`):** Overhauled the installation process into a single, robust script. It now handles system dependencies, Python packages, and programmatically creates the entire database structure, including source files and initializing the SQLite database with Alembic.
 - **Technology Stack Simplification:**
   - Replaced the PostgreSQL database dependency with **SQLite**. This removes the need for an external database server and simplifies deployment significantly.
@@ -68,16 +46,9 @@ The current focus is on implementing the deployment roll-off phase, which includ
 
 ## Next Steps
 
-1.  **Implement Client-Driven Setup**: Begin implementing the newly documented interactive setup flow.
-2.  **Implement Timer Systems**: Implement the newly documented main game timer and player timer systems.
-3.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
-4.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
-
-## Next Immediate Steps
-
-1.  **Implement Client-Driven Setup**: Begin implementation of the new interactive setup flow as detailed in the updated documentation.
-2.  **Implement Timer Systems**: Begin implementing the newly documented main game timer and player timer systems based on `docs/game_timer.md` and `docs/player_timer.md`.
-3.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions, are working as expected after the recent fixes.
+1.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions and the new popup behavior, are working as expected.
+2.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
+3.  **Review Documentation**: Do a final pass on all memory-bank documents to ensure they are consistent and up-to-date with the final state of the application.
 
 ## Open Questions
 

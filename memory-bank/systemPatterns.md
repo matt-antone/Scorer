@@ -11,7 +11,7 @@ Scorer will be a Python application with two main components running concurrentl
 
 **Data Flow & State Management:**
 
-- **Central Game State**: The `ScorerApp` (Kivy application main class) maintains the authoritative current game state (Player 1 Score, P1 CPs, Player 2 Score, P2 CPs, Current Round, Timer status, game phase, etc.). This state is held in a Python dictionary (`game_state`). This state now includes more detailed setup properties like `p1_name`, `p2_name`, `p1_deployment_roll`, `p2_deployment_roll`, and `attacker_player_id`.
+- **Central Game State**: The `ScorerApp` (Kivy application main class) maintains the authoritative current game state (Player 1 Score, P1 CPs, Player 2 Score, P2 CPs, Current Round, Timer status, game phase, etc.). This state is held in a Python dictionary (`game_state`). This state now includes more detailed setup properties like `p1_name`, `p2_name`, `p1_deployment_roll`, `p2_deployment_roll`, and `attacker_player_id`. The scoring has been further broken down to track Primary and Secondary objective scores independently, with the total score being a sum of these two.
 - **Data Persistence**: The `ScorerApp` is responsible for saving the current `game_state` to `game_state.json` (in the user's Kivy app data directory) on significant changes (like round advance, score update - to be fully verified for all cases) and on application exit. It also loads from this file on startup.
 - **Startup Flow with `ResumeOrNewScreen`**:
   - On startup, `ScorerApp.load_game_state()` attempts to load `game_state.json`.
@@ -130,7 +130,7 @@ flowchart TD
         W -- "Choice made on Client" --> F2;
         KivyChoice["Kivy Host can also make choice"] --o W;
         KivyChoice -- "Choice made on Host" --> F2
-        F2[Deployment: Display Results] --> F3[Kivy: FirstTurnSetupScreen];
+        F2[Deployment: Display Results] --> F3[Kivy: InitiativeScreen];
     end
 
     F3 --> G["game_play"];
@@ -161,7 +161,7 @@ flowchart TD
     - Once a winner is determined, the "Attacker"/"Defender" choice is presented on both the Kivy host AND the winning player's client.
     - The first interface to register the choice updates the state for all clients.
     - The Kivy `DeploymentSetupScreen` acts as both a controller and a real-time display of this entire process.
-  - `first_turn`: After the roles are set, the Kivy host displays the `FirstTurnSetupScreen` where the Attacker chooses who goes first.
+  - `initiative`: After roles are set and players have deployed their armies (off-app), the Kivy host displays the `InitiativeScreen`. Both players roll a die. The winner goes first. In case of a tie, the Attacker chooses who goes first.
 - **Gameplay Loop**:
   - `game_play`: The core state where players take turns, score points, and use the timer. The app cycles through rounds 1-5.
 - **Game End**:

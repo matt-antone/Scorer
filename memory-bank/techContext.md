@@ -81,6 +81,8 @@ The following procedure creates a stable development environment on macOS:
 
 4.  **Verify Installation**: After these steps, Kivy and ffpyplayer should coexist peacefully, and the runtime warnings about duplicate SDL2 symbols should disappear.
 
+**Important Note on Environment Stability**: This solution is precise and can be brittle. The `install.sh` script, which automates part of this process, intentionally uninstalls the `sdl2` Homebrew package after `ffpyplayer` is built. This is to prevent the Kivy app from trying to use a version of SDL2 that might conflict with its own bundled one at runtime. A side effect is that if the development environment is changed (e.g., by running `brew upgrade`), the Kivy application may fail to launch with a "Window provider" error. **If this happens, simply re-running `./install.sh` will fix the environment by reinstalling the necessary libraries.**
+
 ## 4. Installation & Setup
 
 - The project is designed to be set up automatically using a single script.
@@ -419,3 +421,16 @@ SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
      ```
 
 ### Environment Setup
+
+## 7. Automated Testing
+
+- **Framework**: `pytest`
+- **Non-Graphical Tests**: Tests for core application logic (e.g., `main.py` functions) are located in `tests/non_graphical/`. These tests mock out the Kivy graphical components and run headlessly. They are stable and reliable.
+- **Graphical Tests & Known Issues**:
+  - **Framework**: Kivy's `GraphicUnitTest` is the intended framework for testing UI components.
+  - **Problem**: There is a severe, unresolved issue when running graphical tests on the macOS development environment. The tests consistently fail with a `kivy.uix.screenmanager.ScreenManagerException`, indicating that the screen widgets defined in the `scorer.kv` file are not being found by the `ScreenManager`.
+  - **Investigation**: Extensive debugging has shown this is likely a timing or initialization issue within the `GraphicUnitTest` harness. The `kv` rules are not fully processed before the test attempts to access the widgets.
+  - **Attempted Solutions (Failed)**:
+    1.  **`advance_frames(1)`**: The documented solution for this type of timing issue is to call `self.advance_frames(1)` to allow Kivy to process a frame. This had no effect.
+    2.  **Manual App Lifecycle**: Creating a test that runs the app in a separate thread and interacts with it via `App.get_running_app()` failed because Kivy's graphics provider on macOS (`SDL2`) cannot be initialized on a background thread.
+  - **Conclusion**: Automated graphical testing is **currently blocked** on the macOS development platform. The tests in `tests/graphical/` are structured correctly in principle but will not pass until the underlying framework issue is resolved. The non-graphical tests, however, provide good coverage for the application's core logic.

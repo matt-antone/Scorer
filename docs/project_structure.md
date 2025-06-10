@@ -1,41 +1,47 @@
 # Project Structure
 
 ```
-scorer/
-├── src/
-│   ├── server/
-│   │   ├── state_server.py
-│   │   ├── network_manager.py
-│   │   ├── update_service.py
-│   │   └── asset_manager.py
-│   ├── client/
-│   │   ├── components/
-│   │   ├── screens/
-│   │   ├── services/
-│   │   └── utils/
-│   └── shared/
-│       ├── models/
-│       ├── constants/
-│       └── utils/
-├── tests/
-│   ├── server/
-│   ├── client/
-│   └── integration/
-├── scripts/
-│   ├── install.sh
-│   ├── setup_pi.sh
-│   └── deploy.sh
-├── docs/
-│   ├── architecture/
-│   ├── api/
-│   └── guides/
-├── assets/
-│   ├── images/
-│   └── fonts/
-└── config/
-    ├── development.yaml
-    └── production.yaml
+Scorer/
+├── assets/            # Shared assets for all components
+│   ├── fonts/        # Font files
+│   ├── billboards/   # Screensaver images
+│   ├── qr_codes/     # Generated QR codes
+│   └── icons/        # Application icons
+├── pi_app/           # Raspberry Pi application
+│   ├── screens/      # Kivy screen implementations
+│   ├── widgets/      # Kivy widget implementations
+│   ├── main.py       # Main application entry point
+│   └── scorer.kv     # Main Kivy layout file
+├── state_server/     # Flask server for state management
+│   ├── db/          # Database models and migrations
+│   ├── static/      # Static files for web server
+│   └── templates/   # HTML templates
+├── phone_clients/    # Web client for mobile devices
+│   ├── src/         # TypeScript source files
+│   └── public/      # Static web assets
+└── memory-bank/     # Project documentation
+    ├── projectbrief.md
+    ├── productContext.md
+    ├── systemPatterns.md
+    ├── techContext.md
+    ├── activeContext.md
+    ├── progress.md
+    └── im-a-dummy.md
 ```
+
+## Directory Descriptions
+
+### assets/
+
+The `assets/` directory contains all shared assets used across components:
+
+- **fonts/**: Contains the Inter font family used throughout the application
+- **billboards/**: Contains images used in the screensaver
+- **qr_codes/**: Directory where generated QR codes are stored
+- **icons/**: Application icons in various sizes
+- **background.png**: Main background image for the Kivy application
+- **splash.png**: Splash screen image
+- **transparent.png**: Transparent image used for button backgrounds
 
 ## Directory Purposes
 
@@ -77,16 +83,6 @@ scorer/
 - **architecture/**: System design docs
 - **api/**: API documentation
 - **guides/**: User and developer guides
-
-### assets/
-
-- **images/**: Application images
-- **fonts/**: Custom fonts
-
-### config/
-
-- `development.yaml`: Development settings
-- `production.yaml`: Production settings
 
 ## Key Files
 

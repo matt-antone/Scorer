@@ -2,6 +2,21 @@
 
 This document tracks the current working state of the Scorer application, what's left to build, and any known issues.
 
+## Completed
+
+- **Project Structure**:
+
+  - Reorganized into three main components: pi_app, state_server, phone_clients
+  - Created memory bank structure for each component
+  - Moved assets to root level for shared access
+  - Updated all file references to reflect new structure
+
+- **Asset Management**:
+  - Centralized assets in root directory
+  - Updated all component references to use relative paths
+  - Verified asset accessibility across components
+  - Updated documentation to reflect new structure
+
 ## What Works
 
 - **Installation**: A fully automated `install.sh` script successfully sets up the entire environment on a fresh Raspberry Pi OS, including correct Python dependencies, FFmpeg, and a custom-built SDL2 with KMS/DRM support. The script is idempotent and handles both initial setup and updates.
@@ -26,12 +41,15 @@ This document tracks the current working state of the Scorer application, what's
   - **Game Timer**: Completed documentation for a timestamp-based main game timer (`docs/game_timer.md`).
   - **Player Timers**: Completed documentation for a timestamp-based "chess-clock" style player timer system (`docs/player_timer.md`).
   - **Client-Driven Setup**: Completed a major documentation overhaul for a new interactive setup flow where players can enter names and roll for deployment from their own devices.
+- **Resume/New Game flow**: Users are prompted to resume or start a new game if a saved game is found at startup. All state resets and transitions are handled according to documentation.
 
 ## What's Left to Build
 
 - **Client-Driven Setup and Timers**: While the core Kivy application is feature-complete, the advanced features for client-driven setup and the integrated game timers are documented but not yet implemented.
 - Finalize UI elements for touch interaction on the Raspberry Pi.
 - Conduct a full regression test of all game logic paths.
+- **Further UI/UX polish for the ResumeOrNewScreen**.
+- **Additional testing for edge cases (e.g., corrupted save files, mid-game interruptions)**.
 
 ## Current Status
 
@@ -41,6 +59,7 @@ This document tracks the current working state of the Scorer application, what's
 ## Known Issues
 
 - **macOS Environment Sensitivity**: The Kivy windowing system on macOS can be fragile. Because the `install.sh` script manages `SDL2` by installing and then uninstalling it, any other system update or change (e.g., via Homebrew) can break the environment. If the app fails to launch with an `SDL2` error, the solution is to re-run `./install.sh`.
+- **None related to resume/new game flow as of this update**.
 
 ## Blockers
 

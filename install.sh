@@ -55,4 +55,20 @@ if [ ! -f "db/scorer.db" ]; then
     alembic -c db/alembic.ini upgrade head
 fi
 
+# Offer display rotation for Raspberry Pi
+if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
+    echo ""
+    read -p "Do you want to rotate the display 180 degrees for upside-down mounting? (y/n): " rotate
+    if [ "$rotate" = "y" ] || [ "$rotate" = "Y" ]; then
+        # Remove any previous rotation lines to avoid duplicates
+        sudo sed -i '/^display_lcd_rotate=/d' /boot/config.txt
+        sudo sed -i '/^display_hdmi_rotate=/d' /boot/config.txt
+        # Add the new rotation line (for most Pi screens)
+        echo "display_lcd_rotate=2" | sudo tee -a /boot/config.txt
+        echo "Display rotation set to 180 degrees. Please reboot for changes to take effect."
+    else
+        echo "Display rotation unchanged."
+    fi
+fi
+
 echo ">>> Installation complete." 

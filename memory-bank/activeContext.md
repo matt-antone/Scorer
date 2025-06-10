@@ -37,18 +37,85 @@ The primary focus is on refining the user experience of the core gameplay screen
   - `docs/game_timer.md`: Defines the main game timer, which simplifies state management by using a start timestamp and accumulated duration, eliminating the need for constant "tick" updates.
   - `docs/player_timer.md`: Defines a "chess-clock" style timer to track individual player turn times, also using a timestamp-based model for synchronization. All related screen documents were updated to reference these new, authoritative timer guides.
 - **Client-Driven Setup Flow**: Overhauled the documentation to reflect a new, interactive setup process. Player clients can now submit their own names and perform the deployment roll-off, with the Kivy host updating in real-time and providing a manual override. This was a major documentation update involving the creation of new screen docs and changes to `systemPatterns.md`.
+- **ResumeOrNewScreen**: Implemented `ResumeOrNewScreen` (Python and KV) to present users with a choice to resume a previous game or start a new one if a saved game is detected.
+- **Startup Flow**: Updated `main.py` to add `ResumeOrNewScreen` to the ScreenManager and to check for in-progress games after the splash screen.
+- **Splash Screen Logic**: The splash screen's START button now calls a method that checks for a valid game and routes to either the resume/new screen or the name entry screen.
+- **Game Flow**: The new game flow now properly resets all scores and state by calling `initialize_game_state()`.
+- **Memory Bank Organization**: Implemented comprehensive cross-referencing system between all memory banks:
+
+  - Created `memory_bank_rules.md` establishing mandatory reading requirements
+  - Added cross-references section to all component memory banks
+  - Established clear documentation hierarchy
+  - Defined update requirements and verification process
+
+- **Component Memory Banks**: Updated all component-specific memory banks with:
+  - Cross-references to core memory bank files
+  - Links to related component memory banks
+  - References to implementation files
+  - Clear documentation structure
+- **Asset Directory Reorganization**: Moved the assets directory to the root level for shared access:
+
+  - Moved `pi_app/assets/` to `/assets/`
+  - Updated all asset references in Kivy files to use relative paths
+  - Updated documentation to reflect new structure
+  - Ensured all components can access shared assets
+
+- **File Reference Updates**:
+  - Updated paths in all Kivy files to use `../assets/`
+  - Updated documentation to reflect new asset locations
+  - Verified all asset references are working correctly
+  - Ensured cross-component asset sharing is possible
 
 ## Active Decisions
 
-- **Automated First-Time Setup:** The project philosophy is that a user should be able to clone the repository and run a single `install.sh` script to get a fully working application, including the database.
-- **Self-Contained Dependencies:** The application aims to be as self-contained as possible, with SQLite being a key part of that strategy.
-- **Reliable Image Loading**: All runtime-generated images must be loaded using the pattern documented in `.cursorrules` to prevent race conditions.
+- **Documentation Requirements**: All memory bank files must now include:
+
+  - Cross-references section
+  - Implementation references
+  - Clear documentation hierarchy
+  - Update requirements
+
+- **Reading Requirements**: Before any task execution:
+  - ALL memory bank files must be read
+  - ALL relevant documentation must be reviewed
+  - Explicit confirmation of understanding is required
+  - NO EXCEPTIONS to these requirements
 
 ## Next Steps
 
-1.  **Final Pi Testing**: Conduct thorough testing on the Raspberry Pi to confirm that all UI elements, especially touch interactions and the new popup behavior, are working as expected.
-2.  **Code Cleanup**: Review code for any commented-out blocks or debugging statements that can be removed.
-3.  **Review Documentation**: Do a final pass on all memory-bank documents to ensure they are consistent and up-to-date with the final state of the application.
+1. **Documentation Verification**:
+
+   - Review all cross-references for accuracy
+   - Ensure all implementation files are properly referenced
+   - Verify documentation hierarchy is maintained
+   - Check for any missing references
+
+2. **Component Updates**:
+
+   - Update component-specific documentation as needed
+   - Ensure all components follow the new reference structure
+   - Maintain consistency across all memory banks
+   - Document any discrepancies found
+
+3. **Process Implementation**:
+   - Establish verification process for documentation updates
+   - Create templates for new memory bank files
+   - Define update procedures for existing files
+   - Document any process improvements needed
+
+## Current Challenges
+
+- Ensuring all team members follow the new memory bank rules
+- Maintaining consistency across all documentation
+- Keeping cross-references up to date
+- Managing documentation updates efficiently
+
+## Environment Notes
+
+- All memory bank files are now cross-referenced
+- Documentation hierarchy is established
+- Update requirements are defined
+- Verification process is in place
 
 ## Open Questions
 

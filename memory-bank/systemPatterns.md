@@ -83,7 +83,7 @@ graph TD
 ## 4. Global Visual Theme
 
 - **Core Aesthetic**: The application adopts a consistent "Red vs. Blue" two-column visual theme across all screens, with the exception of the `SplashScreen`.
-- **Background**: Achieved using `assets/background.png` on `ScorerRootWidget` and `BoxLayout`s with appropriate background colors for other screens like `ResumeOrNewScreen` and setup screens.
+- **Background**: Achieved using `../assets/background.png` on `ScorerRootWidget` and `BoxLayout`s with appropriate background colors for other screens like `ResumeOrNewScreen` and setup screens.
 - **Content Organization**: Player 1 information is generally on the left (red side), Player 2 on the right (blue side).
 - **Font**: "InterBlack" is registered via `LabelBase.register` and used for key headers and labels, as specified in `scorer.kv` (e.g., via `<InterBlack@Label>`).
 
@@ -580,3 +580,10 @@ The output of the Kivy state management system is the perfect input for the clie
 
 6.  **Remote Machine Command Execution:**
     // ... existing code ...
+
+## Startup Flow Pattern (May 2024)
+
+- After the splash screen, the app checks for a valid, in-progress game state.
+- If a valid game is found, the ResumeOrNewScreen is shown, allowing the user to resume or start a new game.
+- If no valid game is found, the app proceeds to the NameEntryScreen for a fresh start.
+- This ensures the user always has control over whether to continue or reset, and closes the gap between documentation and implementation.

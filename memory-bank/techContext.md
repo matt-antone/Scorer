@@ -434,3 +434,7 @@ SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
     1.  **`advance_frames(1)`**: The documented solution for this type of timing issue is to call `self.advance_frames(1)` to allow Kivy to process a frame. This had no effect.
     2.  **Manual App Lifecycle**: Creating a test that runs the app in a separate thread and interacts with it via `App.get_running_app()` failed because Kivy's graphics provider on macOS (`SDL2`) cannot be initialized on a background thread.
   - **Conclusion**: Automated graphical testing is **currently blocked** on the macOS development platform. The tests in `tests/graphical/` are structured correctly in principle but will not pass until the underlying framework issue is resolved. The non-graphical tests, however, provide good coverage for the application's core logic.
+
+# Tech Context
+
+- The install script now prompts the user to optionally rotate the display 180 degrees for upside-down or kiosk mounting on Raspberry Pi. If selected, it updates /boot/config.txt with display_lcd_rotate=2, effective after reboot.

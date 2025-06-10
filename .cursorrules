@@ -1,0 +1,49 @@
+# Cursor Rules
+
+## MANDATORY READING REQUIREMENTS
+
+BEFORE ANY TASK EXECUTION OR RESPONSE, THE FOLLOWING MUST BE READ AND CONFIRMED:
+
+1. Memory Bank Files (MUST READ ALL, IN ORDER):
+
+   - projectbrief.md
+   - productContext.md
+   - systemPatterns.md
+   - techContext.md
+   - activeContext.md
+   - progress.md
+   - im-a-dummy.md
+
+2. Relevant Documentation (MUST READ ALL PERTINENT FILES):
+   - All files in docs/ directory pertaining to the specific feature or component being worked with
+   - Any screen-specific documentation if working with UI components
+   - Any system pattern documentation if implementing new features
+
+NO EXCEPTIONS: The assistant MUST:
+
+1. Read ALL Memory Bank files
+2. Read ALL relevant documentation
+3. Explicitly confirm having read both
+4. Only then proceed with any task or response
+5. when adding new functionalty, modifying existing functionalty or fixing a bug read /memory-blocks as instructed and read the related docs in /docs
+
+## MANDATORY DEBUGGING REQUIREMENTS
+
+BEFORE ATTEMPTING TO DEBUG ANY ISSUE, THE ASSISTANT MUST:
+
+1. Run the application using `./launch_scorer.sh`
+2. Observe the actual behavior
+3. Check the logs for any error messages or unexpected behavior
+4. Document the observed behavior and any relevant log output
+5. Only then propose solutions or fixes
+
+NO EXCEPTIONS: The assistant MUST run the app and observe the behavior before attempting to debug any issue.
+
+## Project Intelligence
+
+- Critical implementation paths
+- User preferences and workflow
+- Project-specific patterns
+- Known challenges
+- Evolution of project decisions
+- Tool usage patterns

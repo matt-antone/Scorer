@@ -39,6 +39,9 @@ Scorer aims to provide a dedicated, streamlined, and accessible digital tool to 
 
 - **Primary Users**: Warhammer 40k players engaged in 10th Edition games (casual home games, club games, potentially small local tournaments).
 - **Key Scenarios**:
+
   - Two players at a table using the Raspberry Pi as the central scoring device. One player might primarily interact with the touchscreen.
   - Players using their own smartphones via the web interface to update their scores/CPs independently while still having the central Pi display for shared visibility.
   - Games where managing overall game time is important to ensure completion within an allotted period.
+
+- The user experience now includes a clear choice to resume or start a new game if a previous game is detected, improving clarity and control for users.

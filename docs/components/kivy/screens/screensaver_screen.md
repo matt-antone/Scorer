@@ -46,7 +46,7 @@ The Screensaver Screen provides a simple display mode that shows either the defa
 ## Display
 
 - The screen displays a single, static image.
-- The image source is determined by the settings: it's either the default picture (`assets/screensaver/default.jpg`) or a custom picture uploaded by the user.
+- The image source is determined by the settings: it's either the default picture (`assets/billboards/default.jpg`) or a custom picture uploaded by the user.
 - The picture is scaled to fit the screen while maintaining its aspect ratio and is centered.
 - A small "Touch anywhere to exit" label is displayed at the bottom.
 
@@ -58,7 +58,7 @@ The Screensaver Screen provides a simple display mode that shows either the defa
 
 - **File Location**: `screens/screensaver_screen.py`
 - **Settings Integration**: The screen's behavior is entirely dependent on settings managed in the `SettingsScreen` and stored persistently.
-- **Picture Handling**: Loads images from the `assets/screensaver/` directory. Custom pictures are stored in a `custom/` subdirectory.
+- **Picture Handling**: Loads images from the `assets/billboards/` directory. Custom pictures are stored in a `custom/` subdirectory.
 - **Activity Timeout**: The timeout logic resides in the main `App` class, not in the individual screens.
 
 # Changelog

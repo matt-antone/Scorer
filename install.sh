@@ -1,59 +1,56 @@
 #!/bin/bash
 set -e
 
+# Refuse to run as root
+if [ "$EUID" -eq 0 ]; then
+  echo "ERROR: Do not run this script as root or with sudo. Homebrew and Python dependencies must be installed as your user."
+  exit 1
+fi
+
 echo ">>> Starting Scorer installation..."
 
-# Create a Python virtual environment
-if [ ! -d ".venv" ]; then
-    echo ">>> Creating Python virtual environment..."
-    python3 -m venv .venv
+# Install Homebrew dependencies first (as user)
+echo ">>> Ensuring Homebrew dependencies are installed..."
+if ! command -v brew &> /dev/null; then
+  echo "Homebrew is not installed. Please install Homebrew first: https://brew.sh/"
+  exit 1
 fi
 
-# Activate the virtual environment
+# Install and link Homebrew dependencies
+brew install ffmpeg@6 sdl2 sdl2_image sdl2_mixer sdl2_ttf
+brew link ffmpeg@6 --force
+
+# Set up environment variables for ffmpeg
+export LDFLAGS="-L/opt/homebrew/opt/ffmpeg@6/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/ffmpeg@6/include"
+
+# Install Pi App dependencies
+echo ">>> Installing Pi App Python dependencies..."
+cd pi_app
+python3 -m venv .venv || true
 source .venv/bin/activate
+pip install --upgrade pip
 
-# Install Python dependencies from requirements.txt
-echo ">>> Installing Python dependencies from requirements.txt..."
-pip install -r requirements.txt
+# Install dependencies in the correct order
+echo ">>> Installing core dependencies..."
+pip install -r ../requirements.txt
 
-# OS-specific installations for ffpyplayer
-echo ">>> Installing ffpyplayer..."
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo ">>> Running macOS specific setup for ffpyplayer..."
-    
-    if ! command -v brew &> /dev/null; then
-        echo "Homebrew not found. Please install Homebrew to continue."
-        exit 1
-    fi
+# Install ffpyplayer from source
+echo ">>> Installing ffpyplayer from source..."
+USE_SYSTEM_LIBS=1 pip install --no-binary ffpyplayer ffpyplayer==4.5.2
 
-    echo ">>> Uninstalling potentially conflicting pip packages..."
-    pip uninstall -y ffpyplayer || true
-    
-    echo ">>> Ensuring Homebrew dependencies are installed..."
-    brew install ffmpeg@6
-    brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
-
-    echo ">>> Building ffpyplayer from source..."
-    # Set environment variables to link against Homebrew's ffmpeg@6
-    export LDFLAGS="-L/opt/homebrew/opt/ffmpeg@6/lib"
-    export CPPFLAGS="-I/opt/homebrew/opt/ffmpeg@6/include"
-    USE_SYSTEM_LIBS=1 pip install --no-binary ffpyplayer ffpyplayer
-
-    echo ">>> Cleaning up build-time Homebrew dependencies..."
-    # The following lines are commented out to support the test environment,
-    # which requires the SDL2 libraries to be present.
-    # brew uninstall sdl2 sdl2_image sdl2_mixer sdl2_ttf
-    # brew autoremove
+# Run Alembic migrations if config exists
+if [ -f ../state_server/db/alembic.ini ]; then
+  echo ">>> Running Alembic migrations..."
+  cd ../state_server
+  source ../pi_app/.venv/bin/activate
+  alembic -c db/alembic.ini upgrade head
+  cd ../pi_app
 else
-    echo ">>> Installing ffpyplayer using pip..."
-    pip install ffpyplayer==4.5.2
+  echo "Alembic config not found at state_server/db/alembic.ini, skipping migrations."
 fi
 
-# Initialize and migrate the database
-echo ">>> Setting up the database..."
-if [ ! -f "db/scorer.db" ]; then
-    alembic -c db/alembic.ini upgrade head
-fi
+cd ..
 
 # Offer display rotation for Raspberry Pi
 if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
@@ -71,4 +68,4 @@ if grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
     fi
 fi
 
-echo ">>> Installation complete." 
+echo ">>> Installation complete!" 

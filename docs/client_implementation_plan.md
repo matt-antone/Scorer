@@ -35,10 +35,8 @@ client/
 │       ├── validation.ts
 │       ├── formatting.ts
 │       └── constants.ts
-├── public/
-│   ├── assets/
-│   └── index.html
-└── package.json
+└── public/
+    └── index.html
 ```
 
 ## 2. Core Components

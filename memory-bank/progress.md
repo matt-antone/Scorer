@@ -42,6 +42,13 @@ This document tracks the current working state of the Scorer application, what's
   - **Player Timers**: Completed documentation for a timestamp-based "chess-clock" style player timer system (`docs/player_timer.md`).
   - **Client-Driven Setup**: Completed a major documentation overhaul for a new interactive setup flow where players can enter names and roll for deployment from their own devices.
 - **Resume/New Game flow**: Users are prompted to resume or start a new game if a saved game is found at startup. All state resets and transitions are handled according to documentation.
+- The Pi App has been successfully restructured into its own directory (`pi_app/`).
+- The state server has been successfully restructured into its own directory (`state_server/`).
+- The installer script (`install.sh`) has been updated to refuse to run as root, ensure Homebrew dependencies are installed as the user, and run Alembic migrations using the correct config path (`state_server/db/alembic.ini`).
+- The Pi App launcher (`pi_app/launch_scorer.sh`) has been updated to always run from its own directory, ensuring all paths are correct.
+- The Pi App launches successfully after dependency and installer fixes.
+- The installer script now robustly handles Homebrew and Python dependencies, ffpyplayer, and Alembic migrations.
+- No immediate errors on launch.
 
 ## What's Left to Build
 
@@ -50,11 +57,21 @@ This document tracks the current working state of the Scorer application, what's
 - Conduct a full regression test of all game logic paths.
 - **Further UI/UX polish for the ResumeOrNewScreen**.
 - **Additional testing for edge cases (e.g., corrupted save files, mid-game interruptions)**.
+- Test the Pi App to ensure everything works as expected.
+- Verify the database setup and migrations.
+- Update project documentation to reflect the new structure and installation process.
+- Continue testing the Pi App for deeper issues or edge cases.
+- Verify the state server and phone clients.
 
 ## Current Status
 
 - **Overall:** The core Kivy application is functionally complete and stable on both macOS and the target Raspberry Pi hardware. All screens in the game flow are implemented.
 - **Focus:** The next major phase will be to implement the documented web client interactivity (setup, timers) and perform final testing.
+- The project is now structured with separate directories for the Pi App and state server.
+- The installer script and Pi App launcher have been updated to reflect the new structure.
+- All dependencies are installed correctly, and Alembic migrations are run successfully.
+- The project is now stable after a full dependency and installation overhaul.
+- The Pi App is confirmed to launch with all dependencies resolved.
 
 ## Known Issues
 

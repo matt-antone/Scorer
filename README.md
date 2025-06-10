@@ -12,6 +12,7 @@ The core Kivy application running on Raspberry Pi 5 with a 5-inch touchscreen.
 - Provides the main user interface
 - Generates QR codes for client connections
 - Handles game flow through various screens
+- Contains its own virtual environment and launcher script
 
 ### 2. State Server (`state_server/`)
 
@@ -21,6 +22,7 @@ A Flask-based web server that manages game state synchronization.
 - Handles WebSocket connections for real-time updates
 - Manages client authentication and sessions
 - Persists game state in SQLite database
+- Includes database migrations and schema management
 
 ### 3. Phone Clients (`phone_clients/`)
 
@@ -31,6 +33,53 @@ Web-based applications for player interaction via mobile devices.
 - Score submission interface
 - QR code scanning for connection
 
+## Installation
+
+> **For full details, see [`docs/installation_guide.md`](docs/installation_guide.md)**
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Git
+- Homebrew (on macOS)
+
+### Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone [repository-url]
+   cd Scorer
+   ```
+2. **Run the installer:**
+
+   ```bash
+   ./install.sh
+   ```
+
+   - Do NOT use sudo. The script will handle all dependencies as your user.
+   - The installer will:
+     - Install and link Homebrew dependencies (ffmpeg@6, SDL2, etc.)
+     - Create a virtual environment for the Pi App
+     - Install all Python dependencies (including ffpyplayer) in the Pi App's virtual environment
+     - Build ffpyplayer from source with system libraries
+     - Run Alembic migrations using the Pi App's virtual environment
+
+3. **Launch the Pi App:**
+
+   ```bash
+   cd pi_app
+   ./launch_scorer.sh
+   ```
+
+   If you see the app launch without errors, installation was successful.
+
+4. **(Optional) Launch the State Server:**
+   ```bash
+   cd state_server
+   source ../pi_app/.venv/bin/activate
+   python main.py
+   ```
+
 ## Development Setup
 
 Each component has its own:
@@ -40,25 +89,11 @@ Each component has its own:
 - Development guidelines
 - Testing framework
 
-## Getting Started
-
-1. Clone the repository
-2. Follow the setup instructions in each component's directory
-3. Start with the Pi App for local development
-4. Set up the State Server for multiplayer functionality
-5. Build the Phone Clients for player interaction
-
 ## Documentation
 
-Each component maintains its own documentation in its `memory-bank/` directory:
-
-- `projectbrief.md`: Core requirements and goals
-- `productContext.md`: Why and how the component works
-- `systemPatterns.md`: Architecture and design patterns
-- `techContext.md`: Technical stack and setup
-- `activeContext.md`: Current focus and changes
-- `progress.md`: Current status and next steps
-- `im-a-dummy.md`: Known issues and discrepancies
+- `docs/`: Technical documentation and implementation details
+- `memory-bank/`: Project-wide documentation and context
+- Component-specific documentation in each component's directory
 
 ## Contributing
 

@@ -2,147 +2,148 @@
 
 ## Current Focus
 
-The primary focus is on refining the user experience of the core gameplay screen. The most recent work has centered on the `NumberPadPopup` used for score entry. The goal is to make it more intuitive and compact.
+- Verifying the new project structure and installation process.
+- Ensuring the Pi App launches successfully after dependency and installer fixes.
 
 ## Recent Changes
 
-- **Number Pad UX Improvement**: Overhauled the `NumberPadPopup` widget.
-  - The current score is now displayed as a placeholder (`hint_text`) in the input field, rather than being an editable value. This clarifies that the user should enter a new, updated score.
-  - If a user closes the popup without entering a value, the score remains unchanged.
-  - The popup's title is now dynamic, clearly stating which score is being updated (e.g., "Enter the updated Primary score").
-  - The redundant helper text label within the popup has been removed, and this information is now conveyed in the title.
-  - The popup has been resized to be narrower and more compact, fitting the width of the number pad itself.
-- **Kivy Environment Fix (macOS)**: Re-resolved the `SDL2` dependency issue on macOS. A crash indicated that the `libSDL2` library, which Kivy's window provider depends on, was missing. This occurs because the `install.sh` script intentionally uninstalls it to prevent conflicts with `ffpyplayer`. Re-running `./install.sh` successfully restored the library and fixed the application launch. This confirms the procedure for fixing environment-related launch failures on macOS.
-- **Automated Installation Script (`install.sh`):** Overhauled the installation process into a single, robust script. It now handles system dependencies, Python packages, and programmatically creates the entire database structure, including source files and initializing the SQLite database with Alembic.
-- **Technology Stack Simplification:**
-  - Replaced the PostgreSQL database dependency with **SQLite**. This removes the need for an external database server and simplifies deployment significantly.
-  - Pinned critical Python packages (`Flask`, `Flask-SocketIO`) in `requirements.txt` to resolve dependency conflicts and ensure a stable build.
-- **"No Connection" Screen:** Implemented a UI screen on the web client that appears when the connection to the server is lost, improving user experience.
-- **Screensaver Integration:** Fully integrated the `ScreensaverScreen` into the main application. This includes an inactivity timer that, after a set duration, displays a slideshow of images. User interaction on the screensaver returns the user to their previous screen.
-- **Screensaver Enhancement:** The screensaver slideshow has been improved. It now randomizes the order of the billboard images and uses a slow, two-second fade animation for a smoother transition between slides.
-- **Bug Fix:** Resolved a startup crash (`TypeError`) caused by a refactoring mismatch between `main.py` and `websocket_server.py`. The `WebSocketServer`'s constructor was updated to accept the necessary callbacks directly, improving the code's robustness.
-- **Splash Screen Rework:** The splash screen has been changed from a timed, automatic transition to a manual one. It now features a large, styled "START" button that the user must press to enter the application. The logic for the splash screen has also been refactored into its own dedicated file (`screens/splash_screen.py`) for better code organization.
-- **Race Condition Fix**: Resolved a crash on the `ResumeOrNewScreen` by implementing the robust widget initialization pattern. This prevents an `AttributeError` that occurred when the screen's `on_enter` event fired before the UI widgets were fully loaded and ready.
-- **Client Connection UX**: Implemented a robust and user-friendly method for connecting clients.
-  - The app now generates QR codes for Player 1, Player 2, and a general observer client.
-  - On the `NameEntryScreen`, QR codes are displayed directly under the name inputs for easy setup.
-  - A popup was previously available from the main game screen, but this was removed in favor of a more robust pre-game network check.
-  - On a Raspberry Pi, the splash screen will now check for a network connection and present a connection manager popup if disconnected, ensuring QR codes can be generated with a valid IP.
-  - The splash screen now provides feedback, showing a loading indicator while QR codes are generated in the background, then revealing the "START" button.
-- **QR Code Race Condition Fix**: Resolved a critical bug where QR codes would fail to display. The fix involves a new robust pattern for loading runtime-generated images: preventing premature loads, pre-caching the image texture on a loading screen, and then explicitly calling `.reload()` on the target `Image` widget before it's displayed. This pattern has been documented in `.cursorrules`.
-- **Refactoring and Bug Fix**: Resolved a `KeyError` crash on the `FirstTurnSetupScreen` by removing a duplicate class definition from `main.py` and consolidating the correct logic into `screens/first_turn_setup_screen.py`. This fix also involved correcting the game state handling to ensure the `first_turn_player_id` was set and read properly before starting the game.
-- **macOS Dependency Stability**: After a lengthy investigation, resolved a major dependency conflict on macOS where bundled versions of SDL2 from `kivy` and `ffpyplayer` caused runtime instability and visual artifacts. The fix involves using Homebrew to install `ffmpeg@6` and building `ffpyplayer` from source against it, which stabilizes the development environment. This procedure is now documented in `techContext.md`.
-- **UI Button Fix**: Resolved the bug where button text would disappear upon being disabled. This was fixed by setting the `disabled_color` property in the button's style definition.
-- **Timer System Documentation**: Created comprehensive documentation for a new, robust, timestamp-based timer system.
-  - `docs/game_timer.md`: Defines the main game timer, which simplifies state management by using a start timestamp and accumulated duration, eliminating the need for constant "tick" updates.
-  - `docs/player_timer.md`: Defines a "chess-clock" style timer to track individual player turn times, also using a timestamp-based model for synchronization. All related screen documents were updated to reference these new, authoritative timer guides.
-- **Client-Driven Setup Flow**: Overhauled the documentation to reflect a new, interactive setup process. Player clients can now submit their own names and perform the deployment roll-off, with the Kivy host updating in real-time and providing a manual override. This was a major documentation update involving the creation of new screen docs and changes to `systemPatterns.md`.
-- **ResumeOrNewScreen**: Implemented `ResumeOrNewScreen` (Python and KV) to present users with a choice to resume a previous game or start a new one if a saved game is detected.
-- **Startup Flow**: Updated `main.py` to add `ResumeOrNewScreen` to the ScreenManager and to check for in-progress games after the splash screen.
-- **Splash Screen Logic**: The splash screen's START button now calls a method that checks for a valid game and routes to either the resume/new screen or the name entry screen.
-- **Game Flow**: The new game flow now properly resets all scores and state by calling `initialize_game_state()`.
-- **Memory Bank Organization**: Implemented comprehensive cross-referencing system between all memory banks:
+1. **Systemic Implementation Analysis**
 
-  - Created `memory_bank_rules.md` establishing mandatory reading requirements
-  - Added cross-references section to all component memory banks
-  - Established clear documentation hierarchy
-  - Defined update requirements and verification process
+   - Identified 5 major systemic issues
+   - Created implementation plan
+   - Documented in [Common Implementation Patterns](../decisions/common_implementation_patterns.md)
+   - Changes tracked in [2024-05-20-systemic-fixes-analysis.md](../changes/2024-05-20-systemic-fixes-analysis.md)
 
-- **Component Memory Banks**: Updated all component-specific memory banks with:
-  - Cross-references to core memory bank files
-  - Links to related component memory banks
-  - References to implementation files
-  - Clear documentation structure
-- **Asset Directory Reorganization**: Moved the assets directory to the root level for shared access:
+2. **Asset Directory Restructuring**
 
-  - Moved `pi_app/assets/` to `/assets/`
-  - Updated all asset references in Kivy files to use relative paths
-  - Updated documentation to reflect new structure
-  - Ensured all components can access shared assets
+   - Moved assets to root level for shared access
+   - Updated all file references
+   - Documented in decision record: [Asset Directory Structure](../decisions/asset_directory_structure.md)
+   - Changes tracked in:
+     - [2024-05-20-asset-directory-move.md](../changes/2024-05-20-asset-directory-move.md)
+     - [2024-05-20-file-reference-updates.md](../changes/2024-05-20-file-reference-updates.md)
 
-- **File Reference Updates**:
-  - Updated paths in all Kivy files to use `../assets/`
-  - Updated documentation to reflect new asset locations
-  - Verified all asset references are working correctly
-  - Ensured cross-component asset sharing is possible
+3. **Pi App Restructuring**
+
+   - Moved the Pi App into its own directory (`pi_app/`).
+   - Moved the state server into its own directory (`state_server/`).
+   - Updated the installer script to handle the new structure and refuse to run as root.
+   - Updated the Pi App launcher to ensure it runs from the correct directory.
+
+4. **Updated the installer script**
+
+   - Install Homebrew dependencies first and link them correctly.
+   - Set up environment variables for ffmpeg.
+   - Install all Python dependencies in the Pi App's virtual environment.
+   - Build ffpyplayer from source with system libraries.
+   - Run Alembic migrations using the Pi App's virtual environment.
+
+5. **Cleaned up and reinstalled all dependencies**
+   - The Pi App now launches successfully with no immediate errors.
 
 ## Active Decisions
 
-- **Documentation Requirements**: All memory bank files must now include:
+1. **Systemic Implementation Patterns**
 
-  - Cross-references section
-  - Implementation references
-  - Clear documentation hierarchy
-  - Update requirements
+   - Decision: [Common Implementation Patterns](../decisions/common_implementation_patterns.md)
+   - Status: Planning Phase
+   - Impact: Will affect all screen implementations
 
-- **Reading Requirements**: Before any task execution:
-  - ALL memory bank files must be read
-  - ALL relevant documentation must be reviewed
-  - Explicit confirmation of understanding is required
-  - NO EXCEPTIONS to these requirements
+2. **Asset Management**
+
+   - Decision: [Asset Directory Structure](../decisions/asset_directory_structure.md)
+   - Status: Implemented
+   - Impact: Improved asset sharing and maintenance
+
+3. **Installer Script**
+
+   - Decision: The installer script now refuses to run as root to avoid permission issues with Homebrew and Python dependencies.
+   - Status: Implemented
+   - Impact: Ensures correct dependencies are installed and avoids permission issues.
+
+4. **Alembic Migrations**
+
+   - Decision: Alembic migrations are run using the correct config path (`state_server/db/alembic.ini`).
+   - Status: Implemented
+   - Impact: Ensures correct database migrations are applied.
+
+5. **Pi App Launcher**
+
+   - Decision: The Pi App launcher is updated to ensure it runs from the correct directory.
+   - Status: Implemented
+   - Impact: Ensures correct execution paths and dependencies are met.
+
+6. **All dependencies and migrations are now managed from the Pi App's environment for consistency**
+
+7. **Homebrew and Python dependencies are never installed as root**
 
 ## Next Steps
 
-1. **Documentation Verification**:
+1. **Foundation Implementation**
 
-   - Review all cross-references for accuracy
-   - Ensure all implementation files are properly referenced
-   - Verify documentation hierarchy is maintained
-   - Check for any missing references
+   - [ ] Create `GameState` class
+   - [ ] Implement `BaseScreen`
+   - [ ] Create validation framework
+   - [ ] Add lifecycle hooks
 
-2. **Component Updates**:
+2. **Component Development**
 
-   - Update component-specific documentation as needed
-   - Ensure all components follow the new reference structure
-   - Maintain consistency across all memory banks
-   - Document any discrepancies found
+   - [ ] Create standard widgets
+   - [ ] Implement error handling
+   - [ ] Add state persistence
+   - [ ] Create UI patterns
 
-3. **Process Implementation**:
-   - Establish verification process for documentation updates
-   - Create templates for new memory bank files
-   - Define update procedures for existing files
-   - Document any process improvements needed
+3. **Integration Planning**
 
-## Current Challenges
+   - [ ] Plan screen updates
+   - [ ] Design documentation validation
+   - [ ] Plan feature flags
+   - [ ] Create sync checks
 
-- Ensuring all team members follow the new memory bank rules
-- Maintaining consistency across all documentation
-- Keeping cross-references up to date
-- Managing documentation updates efficiently
+4. **Testing**
 
-## Environment Notes
+   - [ ] Test the Pi App to ensure everything works as expected.
+   - [ ] Verify the database setup and migrations.
 
-- All memory bank files are now cross-referenced
-- Documentation hierarchy is established
-- Update requirements are defined
-- Verification process is in place
+5. **Documentation**
 
-## Open Questions
+   - Following new decision and change record rules
+   - Maintaining cross-references
+   - Tracking all changes
+   - Ensuring consistency
 
-- Is a simple `show()`/`hide()` mechanism sufficient, or should the controller re-initialize screens each time they are shown?
+6. **Project Documentation**
+   - [ ] Update project documentation to reflect the new structure and installation process.
 
-## Current Challenges
+## Current Considerations
 
-- Refactoring the client-side JavaScript without introducing new bugs.
-- Ensuring the new architecture is clean and maintainable.
+1. **Implementation Order**
 
-## Environment Notes
+   - Foundation first
+   - Components second
+   - Integration last
+   - Documentation throughout
 
-- Development on macOS
-- Target deployment on Raspberry Pi
-- Virtual environment management
-- Dependencies:
-  - Kivy
-  - Flask-SocketIO
-  - python-socketio
-  - SQLAlchemy
-  - aiosqlite
-  - ffpyplayer
+2. **Documentation**
 
-## Tomorrow's Tasks
+   - Following new decision and change record rules
+   - Maintaining cross-references
+   - Tracking all changes
+   - Ensuring consistency
 
-1. Review and refine game over screen styling
-2. Ensure consistent font usage across all screens
-3. Test game over state transitions
-4. Verify all game data is displayed correctly
-5. Document any additional styling requirements
+3. **Code Organization**
+   - Maintaining clean architecture
+   - Following established patterns
+   - Ensuring proper separation of concerns
+   - Documenting all decisions
+
+## Cross-References
+
+- [Project Brief](projectbrief.md)
+- [Product Context](productContext.md)
+- [System Patterns](systemPatterns.md)
+- [Tech Context](techContext.md)
+- [Progress](progress.md)
+- [Decision Records](../decisions/)
+- [Change Records](../changes/)
+- [Rules](../rules/)

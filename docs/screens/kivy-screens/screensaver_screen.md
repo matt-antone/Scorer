@@ -99,16 +99,16 @@ class ScreensaverScreen(Screen):
 
 ```
 assets/
-  screensaver/
-    default.jpg
-    custom/
-      user_uploaded.jpg
+└── billboards/
+    ├── default.jpg
+    └── custom/
+        └── user_uploaded_images.jpg
 ```
 
 ## 7. Usage Notes
 
-- Default picture is provided in assets/screensaver/default.jpg
-- Custom pictures are stored in assets/screensaver/custom/
+- Default picture is provided in assets/billboards/default.jpg
+- Custom pictures are stored in assets/billboards/custom/
 - Pictures should be:
   - JPG or PNG format
   - Landscape orientation

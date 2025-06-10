@@ -16,6 +16,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from widgets.header_widget import HeaderWidget
 from widgets.number_pad_popup import NumberPadPopup
 from screens.resume_or_new_screen import ResumeOrNewScreen
+from state.game_state import GameState, GameStatus
 
 kivy.require('2.3.0')
 
@@ -196,6 +197,27 @@ class ScorerApp(App):
         
         # Switch to the game over screen
         self.root.manager.current = 'game_over'
+
+# Initialize the game state
+game_state = GameState()
+
+# Example: Set player names
+game_state.player1_name = "Player 1"
+game_state.player2_name = "Player 2"
+
+# Example: Set attacker and first turn player
+game_state.attacker_id = 1
+game_state.first_turn_player_id = 2
+
+# Example: Start the game
+game_state.start_game()
+
+# Example: Update scores
+game_state.update_score(1, primary=10, secondary=5)
+game_state.update_score(2, primary=8, secondary=3)
+
+# Example: Print current state
+print("Current game state:", game_state)
 
 if __name__ == '__main__':
     ScorerApp().run() 

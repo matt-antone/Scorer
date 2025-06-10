@@ -56,8 +56,7 @@ scorer/
 │   ├── server/           # Backend services
 │   │   ├── state_server.py      # WebSocket & state management
 │   │   ├── network_manager.py   # WiFi & network handling
-│   │   ├── update_service.py    # Version & update management
-│   │   └── asset_manager.py     # Asset handling
+│   │   └── update_service.py    # Version & update management
 │   │
 │   ├── client/           # Web client application
 │   │   ├── components/          # Reusable UI components

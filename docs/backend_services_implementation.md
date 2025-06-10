@@ -248,7 +248,7 @@ class ServiceConfig:
 
     # Assets
     ASSET_DIR = "assets"
-    SCREENSAVER_DIR = "assets/screensaver"
+    SCREENSAVER_DIR = "assets/billboards"
     MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB
 ```
 

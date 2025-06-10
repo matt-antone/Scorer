@@ -1,0 +1,28 @@
+<ConcedeConfirmPopup@Popup>:
+    size_hint: None, None
+    size: '300dp', '200dp'
+    auto_dismiss: False
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            text: 'Are you sure you want to concede?'
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+
+        BoxLayout:
+            spacing: '20dp'
+            size_hint_y: None
+            height: '48dp'
+
+            RoundedButton:
+                text: 'No'
+                on_press: root.dismiss()
+                player: 0 # Neutral
+            RoundedButton:
+                text: 'Yes'
+                on_press: root.confirm_concede()
+                player: 0 # Neutral 

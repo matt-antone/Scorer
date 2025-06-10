@@ -1,0 +1,111 @@
+<DeploymentSetupScreen>:
+    p1_name_label: p1_name_label
+    p2_name_label: p2_name_label
+    status_label: status_label
+    p1_roll_label: p1_roll_label
+    p2_roll_label: p2_roll_label
+    p1_roll_button: p1_roll_button
+    p2_roll_button: p2_roll_button
+    p1_choice_box: p1_choice_box
+    p2_choice_box: p2_choice_box
+
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 0.5, 0.05, 0.05, 1  # Medium-dark red for Player 1
+            Rectangle:
+                pos: self.x, self.y
+                size: self.width/2, self.height
+            Color:
+                rgba: 0.05, 0.05, 0.5, 1  # Medium-dark blue for Player 2
+            Rectangle:
+                pos: self.x + self.width/2, self.y
+                size: self.width/2, self.height
+        orientation: 'vertical'
+        HeaderWidget:
+            title: 'Deployment Roll-Off'
+
+        Label:
+            id: status_label
+            text: "Players roll to determine Attacker/Defender."
+            font_size: '22sp'
+            size_hint_y: 0.2
+
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: '10dp'
+            spacing: '20dp'
+
+            # Player 1 Side
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '10dp'
+                Label:
+                    id: p1_name_label
+                    text: 'Player 1' # Default, will be updated
+                    font_size: '24sp'
+                Label:
+                    id: p1_roll_label
+                    text: ''
+                    font_size: '150sp'
+                RoundedButton:
+                    id: p1_roll_button
+                    text: 'Roll'
+                    size_hint_y: None
+                    height: '50dp'
+                    player: 1 # Player 1 (Red)
+                    on_press: root.roll_die(1)
+                BoxLayout:
+                    id: p1_choice_box
+                    orientation: 'vertical'
+                    spacing: '10dp'
+                    opacity: 0
+                    RoundedButton:
+                        text: 'Attacker'
+                        size_hint_y: None
+                        height: '50dp'
+                        player: 1 # Player 1 (Red)
+                        on_press: root.select_role('attacker')
+                    RoundedButton:
+                        text: 'Defender'
+                        size_hint_y: None
+                        height: '50dp'
+                        player: 1 # Player 1 (Red)
+                        on_press: root.select_role('defender')
+
+            # Player 2 Side
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '10dp'
+                Label:
+                    id: p2_name_label
+                    text: 'Player 2' # Default, will be updated
+                    font_size: '24sp'
+                Label:
+                    id: p2_roll_label
+                    text: ''
+                    font_size: '150sp'
+                RoundedButton:
+                    id: p2_roll_button
+                    text: 'Roll'
+                    size_hint_y: None
+                    height: '50dp'
+                    player: 2 # Player 2 (Blue)
+                    on_press: root.roll_die(2)
+                BoxLayout:
+                    id: p2_choice_box
+                    orientation: 'vertical'
+                    spacing: '10dp'
+                    opacity: 0
+                    RoundedButton:
+                        text: 'Attacker'
+                        size_hint_y: None
+                        height: '50dp'
+                        player: 2 # Player 2 (Blue)
+                        on_press: root.select_role('attacker')
+                    RoundedButton:
+                        text: 'Defender'
+                        size_hint_y: None
+                        height: '50dp'
+                        player: 2 # Player 2 (Blue)
+                        on_press: root.select_role('defender') 

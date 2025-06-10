@@ -1,0 +1,108 @@
+<InitiativeScreen>:
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 0.5, 0.05, 0.05, 1  # Medium-dark red for Player 1
+            Rectangle:
+                pos: self.x, self.y
+                size: self.width/2, self.height
+            Color:
+                rgba: 0.05, 0.05, 0.5, 1  # Medium-dark blue for Player 2
+            Rectangle:
+                pos: self.x + self.width/2, self.y
+                size: self.width/2, self.height
+        orientation: 'vertical'
+        HeaderWidget:
+            id: header
+            title: 'Initiative Roll'
+
+        Label:
+            id: status_label
+            text: 'Roll for Initiative!'
+            font_size: '22sp'
+            size_hint_y: 0.15
+
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: '10dp'
+            spacing: '20dp'
+
+            # Player 1 Side
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '10dp'
+                Label:
+                    id: p1_name_label
+                    text: 'Player 1' # Default, will be updated
+                    font_size: '24sp'
+                Label:
+                    id: p1_roll_label
+                    text: ''
+                    font_size: '150sp'
+                RoundedButton:
+                    id: p1_roll_button
+                    text: 'Roll'
+                    size_hint_y: None
+                    height: '50dp'
+                    player: 1 # Player 1 (Red)
+                    on_press: root.roll_die(1)
+                BoxLayout:
+                    id: p1_choice_box
+                    orientation: 'vertical'
+                    spacing: '10dp'
+                    opacity: 0
+                    disabled: True
+                    RoundedButton:
+                        text: app.game_state.get('p1_name', 'Player 1')
+                        on_press: root.select_first_turn(self.text)
+                        player: 1 # Player 1 (Red)
+                    RoundedButton:
+                        text: app.game_state.get('p2_name', 'Player 2')
+                        on_press: root.select_first_turn(self.text)
+                        player: 1 # Player 1 (Red)
+
+            # Player 2 Side
+            BoxLayout:
+                orientation: 'vertical'
+                spacing: '10dp'
+                Label:
+                    id: p2_name_label
+                    text: 'Player 2' # Default, will be updated
+                    font_size: '24sp'
+                Label:
+                    id: p2_roll_label
+                    text: ''
+                    font_size: '150sp'
+                RoundedButton:
+                    id: p2_roll_button
+                    text: 'Roll'
+                    size_hint_y: None
+                    height: '50dp'
+                    player: 2 # Player 2 (Blue)
+                    on_press: root.roll_die(2)
+                BoxLayout:
+                    id: p2_choice_box
+                    orientation: 'vertical'
+                    spacing: '10dp'
+                    opacity: 0
+                    disabled: True
+                    RoundedButton:
+                        text: app.game_state.get('p1_name', 'Player 1')
+                        on_press: root.select_first_turn(self.text)
+                        player: 2 # Player 2 (Blue)
+                    RoundedButton:
+                        text: app.game_state.get('p2_name', 'Player 2')
+                        on_press: root.select_first_turn(self.text)
+                        player: 2 # Player 2 (Blue)
+
+        BoxLayout:
+            id: continue_box
+            size_hint_y: 0.15
+            opacity: 0
+            disabled: True
+            padding: '10dp'
+            RoundedButton:
+                text: 'Continue to Game'
+                font_size: '20sp'
+                background_color: 0.13, 0.55, 0.13, 1
+                on_press: root.proceed_to_game() 

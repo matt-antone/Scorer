@@ -1,0 +1,21 @@
+#:kivy 2.3.0
+
+<RoundedButton@Button>:
+    player: 0 # 0 = neutral, 1 = player 1 (red), 2 = player 2 (blue)
+    background_color: (0.3, 0.3, 0.3, 1) # Default gray color
+    background_normal: '../../assets/transparent.png'
+    background_down: '../../assets/transparent.png'
+    background_disabled_normal: '../../assets/transparent.png'
+    background_disabled_down: '../../assets/transparent.png'
+    border: (0, 0, 0, 0)
+    font_size: '20sp'
+    font_name: '../../assets/fonts/Inter/static/Inter_18pt-Bold.ttf'
+    text: root.text.title() if hasattr(root, 'text') and root.text else ''
+    canvas.before:
+        Color:
+            # If the button is disabled, use a darker gray. Otherwise, use the color based on the player property.
+            rgba: (0.2, 0.2, 0.2, 1) if self.disabled else (1, 0, 0, 1) if self.player == 1 else (0, 0, 1, 1) if self.player == 2 else self.background_color
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10] 

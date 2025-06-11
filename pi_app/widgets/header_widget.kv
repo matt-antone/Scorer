@@ -1,16 +1,19 @@
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
+
 <HeaderWidget>:
     height: '86px'
     size_hint_y: None
     canvas.before:
         Color:
-            rgba: 0.2, 0.2, 0.2, 1
+            rgba: 0.1, 0.1, 0.1, 1
         Rectangle:
             pos: self.pos
             size: self.size
     Label:
-        text: root.title
+        text: root.title if root.title else UI_STRINGS['header']['default_title']
         color: 1, 1, 1, 1
-        font_size: '20sp'
+        font_size: '24sp'
         size_hint_x: None
         width: self.texture_size[0]
         pos_hint: {'right': 1, 'center_y': 0.5}

@@ -1,27 +1,49 @@
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
+
 <ResumeOrNewScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
     BoxLayout:
         orientation: 'vertical'
-        padding: dp(40)
-        spacing: dp(30)
+        padding: '20dp'
+        spacing: '20dp'
+
         Label:
-            text: 'A previous game was found.'
-            font_size: '28sp'
+            text: UI_STRINGS['resume_or_new']['found_game']
+            font_size: '24sp'
+            color: 1, 1, 1, 1
             size_hint_y: None
-            height: self.texture_size[1] + dp(20)
+            height: '40dp'
+
         Label:
-            text: 'Would you like to resume or start a new game?'
-            font_size: '20sp'
+            text: UI_STRINGS['resume_or_new']['question']
+            font_size: '18sp'
+            color: 1, 1, 1, 1
             size_hint_y: None
-            height: self.texture_size[1] + dp(10)
-        Button:
-            text: 'Resume Game'
-            font_size: '24sp'
+            height: '30dp'
+
+        Widget:
             size_hint_y: None
-            height: dp(60)
-            on_press: root.resume_game()
-        Button:
-            text: 'Start New Game'
-            font_size: '24sp'
+            height: '20dp'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: '20dp'
             size_hint_y: None
-            height: dp(60)
-            on_press: root.start_new_game() 
+            height: '50dp'
+
+            Button:
+                text: UI_STRINGS['resume_or_new']['resume']
+                font_size: '20sp'
+                on_release: root.resume_game()
+
+            Button:
+                text: UI_STRINGS['resume_or_new']['new_game']
+                font_size: '20sp'
+                on_release: root.new_game() 

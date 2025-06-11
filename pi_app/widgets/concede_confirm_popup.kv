@@ -1,6 +1,9 @@
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
+
 <ConcedeConfirmPopup@Popup>:
-    size_hint: None, None
-    size: '300dp', '200dp'
+    title: UI_STRINGS['concede_confirm']['title']
+    size_hint: 0.8, 0.4
     auto_dismiss: False
 
     BoxLayout:
@@ -9,20 +12,23 @@
         spacing: '20dp'
 
         Label:
-            text: 'Are you sure you want to concede?'
+            text: UI_STRINGS['concede_confirm']['question']
             font_size: '24sp'
             color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '40dp'
 
         BoxLayout:
+            orientation: 'horizontal'
             spacing: '20dp'
             size_hint_y: None
-            height: '48dp'
+            height: '50dp'
 
-            RoundedButton:
-                text: 'No'
-                on_press: root.dismiss()
-                player: 0 # Neutral
-            RoundedButton:
-                text: 'Yes'
-                on_press: root.confirm_concede()
-                player: 0 # Neutral 
+            Button:
+                text: UI_STRINGS['common']['no']
+                font_size: '20sp'
+                on_release: root.dismiss()
+            Button:
+                text: UI_STRINGS['common']['yes']
+                font_size: '20sp'
+                on_release: root.confirm_concede() 

@@ -23,9 +23,6 @@ class SplashScreen(Screen):
 
     def __init__(self, **kwargs):
         logger.info("SplashScreen: Initializing")
-        # Explicitly load the KV file
-        kv_path = os.path.join(os.path.dirname(__file__), 'splash_screen.kv')
-        Builder.load_file(kv_path)
         super().__init__(**kwargs)
         # Fallback label if KV fails
         if not self.children:

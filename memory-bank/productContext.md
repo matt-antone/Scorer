@@ -28,12 +28,239 @@ Scorer aims to provide a dedicated, streamlined, and accessible digital tool to 
 
 ## 3. User Experience Goals
 
-- **Clarity**: Key game information (scores, CPs, round, timer) should be clearly visible and unambiguous at a glance on both the Pi screen and the web interface.
-- **Comprehensive Pi Control**: The Pi's touchscreen interface must allow for easy and complete management of all game aspects by either player, without requiring a phone.
-- **Simplicity**: Interactions for updating scores, CPs, advancing rounds, and managing the timer (on both Pi and web where applicable) should be intuitive and require minimal taps/effort.
-- **Reliability**: The application should accurately track and display information throughout the game, with updates correctly synchronized between the Pi and web clients.
-- **Non-Intrusive Web Viewing**: The web interface should primarily serve as an excellent viewer, allowing players to follow along without distracting from the physical game board. Optional self-updates should be seamless.
-- **Accessibility**: QR code for web access makes it easy for anyone with a smartphone to connect.
+### Core Game Flow
+
+1. **Splash Screen**
+
+   - Quick startup
+   - Network status check
+   - QR code generation
+   - Clear start button
+
+2. **Resume/New Game**
+
+   - Clear options
+   - Easy state recovery
+   - Smooth transition
+
+3. **Name Entry**
+
+   - Simple input
+   - Default names
+   - Clear validation
+   - QR code display
+
+4. **Deployment Setup**
+
+   - Clear instructions
+   - Easy roll-off
+   - Attacker/Defender selection
+   - First turn determination
+
+5. **Initiative**
+
+   - Simple roll-off
+   - Clear winner display
+   - Easy turn selection
+   - Smooth transition
+
+6. **Scoreboard**
+
+   - Clear score display
+   - Easy score entry
+   - Round tracking
+   - Turn switching
+   - Game end detection
+
+7. **Game Over**
+   - Winner display
+   - Final scores
+   - New game option
+   - Clean transition
+
+## Feature Requirements
+
+### Core Features
+
+1. **Game State Management**
+
+   - Save/Load functionality
+   - State persistence
+   - Error recovery
+   - State validation
+
+2. **Score Tracking**
+
+   - Primary objectives
+   - Secondary objectives
+   - Command points
+   - Round tracking
+
+3. **Turn Management**
+
+   - Player switching
+   - Round progression
+   - Game end detection
+   - State updates
+
+4. **UI/UX**
+   - Consistent styling
+   - Clear feedback
+   - Easy navigation
+   - Responsive design
+
+### Advanced Features
+
+1. **Settings**
+
+   - Theme selection
+   - Game preferences
+   - Display options
+   - Sound settings
+
+2. **Screensaver**
+
+   - Auto-activation
+   - Touch to wake
+   - Power management
+   - State preservation
+
+3. **Statistics**
+   - Win/loss tracking
+   - Score history
+   - Player stats
+   - Game analytics
+
+## User Interface
+
+### Design Principles
+
+1. **Consistency**
+
+   - Uniform styling
+   - Consistent layout
+   - Standard components
+   - Clear hierarchy
+
+2. **Clarity**
+
+   - Readable text
+   - Clear buttons
+   - Obvious actions
+   - Intuitive flow
+
+3. **Feedback**
+   - Action confirmation
+   - Error messages
+   - State changes
+   - Progress indicators
+
+### Layout Guidelines
+
+1. **Screen Organization**
+
+   - Clear sections
+   - Logical grouping
+   - Proper spacing
+   - Balanced layout
+
+2. **Component Design**
+
+   - Touch-friendly
+   - Clear labels
+   - Proper sizing
+   - Consistent spacing
+
+3. **Navigation**
+   - Clear paths
+   - Easy transitions
+   - Back options
+   - State preservation
+
+## Game Rules
+
+### Core Rules
+
+1. **Round Limit**
+
+   - Maximum 5 rounds
+   - Both players complete
+   - Game end detection
+   - Winner calculation
+
+2. **Scoring**
+
+   - Primary objectives
+   - Secondary objectives
+   - Command points
+   - Total calculation
+
+3. **Turn Order**
+   - Initiative roll
+   - First turn selection
+   - Player switching
+   - Round progression
+
+### Advanced Rules
+
+1. **Customization**
+
+   - Round limits
+   - Scoring rules
+   - Timer options
+   - Game preferences
+
+2. **Statistics**
+   - Win tracking
+   - Score history
+   - Player stats
+   - Game analytics
+
+## User Feedback
+
+### Current Issues
+
+1. **Layout**
+
+   - Inconsistent spacing
+   - Button sizing
+   - Text alignment
+   - Screen transitions
+
+2. **Functionality**
+
+   - Error handling
+   - State management
+   - Navigation flow
+   - Input validation
+
+3. **Experience**
+   - User feedback
+   - State recovery
+   - Error messages
+   - Progress indicators
+
+### Improvement Areas
+
+1. **UI/UX**
+
+   - Consistent styling
+   - Better feedback
+   - Smoother transitions
+   - Clearer navigation
+
+2. **Functionality**
+
+   - Robust error handling
+   - Improved state management
+   - Better validation
+   - Enhanced recovery
+
+3. **Features**
+   - Missing screens
+   - Advanced options
+   - Statistics tracking
+   - Customization
 
 ## 4. Target Users & Scenarios
 

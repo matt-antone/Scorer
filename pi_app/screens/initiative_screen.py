@@ -1,12 +1,13 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from kivy.properties import ObjectProperty, NumericProperty
+from kivy.properties import NumericProperty
 import random
 
 class InitiativeScreen(Screen):
+    # Game state
     p1_roll = NumericProperty(0)
     p2_roll = NumericProperty(0)
-    
+
     def on_enter(self):
         """Called when the screen is shown."""
         app = App.get_running_app()
@@ -24,8 +25,8 @@ class InitiativeScreen(Screen):
         self.ids.p1_choice_box.disabled = True
         self.ids.p2_choice_box.opacity = 0
         self.ids.p2_choice_box.disabled = True
-        self.ids.continue_box.opacity = 0
-        self.ids.continue_box.disabled = True
+        self.ids.continue_button.opacity = 0
+        self.ids.continue_button.disabled = True
 
         if not is_reroll:
             self.ids.p1_roll_label.text = ""
@@ -61,6 +62,9 @@ class InitiativeScreen(Screen):
         else:
             # Tie
             attacker_name = app.game_state.get('attacker_name')
+            if not attacker_name:
+                # Fallback if attacker_name is not set
+                attacker_name = p1_name
             self.ids.status_label.text = f"It's a tie! {attacker_name}, you choose who goes first."
             self.show_tiebreaker_buttons()
 
@@ -96,10 +100,16 @@ class InitiativeScreen(Screen):
         app.game_state['current_player_name'] = first_player_name
         app.game_state['current_round'] = 1
         print(f"First turn will go to: {first_player_name}. Waiting for user to continue.")
-        self.ids.continue_box.opacity = 1
-        self.ids.continue_box.disabled = False
+        self.ids.continue_button.opacity = 1
+        self.ids.continue_button.disabled = False
 
-    def proceed_to_game(self):
+    def continue_to_game(self):
         """Transitions to the scoreboard."""
         print("Proceeding to scoreboard.")
-        self.manager.current = 'scoreboard' 
+        self.manager.current = 'scoreboard'
+
+    def roll_player1(self):
+        self.roll_die(1)
+
+    def roll_player2(self):
+        self.roll_die(2) 

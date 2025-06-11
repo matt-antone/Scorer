@@ -1,0 +1,36 @@
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
+
+<GameOverScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            text: root.winner_text
+            font_size: '32sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '60dp'
+
+        Label:
+            text: root.final_scores_text
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '100dp'
+
+        Button:
+            text: UI_STRINGS['resume_or_new']['new_game']
+            font_size: '24sp'
+            size_hint_y: None
+            height: '60dp'
+            on_release: root.start_new_game() 

@@ -14,16 +14,17 @@ class ResumeOrNewScreen(Screen):
             self.add_widget(Label(text='ResumeOrNewScreen loaded (no KV)'))
 
     def resume_game(self):
-        logging.info("Resuming game")
+        """Resume the existing game."""
         app = App.get_running_app()
-        if app:
-            # Set phase to game_play and go to main game screen
-            app.game_state['game_phase'] = 'game_play'
-            app.save_game_state()
-            logging.info("Transitioning to scoreboard screen")
-            self.manager.current = 'scoreboard'
-        else:
-            logging.error("No running app found")
+        app.root.current = 'scoreboard'
+        logging.info("Resuming existing game")
+
+    def new_game(self):
+        """Start a new game."""
+        app = App.get_running_app()
+        app.initialize_game_state()
+        app.root.current = 'name_entry'
+        logging.info("Starting new game")
 
     def start_new_game(self):
         logging.info("Starting new game")

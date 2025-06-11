@@ -10,6 +10,7 @@ from typing import Optional
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from functools import wraps
+import logging
 
 
 class GameStatus(Enum):
@@ -56,13 +57,13 @@ def non_negative(msg=None):
 def validate_round(setter):
     """
     Decorator for round number validation.
-    Ensures the value is >= 1.
+    Ensures the value is between 1 and 5.
     Raises ValueError if invalid.
     """
     @wraps(setter)
     def wrapper(self, value):
-        if value < 1:
-            raise ValueError("Current round must be at least 1")
+        if value < 1 or value > 5:
+            raise ValueError("Current round must be between 1 and 5")
         return setter(self, value)
     return wrapper
 
@@ -236,8 +237,8 @@ class GameState:
             raise ValueError("Secondary scores cannot be negative")
         
         # Validate round
-        if self._current_round < 1:
-            raise ValueError("Current round must be at least 1")
+        if self._current_round < 1 or self._current_round > 5:
+            raise ValueError("Current round must be between 1 and 5")
     
     def start_game(self) -> None:
         """Start a new game."""
@@ -317,6 +318,11 @@ class GameState:
         """Advance to the next round."""
         if self._status != GameStatus.IN_PROGRESS:
             raise ValueError("Round can only be advanced when game is in progress")
+        
+        if self._current_round >= 5:
+            self._status = GameStatus.GAME_OVER
+            logging.info("Game over: Maximum round limit (5) reached")
+            return
         
         self._current_round += 1
         self._last_action_time = datetime.now()

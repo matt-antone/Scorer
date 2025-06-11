@@ -17,6 +17,7 @@ from widgets.header_widget import HeaderWidget
 from widgets.number_pad_popup import NumberPadPopup
 from screens.resume_or_new_screen import ResumeOrNewScreen
 from state.game_state import GameState, GameStatus
+from screens.game_over_screen import GameOverScreen
 
 kivy.require('2.3.0')
 
@@ -65,6 +66,7 @@ class ScorerApp(App):
         self.sm.add_widget(DeploymentSetupScreen(name='deployment_setup'))
         self.sm.add_widget(InitiativeScreen(name='initiative'))
         self.sm.add_widget(ScoreboardScreen(name='scoreboard'))
+        self.sm.add_widget(GameOverScreen(name='game_over'))
         # Decide which screen to show after splash
         self.sm.current = 'splash'
         return self.sm
@@ -101,15 +103,46 @@ class ScorerApp(App):
 
     def save_game_state(self):
         path = self.get_persistent_storage_path()
+        # Convert GameStatus enum to string before saving
+        state_to_save = self.game_state.copy()
+        if 'status' in state_to_save and state_to_save['status'] is not None:
+            state_to_save['status'] = state_to_save['status'].name
         with open(path, 'w') as f:
-            json.dump(self.game_state, f, indent=4)
-        logging.info(f"Game state saved: {self.game_state}")
+            json.dump(state_to_save, f, indent=4)
+        logging.info(f"Game state saved: {state_to_save}")
 
     def load_game_state(self):
         path = self.get_persistent_storage_path()
         try:
             with open(path, 'r') as f:
-                self.game_state = json.load(f)
+                loaded_state = json.load(f)
+            
+            # Ensure all required keys are present
+            default_state = {
+                'p1_name': 'Player 1',
+                'p2_name': 'Player 2',
+                'p1_primary_score': 0,
+                'p1_secondary_score': 0,
+                'p2_primary_score': 0,
+                'p2_secondary_score': 0,
+                'p1_cp': 0,
+                'p2_cp': 0,
+                'attacker_name': None,
+                'defender_name': None,
+                'first_turn_player_name': None,
+                'current_player_name': None,
+                'current_round': 0,
+                'current_player_id': 1,  # Default to Player 1
+                'status': None,
+            }
+            
+            # Update loaded state with any missing default values
+            self.game_state = {**default_state, **loaded_state}
+            
+            # Convert status string back to GameStatus enum
+            if self.game_state['status'] is not None:
+                self.game_state['status'] = GameStatus[self.game_state['status']]
+            
             logging.info(f"Game state loaded: {self.game_state}")
         except (FileNotFoundError, json.JSONDecodeError):
             self.initialize_game_state()
@@ -129,6 +162,8 @@ class ScorerApp(App):
             'first_turn_player_name': None,
             'current_player_name': None,
             'current_round': 0,
+            'current_player_id': 1,  # Start with Player 1 by default
+            'status': None,
         }
         self.save_game_state()
         logging.info("Game state initialized")

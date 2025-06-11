@@ -438,3 +438,194 @@ SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
 # Tech Context
 
 - The install script now prompts the user to optionally rotate the display 180 degrees for upside-down or kiosk mounting on Raspberry Pi. If selected, it updates /boot/config.txt with display_lcd_rotate=2, effective after reboot.
+
+# Technical Context
+
+## System Architecture
+
+### Core Components
+
+1. **Pi App**
+
+   - Primary interface
+   - Game state source
+   - Touch screen control
+
+2. **State Server**
+
+   - State synchronization
+   - WebSocket server
+   - Database management
+
+3. **Phone Clients**
+   - Mobile interface
+   - Real-time updates
+   - Score submission
+
+### Communication
+
+1. **Network**
+
+   - Local network
+   - WebSocket
+   - HTTP/HTTPS
+
+2. **Protocols**
+   - WebSocket
+   - REST API
+   - State synchronization
+
+## Development Environment
+
+### Core Requirements
+
+1. **Hardware**
+
+   - Raspberry Pi 5
+   - Touch screen
+   - Network connectivity
+
+2. **Software**
+   - Python 3.11.5
+   - Kivy 2.3.1
+   - SQLite
+   - FFmpeg 6
+
+### Development Tools
+
+1. **Version Control**
+
+   - Git
+   - GitHub
+   - Branch management
+
+2. **Testing**
+   - Unit tests
+   - Integration tests
+   - Performance tests
+
+## Technical Patterns
+
+### State Management
+
+1. **System-wide**
+
+   - Centralized state
+   - Real-time updates
+   - State validation
+
+2. **Component-specific**
+   - Local state
+   - State synchronization
+   - Error recovery
+
+### Error Handling
+
+1. **System-wide**
+
+   - Graceful degradation
+   - Error recovery
+   - State preservation
+
+2. **Component-specific**
+   - Local error handling
+   - State recovery
+   - User feedback
+
+### Security
+
+1. **Authentication**
+
+   - Client verification
+   - Session management
+   - Access control
+
+2. **Data Protection**
+   - State validation
+   - Input sanitization
+   - Error handling
+
+## Performance Considerations
+
+### System-wide
+
+1. **State Management**
+
+   - Efficient updates
+   - Minimal latency
+   - Resource optimization
+
+2. **Network Usage**
+   - Bandwidth optimization
+   - Connection management
+   - Error recovery
+
+### Component-specific
+
+1. **Pi App**
+
+   - Touch response
+   - Screen updates
+   - State management
+
+2. **State Server**
+
+   - Connection handling
+   - State synchronization
+   - Database optimization
+
+3. **Phone Clients**
+   - Mobile optimization
+   - Offline support
+   - State synchronization
+
+## Security Considerations
+
+### System-wide
+
+1. **Authentication**
+
+   - Client verification
+   - Session management
+   - Access control
+
+2. **Data Protection**
+   - State validation
+   - Input sanitization
+   - Error handling
+
+### Component-specific
+
+1. **Pi App**
+
+   - Local security
+   - State protection
+   - Error handling
+
+2. **State Server**
+
+   - API security
+   - Database security
+   - Connection security
+
+3. **Phone Clients**
+   - Client security
+   - Data protection
+   - Connection security
+
+## Related Documentation
+
+### Core Memory Bank
+
+- [projectbrief.md](projectbrief.md)
+- [productContext.md](productContext.md)
+- [systemPatterns.md](systemPatterns.md)
+- [activeContext.md](activeContext.md)
+- [progress.md](progress.md)
+- [im-a-dummy.md](im-a-dummy.md)
+
+### Component Memory Banks
+
+- [Pi App Memory Bank](../pi_app/memory-bank/)
+- [State Server Memory Bank](../state_server/memory-bank/)
+- [Phone Clients Memory Bank](../phone_clients/memory-bank/)

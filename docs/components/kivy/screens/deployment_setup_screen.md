@@ -83,6 +83,7 @@ This screen functions as both a controller and a real-time display.
 - **Dual Functionality**: This screen must be able to both send actions (rolling, choosing roles) and passively receive state updates initiated from player clients, updating its UI in real-time.
 - **State-Driven UI**: The entire state of the screen—button status, roll results, visibility of choice/continue buttons—is derived directly from the central `game_state`.
 - **Name Display**: Player names are displayed from the previous name entry phase and are not updated in real-time during the deployment phase.
+- \*\*All widget access is performed via `self.ids.<id>` (matching the widget's id in the .kv file). `ObjectProperty` is not used for widget binding, as per project-wide pattern.
 
 # Changelog
 

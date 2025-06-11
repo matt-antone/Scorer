@@ -1,91 +1,144 @@
-# Progress
+# Progress Report
 
-This document tracks the current working state of the Scorer application, what's left to build, and any known issues.
+## Completed Features
 
-## Completed
+### Core Game Flow
 
-- **Project Structure**:
+1. ✅ Splash Screen
 
-  - Reorganized into three main components: pi_app, state_server, phone_clients
-  - Created memory bank structure for each component
-  - Moved assets to root level for shared access
-  - Updated all file references to reflect new structure
+   - Network check
+   - QR code generation
+   - Proper initialization
 
-- **Asset Management**:
-  - Centralized assets in root directory
-  - Updated all component references to use relative paths
-  - Verified asset accessibility across components
-  - Updated documentation to reflect new structure
+2. ✅ Resume or New Game Screen
 
-## What Works
+   - Game state loading
+   - New game initialization
+   - Proper navigation
 
-- **Installation**: A fully automated `install.sh` script successfully sets up the entire environment on a fresh Raspberry Pi OS, including correct Python dependencies, FFmpeg, and a custom-built SDL2 with KMS/DRM support. The script is idempotent and handles both initial setup and updates.
-- **Game State**: The application uses a robust SQLite database for game state persistence (`db/scorer.db`). The database is automatically created if it doesn't exist.
-- **Kivy Backend**: The Kivy application runs correctly on both macOS (for development) and Raspberry Pi (for production) using the appropriate display drivers.
-- **Game Flow**: The application has a complete and logical flow from start to finish:
-  - **Splash Screen**: A manual start screen.
-  - **Name Entry Screen**: Simplified with default names.
-  - **Initiative Screen**: A functional roll-off where the winner chooses who goes first, and the Attacker breaks ties.
-  - **Scoreboard Screen**: The main game interface.
-  - **Game Over Screen**: Displays final stats with options to start a new game or exit.
-- **Score Entry**: The `NumberPadPopup` for entering scores has been refined:
-  - It uses the current score as a placeholder (`hint_text`), requiring the user to input a new value.
-  - The title is dynamic to clarify which score is being edited.
-  - The layout is compact and streamlined.
-  - The score is only updated if a new value is entered.
-- **Game Resume Flow**: The `ResumeOrNewScreen` now uses a robust initialization pattern, fixing a race condition and ensuring that saved games can be resumed reliably without crashing.
-- **QR Code Display**: QR codes for player and observer clients are now generated and displayed reliably on the `NameEntryScreen`.
-- **UI Stability**: Fixed a bug where button text would disappear when a button was disabled. This was resolved by explicitly setting the `disabled_color` in the widget style.
-- **Dependency Stability (macOS)**: Resolved a major dependency conflict between Kivy and ffpyplayer. By building `ffpyplayer` from source against a compatible version of `ffmpeg` (`ffmpeg@6`), we have eliminated runtime warnings about duplicate SDL2 libraries, which has fixed application instability and visual artifacts.
-- **Documentation**:
-  - **Game Timer**: Completed documentation for a timestamp-based main game timer (`docs/game_timer.md`).
-  - **Player Timers**: Completed documentation for a timestamp-based "chess-clock" style player timer system (`docs/player_timer.md`).
-  - **Client-Driven Setup**: Completed a major documentation overhaul for a new interactive setup flow where players can enter names and roll for deployment from their own devices.
-- **Resume/New Game flow**: Users are prompted to resume or start a new game if a saved game is found at startup. All state resets and transitions are handled according to documentation.
-- The Pi App has been successfully restructured into its own directory (`pi_app/`).
-- The state server has been successfully restructured into its own directory (`state_server/`).
-- The installer script (`install.sh`) has been updated to refuse to run as root, ensure Homebrew dependencies are installed as the user, and run Alembic migrations using the correct config path (`state_server/db/alembic.ini`).
-- The Pi App launcher (`pi_app/launch_scorer.sh`) has been updated to always run from its own directory, ensuring all paths are correct.
-- The Pi App launches successfully after dependency and installer fixes.
-- The installer script now robustly handles Homebrew and Python dependencies, ffpyplayer, and Alembic migrations.
-- No immediate errors on launch.
+3. ✅ Name Entry Screen
 
-## What's Left to Build
+   - Player name input
+   - Validation
+   - State management
 
-- **Client-Driven Setup and Timers**: While the core Kivy application is feature-complete, the advanced features for client-driven setup and the integrated game timers are documented but not yet implemented.
-- Finalize UI elements for touch interaction on the Raspberry Pi.
-- Conduct a full regression test of all game logic paths.
-- **Further UI/UX polish for the ResumeOrNewScreen**.
-- **Additional testing for edge cases (e.g., corrupted save files, mid-game interruptions)**.
-- Test the Pi App to ensure everything works as expected.
-- Verify the database setup and migrations.
-- Update project documentation to reflect the new structure and installation process.
-- Continue testing the Pi App for deeper issues or edge cases.
-- Verify the state server and phone clients.
+4. ✅ Deployment Setup Screen
 
-## Current Status
+   - Attacker/Defender selection
+   - First turn determination
+   - State management
 
-- **Overall:** The core Kivy application is functionally complete and stable on both macOS and the target Raspberry Pi hardware. All screens in the game flow are implemented.
-- **Focus:** The next major phase will be to implement the documented web client interactivity (setup, timers) and perform final testing.
-- The project is now structured with separate directories for the Pi App and state server.
-- The installer script and Pi App launcher have been updated to reflect the new structure.
-- All dependencies are installed correctly, and Alembic migrations are run successfully.
-- The project is now stable after a full dependency and installation overhaul.
-- The Pi App is confirmed to launch with all dependencies resolved.
+5. ✅ Initiative Screen
+
+   - Initiative roll
+   - Turn order determination
+   - State management
+
+6. ✅ Scoreboard Screen
+
+   - Score tracking
+   - Round management
+   - Turn switching
+   - Game end detection
+
+7. ✅ Game Over Screen
+   - Winner calculation
+   - Score display
+   - New game option
+   - State handling
+
+### Game State Management
+
+1. ✅ Round Limit Enforcement
+
+   - Maximum 5 rounds
+   - Proper game end
+   - State transition
+
+2. ✅ State Serialization
+   - Save/Load functionality
+   - Dictionary/Object compatibility
+   - Error handling
+
+## In Progress
+
+### Screen Improvements
+
+1. 🔄 Layout Issues
+
+   - [ ] Scoreboard screen spacing
+   - [ ] Name entry screen alignment
+   - [ ] Deployment setup screen buttons
+   - [ ] Initiative screen layout
+   - [ ] Resume/New game screen styling
+
+2. 🔄 Functional Issues
+
+   - [ ] Error handling in all screens
+   - [ ] State management improvements
+   - [ ] Navigation refinements
+   - [ ] Input validation
+
+3. 🔄 User Experience
+   - [ ] Consistent styling
+   - [ ] Better feedback
+   - [ ] Improved validation
+   - [ ] Smoother transitions
+
+## Pending Features
+
+### Missing Screens
+
+1. ⏳ Settings Screen
+
+   - Configuration options
+   - Theme selection
+   - Game preferences
+
+2. ⏳ Screensaver Screen
+   - Auto-activation
+   - Touch to wake
+   - Power management
+
+### Additional Features
+
+1. ⏳ Game Statistics
+
+   - Win/loss tracking
+   - Score history
+   - Player statistics
+
+2. ⏳ Advanced Settings
+   - Custom round limits
+   - Scoring rules
+   - Timer options
 
 ## Known Issues
 
-- **macOS Environment Sensitivity**: The Kivy windowing system on macOS can be fragile. Because the `install.sh` script manages `SDL2` by installing and then uninstalling it, any other system update or change (e.g., via Homebrew) can break the environment. If the app fails to launch with an `SDL2` error, the solution is to re-run `./install.sh`.
-- **None related to resume/new game flow as of this update**.
+### Critical
 
-## Blockers
+1. ⚠️ Some screens need layout improvements
+2. ⚠️ State management could be more robust
+3. ⚠️ Error handling needs enhancement
 
-- There are no active blockers.
+### Minor
+
+1. ℹ️ UI consistency across screens
+2. ℹ️ Navigation flow refinements
+3. ℹ️ Input validation improvements
 
 ## Next Steps
 
-- Implement the new client-driven setup flow.
-- Implement the game and player timer systems as per the new documentation.
-- Perform final testing on the Raspberry Pi to ensure touch interactions are smooth.
-- Add "New Game" and "Exit" functionality to the Game Over screen.
-- Document the "New Game" and "Exit" features in `productContext.md`.
+1. Address layout issues in all screens
+2. Improve error handling and validation
+3. Implement missing screens
+4. Add advanced features
+5. Enhance user experience
+
+## Notes
+
+- All core game flow screens are implemented
+- Game state management is working
+- Round limit is properly enforced
+- Game over screen is functional
+- Focus now on improvements and missing features

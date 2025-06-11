@@ -39,6 +39,61 @@ BEFORE ATTEMPTING TO DEBUG ANY ISSUE, THE ASSISTANT MUST:
 
 NO EXCEPTIONS: The assistant MUST run the app and observe the behavior before attempting to debug any issue.
 
+## MANDATORY MEMORY BANK UPDATE REQUIREMENTS
+
+WHEN UPDATING MEMORY BANKS, THE ASSISTANT MUST:
+
+1. Project-Level Memory Bank (MUST UPDATE ALL):
+
+   - Update memory-bank/projectbrief.md if project scope changes
+   - Update memory-bank/productContext.md if user experience or features change
+   - Update memory-bank/systemPatterns.md if architecture or patterns change
+   - Update memory-bank/techContext.md if technical stack or dependencies change
+   - Update memory-bank/activeContext.md for current work and recent changes
+   - Update memory-bank/progress.md for implementation status and next steps
+   - Update memory-bank/im-a-dummy.md for any new patterns or rules
+
+2. Component-Specific Memory Banks (MUST UPDATE RELEVANT ONES):
+
+   - Pi App (pi_app/memory-bank/):
+     - Update projectbrief.md if component scope changes
+     - Update productContext.md if component features change
+     - Update systemPatterns.md if component architecture changes
+     - Update techContext.md if component technical details change
+     - Update activeContext.md for current work and recent changes
+     - Update progress.md for implementation status and next steps
+     - Update im-a-dummy.md for component-specific patterns
+   - State Server (state_server/memory-bank/):
+     - Update projectbrief.md if component scope changes
+     - Update productContext.md if component features change
+     - Update systemPatterns.md if component architecture changes
+     - Update techContext.md if component technical details change
+     - Update activeContext.md for current work and recent changes
+     - Update progress.md for implementation status and next steps
+     - Update im-a-dummy.md for component-specific patterns
+   - Phone Clients (phone_clients/memory-bank/):
+     - Update projectbrief.md if component scope changes
+     - Update productContext.md if component features change
+     - Update systemPatterns.md if component architecture changes
+     - Update techContext.md if component technical details change
+     - Update activeContext.md for current work and recent changes
+     - Update progress.md for implementation status and next steps
+     - Update im-a-dummy.md for component-specific patterns
+
+3. Update Process:
+   - Review ALL project-level memory bank files
+   - Review ALL component-specific memory bank files
+   - Update files based on changes made
+   - Ensure consistency between project and component memory banks
+   - Document any new patterns or rules in .cursorrules
+
+NO EXCEPTIONS: The assistant MUST:
+
+1. Update ALL relevant memory bank files
+2. Maintain consistency between project and component memory banks
+3. Document any new patterns or rules
+4. Only then proceed with any task or response
+
 ## Project Intelligence
 
 - Critical implementation paths

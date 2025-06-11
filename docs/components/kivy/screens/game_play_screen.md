@@ -91,6 +91,7 @@ The `GamePlayScreen` (implemented as `ScorerRootWidget`) is the main game interf
 - **Central Hub**: This is the most complex and interactive screen in the application.
 - **Controller-Responder Pattern**: It strictly follows this pattern. All button presses call handler methods on the `ScorerApp` controller. The `ScorerRootWidget` is then responsible for visually representing the resulting state from the `game_state` dictionary via its `update_view_from_state` method.
 - **Dual Control**: While this screen maintains full control, it also listens for and processes updates initiated from player web clients.
+- All widget access is performed via `self.ids.<id>` (matching the widget's id in the .kv file). `ObjectProperty` is not used for widget binding, as per project-wide pattern.
 
 # Changelog
 

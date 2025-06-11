@@ -1,28 +1,13 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from kivy.properties import ObjectProperty
 from widgets.number_pad_popup import NumberPadPopup
 from widgets.concede_confirm_popup import ConcedeConfirmPopup
 from kivy.clock import Clock
 import time
 import logging
+from state.game_state import GameStatus
 
 class ScoreboardScreen(Screen):
-    # Player 1 UI elements
-    p1_name_label = ObjectProperty(None)
-    p1_total_score_label = ObjectProperty(None)
-    p1_cp_label = ObjectProperty(None)
-    p1_end_turn_button = ObjectProperty(None)
-    
-    # Player 2 UI elements
-    p2_name_label = ObjectProperty(None)
-    p2_total_score_label = ObjectProperty(None)
-    p2_cp_label = ObjectProperty(None)
-    p2_end_turn_button = ObjectProperty(None)
-
-    # Shared UI elements
-    header = ObjectProperty(None)
-
     timer_event = None
 
     def on_enter(self):
@@ -68,30 +53,30 @@ class ScoreboardScreen(Screen):
         p2_total_score = state.get('p2_primary_score', 0) + state.get('p2_secondary_score', 0)
 
         # Populate Player 1 info
-        self.p1_name_label.text = state.get('p1_name', 'Player 1')
-        self.p1_total_score_label.text = str(p1_total_score)
-        self.p1_cp_label.text = str(state.get('p1_cp', 0))
+        self.ids.p1_name_label.text = state.get('p1_name', 'Player 1')
+        self.ids.p1_total_score_label.text = str(p1_total_score)
+        self.ids.p1_cp_label.text = str(state.get('p1_cp', 0))
 
         # Populate Player 2 info
-        self.p2_name_label.text = state.get('p2_name', 'Player 2')
-        self.p2_total_score_label.text = str(p2_total_score)
-        self.p2_cp_label.text = str(state.get('p2_cp', 0))
+        self.ids.p2_name_label.text = state.get('p2_name', 'Player 2')
+        self.ids.p2_total_score_label.text = str(p2_total_score)
+        self.ids.p2_cp_label.text = str(state.get('p2_cp', 0))
         
         # Update header and End Turn button visibility
         current_player_name = state.get('current_player_name', '')
         current_round = state.get('current_round', 1)
-        self.header.title = f"{current_player_name}'s Turn - Round {current_round}"
+        self.ids.header.text = f"{current_player_name}'s Turn - Round {current_round}"
 
         if current_player_name == state.get('p1_name'):
-            self.p1_end_turn_button.opacity = 1
-            self.p1_end_turn_button.disabled = False
-            self.p2_end_turn_button.opacity = 0
-            self.p2_end_turn_button.disabled = True
+            self.ids.p1_end_turn_button.opacity = 1
+            self.ids.p1_end_turn_button.disabled = False
+            self.ids.p2_end_turn_button.opacity = 0
+            self.ids.p2_end_turn_button.disabled = True
         else:
-            self.p1_end_turn_button.opacity = 0
-            self.p1_end_turn_button.disabled = True
-            self.p2_end_turn_button.opacity = 1
-            self.p2_end_turn_button.disabled = False
+            self.ids.p1_end_turn_button.opacity = 0
+            self.ids.p1_end_turn_button.disabled = True
+            self.ids.p2_end_turn_button.opacity = 1
+            self.ids.p2_end_turn_button.disabled = False
 
     def open_score_popup(self, player, objective_type):
         """Opens a number pad popup to set a score."""
@@ -127,20 +112,59 @@ class ScoreboardScreen(Screen):
         app.update_cp(player, amount)
         self.update_view_from_state()
 
-    def end_turn(self):
-        """Handles the end of a player's turn."""
+    def end_turn(self, outgoing_player_id):
+        """End the current player's turn and switch to the other player."""
+        if outgoing_player_id not in (1, 2):
+            logging.error(f"Invalid player ID: {outgoing_player_id}")
+            return
+
         app = App.get_running_app()
-        app.end_turn()
+        game_state = app.game_state
+        
+        # If we're at round 5 and player 2 is ending their turn, end the game
+        if game_state['current_round'] == 5 and outgoing_player_id == 2:
+            logging.info("Game over: Round 5 completed by both players")
+            game_state['status'] = GameStatus.GAME_OVER
+            app.save_game_state()
+            app.root.current = 'game_over'
+            return
+
+        # Switch to the other player
+        game_state['current_player_id'] = 3 - outgoing_player_id  # Switch between 1 and 2
+        
+        # If we're switching back to player 1, increment the round
+        if game_state['current_player_id'] == 1:
+            if game_state['current_round'] < 5:
+                game_state['current_round'] += 1
+        
+        # Update the current player name
+        game_state['current_player_name'] = game_state['p1_name'] if game_state['current_player_id'] == 1 else game_state['p2_name']
+        
+        app.save_game_state()
         self.update_view_from_state()
 
-    def show_concede_confirm(self, player):
+    def show_number_pad(self, objective_type, player):
+        """Opens a number pad popup to set a score."""
+        self.open_score_popup(player, objective_type)
+
+    def increment_score(self, player):
+        """Increments the command points for a player."""
+        self.change_cp(player, 1)
+
+    def decrement_score(self, player):
+        """Decrements the command points for a player."""
+        self.change_cp(player, -1)
+
+    def show_concede_confirm(self):
         """Shows the concede confirmation popup."""
-        popup = ConcedeConfirmPopup(player_number=player)
+        app = App.get_running_app()
+        current_player = 1 if app.game_state.get('current_player_name') == app.game_state.get('p1_name') else 2
+        popup = ConcedeConfirmPopup(player_number=current_player)
         
         # Position the popup on the correct side of the screen
-        if player == 1:
+        if current_player == 1:
             popup.pos_hint = {'x': 0.05, 'center_y': 0.5}
         else: # player == 2
             popup.pos_hint = {'right': 0.95, 'center_y': 0.5}
-            
+        
         popup.open() 

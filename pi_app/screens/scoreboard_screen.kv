@@ -1,164 +1,195 @@
-#:kivy 2.3.0
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
 
 <ScoreboardScreen>:
-    p1_name_label: p1_name_label
-    p1_total_score_label: p1_total_score_label
-    p1_cp_label: p1_cp_label
-    p1_end_turn_button: p1_end_turn_button
-    p2_name_label: p2_name_label
-    p2_total_score_label: p2_total_score_label
-    p2_cp_label: p2_cp_label
-    p2_end_turn_button: p2_end_turn_button
-    header: header
-    font_name: '../assets/fonts/Inter/static/Inter_18pt-Black.ttf'
+    title: UI_STRINGS['scoreboard']['title']
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
     BoxLayout:
-        canvas.before:
-            Color:
-                rgba: 0.5, 0.05, 0.05, 1  # Medium-dark red for Player 1
-            Rectangle:
-                pos: self.x, self.y
-                size: self.width/2, self.height
-            Color:
-                rgba: 0.05, 0.05, 0.5, 1  # Medium-dark blue for Player 2
-            Rectangle:
-                pos: self.x + self.width/2, self.y
-                size: self.width/2, self.height
         orientation: 'vertical'
-        HeaderWidget:
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
             id: header
-            title: "Player 1's Turn - Round 1" # Default text
+            text: UI_STRINGS['scoreboard']['title']
+            font_size: '32sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '60dp'
+
+        # Total Time Label
         Label:
             id: total_time_label
-            text: '00:00:00'
-            font_size: '22sp'
+            text: "Total Time: 00:00:00"
+            font_size: '24sp'
+            color: 1, 1, 1, 1
             size_hint_y: None
             height: '40dp'
 
-        # Main content area
+        # Player 1 Section
         BoxLayout:
-            orientation: 'horizontal'
-            padding: '10dp'
-            spacing: '20dp'
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
+            canvas.before:
+                Color:
+                    rgba: 0.1, 0.1, 0.1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
 
-            # Player 1 Column
+            Label:
+                id: p1_name_label
+                text: UI_STRINGS['common']['player1']
+                font_size: '24sp'
+                size_hint_y: None
+                height: '40dp'
+
             BoxLayout:
-                orientation: 'vertical'
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
                 spacing: '10dp'
-                RoundedButton:
-                    id: p1_end_turn_button
-                    text: 'End Turn'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 1 # Player 1 (Red)
-                    on_press: root.end_turn()
-                Label:
-                    id: p1_name_label
-                    text: "Player 1"
-                    font_size: '24sp'
-                    size_hint_y: 0.15
+
                 Label:
                     id: p1_total_score_label
-                    text: '0'
-                    font_size: '150sp'
-                    bold: True
-                    font_name: '../assets/fonts/Inter/static/Inter_18pt-Black.ttf'
-                Label:
-                    text: 'Command Points'
-                    size_hint_y: 0.1
-                BoxLayout:
-                    size_hint_y: 0.2
-                    RoundedButton:
-                        text: '-'
-                        font_size: '32sp'
-                        on_press: root.change_cp(1, -1)
-                        player: 1 # Player 1 (Red)
-                        disabled: int(p1_cp_label.text) == 0
-                    Label:
-                        id: p1_cp_label
-                        text: '0'
-                        font_size: '30sp'
-                        bold: True
-                    RoundedButton:
-                        text: '+'
-                        font_size: '32sp'
-                        on_press: root.change_cp(1, 1)
-                        player: 1 # Player 1 (Red)
-                BoxLayout:
-                    size_hint_y: 0.2
-                    spacing: '10dp'
-                    RoundedButton:
-                        text: 'Primary'
-                        on_press: root.open_score_popup(1, 'primary')
-                        player: 1 # Player 1 (Red)
-                    RoundedButton:
-                        text: 'Secondary'
-                        on_press: root.open_score_popup(1, 'secondary')
-                        player: 1 # Player 1 (Red)
-                RoundedButton:
-                    text: 'Concede'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 1 # Player 1 (Red)
-                    on_press: root.show_concede_confirm(1)
-
-            # Player 2 Column
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: '10dp'
-                RoundedButton:
-                    id: p2_end_turn_button
-                    text: 'End Turn'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 2 # Player 2 (Blue)
-                    on_press: root.end_turn()
-                Label:
-                    id: p2_name_label
-                    text: "Player 2"
+                    text: UI_STRINGS['scoreboard']['zero']
                     font_size: '24sp'
-                    size_hint_y: 0.15
+                    size_hint_x: 0.3
+
+                Label:
+                    id: p1_cp_label
+                    text: UI_STRINGS['common']['command_points']
+                    font_size: '24sp'
+                    size_hint_x: 0.4
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['minus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.decrement_score(1)
+
+                Label:
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['plus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.increment_score(1)
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Button:
+                    text: UI_STRINGS['common']['primary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('primary', 1)
+
+                Button:
+                    text: UI_STRINGS['common']['secondary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('secondary', 1)
+
+                Button:
+                    id: p1_end_turn_button
+                    text: UI_STRINGS['common']['end_turn']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    opacity: 0
+                    disabled: True
+                    on_release: root.end_turn(1)
+
+        # Player 2 Section
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
+            canvas.before:
+                Color:
+                    rgba: 0.1, 0.1, 0.1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Label:
+                id: p2_name_label
+                text: UI_STRINGS['common']['player2']
+                font_size: '24sp'
+                size_hint_y: None
+                height: '40dp'
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
                 Label:
                     id: p2_total_score_label
-                    text: '0'
-                    font_size: '150sp'
-                    bold: True
-                    font_name: '../assets/fonts/Inter/static/Inter_18pt-Black.ttf'
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
                 Label:
-                    text: 'Command Points'
-                    size_hint_y: 0.1
-                BoxLayout:
-                    size_hint_y: 0.2
-                    RoundedButton:
-                        text: '-'
-                        font_size: '32sp'
-                        on_press: root.change_cp(2, -1)
-                        player: 2 # Player 2 (Blue)
-                        disabled: int(p2_cp_label.text) == 0
-                    Label:
-                        id: p2_cp_label
-                        text: '0'
-                        font_size: '30sp'
-                        bold: True
-                    RoundedButton:
-                        text: '+'
-                        font_size: '32sp'
-                        on_press: root.change_cp(2, 1)
-                        player: 2 # Player 2 (Blue)
-                BoxLayout:
-                    size_hint_y: 0.2
-                    spacing: '10dp'
-                    RoundedButton:
-                        text: 'Primary'
-                        on_press: root.open_score_popup(2, 'primary')
-                        player: 2 # Player 2 (Blue)
-                    RoundedButton:
-                        text: 'Secondary'
-                        on_press: root.open_score_popup(2, 'secondary')
-                        player: 2 # Player 2 (Blue)
-                RoundedButton:
-                    text: 'Concede'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 2 # Player 2 (Blue)
-                    on_press: root.show_concede_confirm(2) 
+                    id: p2_cp_label
+                    text: UI_STRINGS['common']['command_points']
+                    font_size: '24sp'
+                    size_hint_x: 0.4
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['minus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.decrement_score(2)
+
+                Label:
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['plus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.increment_score(2)
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Button:
+                    text: UI_STRINGS['common']['primary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('primary', 2)
+
+                Button:
+                    text: UI_STRINGS['common']['secondary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('secondary', 2)
+
+                Button:
+                    id: p2_end_turn_button
+                    text: UI_STRINGS['common']['end_turn']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    opacity: 0
+                    disabled: True
+                    on_release: root.end_turn(2) 

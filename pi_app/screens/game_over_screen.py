@@ -18,16 +18,27 @@ class GameOverScreen(Screen):
         app = App.get_running_app()
         state = app.game_state
         
-        # Set winner text
-        winner = state.get('winner', 'No winner')
+        # Get scores based on state type
+        if isinstance(state, dict):
+            p1_total = state.get('p1_primary_score', 0) + state.get('p1_secondary_score', 0)
+            p2_total = state.get('p2_primary_score', 0) + state.get('p2_secondary_score', 0)
+            p1_name = state.get('p1_name', 'Player 1')
+            p2_name = state.get('p2_name', 'Player 2')
+        else:
+            p1_total = state.player1_primary + state.player1_secondary
+            p2_total = state.player2_primary + state.player2_secondary
+            p1_name = state.player1_name
+            p2_name = state.player2_name
+        
+        # Calculate winner
+        if p1_total > p2_total:
+            winner = p1_name
+        elif p2_total > p1_total:
+            winner = p2_name
+        else:
+            winner = "Draw"
+            
         self.winner_text = f"Winner: {winner}"
-        
-        # Set final scores
-        p1_name = state.get('p1_name', 'Player 1')
-        p2_name = state.get('p2_name', 'Player 2')
-        p1_total = state.get('p1_primary_score', 0) + state.get('p1_secondary_score', 0)
-        p2_total = state.get('p2_primary_score', 0) + state.get('p2_secondary_score', 0)
-        
         self.final_scores_text = f"{p1_name}: {p1_total}\n{p2_name}: {p2_total}"
 
     def start_new_game(self):

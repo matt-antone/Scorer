@@ -1,111 +1,136 @@
+#:kivy 2.2.1
+#:import UI_STRINGS strings.UI_STRINGS
+
 <DeploymentSetupScreen>:
-    p1_name_label: p1_name_label
-    p2_name_label: p2_name_label
-    status_label: status_label
-    p1_roll_label: p1_roll_label
-    p2_roll_label: p2_roll_label
-    p1_roll_button: p1_roll_button
-    p2_roll_button: p2_roll_button
-    p1_choice_box: p1_choice_box
-    p2_choice_box: p2_choice_box
+    title: UI_STRINGS['deployment']['title']
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
     BoxLayout:
-        canvas.before:
-            Color:
-                rgba: 0.5, 0.05, 0.05, 1  # Medium-dark red for Player 1
-            Rectangle:
-                pos: self.x, self.y
-                size: self.width/2, self.height
-            Color:
-                rgba: 0.05, 0.05, 0.5, 1  # Medium-dark blue for Player 2
-            Rectangle:
-                pos: self.x + self.width/2, self.y
-                size: self.width/2, self.height
         orientation: 'vertical'
-        HeaderWidget:
-            title: 'Deployment Roll-Off'
+        padding: '20dp'
+        spacing: '20dp'
 
+        Label:
+            text: UI_STRINGS['deployment']['title']
+            font_size: '32sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '60dp'
+
+        # Status Label
         Label:
             id: status_label
             text: "Players roll to determine Attacker/Defender."
-            font_size: '22sp'
-            size_hint_y: 0.2
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '40dp'
 
+        # Player 1 Section
         BoxLayout:
-            orientation: 'horizontal'
-            padding: '10dp'
-            spacing: '20dp'
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
 
-            # Player 1 Side
-            BoxLayout:
-                orientation: 'vertical'
-                spacing: '10dp'
-                Label:
-                    id: p1_name_label
-                    text: 'Player 1' # Default, will be updated
-                    font_size: '24sp'
-                Label:
-                    id: p1_roll_label
-                    text: ''
-                    font_size: '150sp'
-                RoundedButton:
-                    id: p1_roll_button
-                    text: 'Roll'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 1 # Player 1 (Red)
-                    on_press: root.roll_die(1)
-                BoxLayout:
-                    id: p1_choice_box
-                    orientation: 'vertical'
-                    spacing: '10dp'
-                    opacity: 0
-                    RoundedButton:
-                        text: 'Attacker'
-                        size_hint_y: None
-                        height: '50dp'
-                        player: 1 # Player 1 (Red)
-                        on_press: root.select_role('attacker')
-                    RoundedButton:
-                        text: 'Defender'
-                        size_hint_y: None
-                        height: '50dp'
-                        player: 1 # Player 1 (Red)
-                        on_press: root.select_role('defender')
+            Label:
+                id: p1_name_label
+                text: UI_STRINGS['common']['player1']
+                font_size: '24sp'
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: '40dp'
 
-            # Player 2 Side
+            Label:
+                id: p1_roll_label
+                text: ""
+                font_size: '36sp'
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: '60dp'
+
+            Button:
+                id: p1_roll_button
+                text: UI_STRINGS['common']['roll']
+                font_size: '20sp'
+                size_hint_y: None
+                height: '50dp'
+                on_release: root.roll_player1()
+
             BoxLayout:
-                orientation: 'vertical'
-                spacing: '10dp'
-                Label:
-                    id: p2_name_label
-                    text: 'Player 2' # Default, will be updated
-                    font_size: '24sp'
-                Label:
-                    id: p2_roll_label
-                    text: ''
-                    font_size: '150sp'
-                RoundedButton:
-                    id: p2_roll_button
-                    text: 'Roll'
-                    size_hint_y: None
-                    height: '50dp'
-                    player: 2 # Player 2 (Blue)
-                    on_press: root.roll_die(2)
-                BoxLayout:
-                    id: p2_choice_box
-                    orientation: 'vertical'
-                    spacing: '10dp'
-                    opacity: 0
-                    RoundedButton:
-                        text: 'Attacker'
-                        size_hint_y: None
-                        height: '50dp'
-                        player: 2 # Player 2 (Blue)
-                        on_press: root.select_role('attacker')
-                    RoundedButton:
-                        text: 'Defender'
-                        size_hint_y: None
-                        height: '50dp'
-                        player: 2 # Player 2 (Blue)
-                        on_press: root.select_role('defender') 
+                id: p1_choice_box
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '50dp'
+                opacity: 0
+                disabled: True
+
+                Button:
+                    text: "Attacker"
+                    font_size: '20sp'
+                    on_release: root.select_role('attacker')
+
+                Button:
+                    text: "Defender"
+                    font_size: '20sp'
+                    on_release: root.select_role('defender')
+
+        # Player 2 Section
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
+
+            Label:
+                id: p2_name_label
+                text: UI_STRINGS['common']['player2']
+                font_size: '24sp'
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: '40dp'
+
+            Label:
+                id: p2_roll_label
+                text: ""
+                font_size: '36sp'
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: '60dp'
+
+            Button:
+                id: p2_roll_button
+                text: UI_STRINGS['common']['roll']
+                font_size: '20sp'
+                size_hint_y: None
+                height: '50dp'
+                on_release: root.roll_player2()
+
+            BoxLayout:
+                id: p2_choice_box
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '50dp'
+                opacity: 0
+                disabled: True
+
+                Button:
+                    text: "Attacker"
+                    font_size: '20sp'
+                    on_release: root.select_role('attacker')
+
+                Button:
+                    text: "Defender"
+                    font_size: '20sp'
+                    on_release: root.select_role('defender')
+
+        # Continue Button
+        Button:
+            text: UI_STRINGS['deployment']['continue']
+            font_size: '24sp'
+            size_hint_y: None
+            height: '48dp'
+            on_release: root.select_role('attacker') 

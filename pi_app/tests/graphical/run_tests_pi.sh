@@ -9,5 +9,8 @@ export SDL_VIDEODRIVER=x11
 export DISPLAY=:0
 export XAUTHORITY=/home/matthewantone/.Xauthority
 
+# Add pi_app to Python path
+export PYTHONPATH=/home/matthewantone/Scorer:$PYTHONPATH
+
 # Run tests
 python3 -m pi_app.tests.graphical.run_tests 

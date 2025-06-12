@@ -629,3 +629,231 @@ SDL_VIDEO_KMSDRM_FORCE_DSI_FORMAT=0
 - [Pi App Memory Bank](../pi_app/memory-bank/)
 - [State Server Memory Bank](../state_server/memory-bank/)
 - [Phone Clients Memory Bank](../phone_clients/memory-bank/)
+
+## Screen Implementation
+
+### Base Screen
+
+The `BaseScreen` class provides core functionality for all screens in the application.
+
+#### Core Components
+
+- State management
+- Error handling
+- Input validation
+- Client synchronization
+- Lifecycle management
+
+#### Required Methods
+
+- `update_view_from_state()`
+- `recover_from_error()`
+- `broadcast_state()`
+- `handle_client_update()`
+
+#### State Management
+
+- State validation
+- State updates
+- State broadcasting
+- State recovery
+
+#### Error Handling
+
+- Error types
+- Error display
+- Error recovery
+- Error logging
+
+#### Synchronization
+
+- Client sync
+- State updates
+- Error handling
+- Recovery
+
+## Implementation Details
+
+### Base Screen
+
+```python
+class BaseScreen(Screen):
+    # State flags
+    is_loading = BooleanProperty(False)
+    is_syncing = BooleanProperty(False)
+    has_error = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._sync_event = None
+        self._error_timeout = None
+        self._current_error = None
+        self._current_status = None
+        self.logger = logging.getLogger(f"{self.__class__.__name__}")
+```
+
+### Required Methods
+
+```python
+def update_view_from_state(self):
+    """Update UI from game state."""
+    pass
+
+def recover_from_error(self):
+    """Recover from error state."""
+    pass
+
+def broadcast_state(self):
+    """Broadcast state changes."""
+    pass
+
+def handle_client_update(self, update):
+    """Handle client updates."""
+    pass
+```
+
+### Error Handling
+
+```python
+class ScreenError(Exception):
+    """Base exception for screen-related errors."""
+    pass
+
+class ValidationError(ScreenError):
+    """Raised when input validation fails."""
+    pass
+
+class StateError(ScreenError):
+    """Raised when state is invalid."""
+    pass
+
+class SyncError(ScreenError):
+    """Raised when synchronization fails."""
+    pass
+```
+
+### State Management
+
+```python
+def validate_state(self, required_keys=None):
+    """Validate current game state."""
+    pass
+
+def update_state(self, updates):
+    """Update game state."""
+    pass
+
+def broadcast_state(self):
+    """Broadcast state changes."""
+    pass
+```
+
+### Synchronization
+
+```python
+def start_sync(self):
+    """Start client synchronization."""
+    pass
+
+def stop_sync(self):
+    """Stop client synchronization."""
+    pass
+
+def handle_client_update(self, update):
+    """Handle client updates."""
+    pass
+```
+
+## Screen Implementation
+
+### Required Files
+
+1. Python file
+
+   - Screen class
+   - Required methods
+   - Error handling
+   - State management
+   - Synchronization
+
+2. KV file
+   - UI layout
+   - Error display
+   - Status display
+   - Loading display
+
+### Example Implementation
+
+```python
+class MyScreen(BaseScreen):
+    def update_view_from_state(self):
+        # Update UI from game state
+        pass
+
+    def recover_from_error(self):
+        # Implement error recovery
+        pass
+
+    def broadcast_state(self):
+        # Broadcast state changes
+        pass
+
+    def handle_client_update(self, update):
+        # Handle client updates
+        pass
+```
+
+```kv
+<MyScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+
+        Label:
+            id: error_label
+            text: root._current_error if root.has_error else ""
+            opacity: 1 if root.has_error else 0
+
+        Label:
+            id: status_label
+            text: root._current_status or ""
+
+        Spinner:
+            id: loading_spinner
+            opacity: 1 if root.is_loading else 0
+            disabled: not root.is_loading
+```
+
+## Best Practices
+
+### Screen Implementation
+
+1. Use BaseScreen
+2. Define UI in KV
+3. Implement methods
+4. Handle state
+5. Manage errors
+6. Sync clients
+
+### State Management
+
+1. Validate state
+2. Update state
+3. Broadcast changes
+4. Handle updates
+5. Recover errors
+
+### Error Handling
+
+1. Use error types
+2. Display errors
+3. Handle recovery
+4. Clear errors
+5. Log issues
+
+### Synchronization
+
+1. Start sync
+2. Handle updates
+3. Broadcast state
+4. Stop sync
+5. Handle errors

@@ -111,3 +111,31 @@ While the loading indicator is shown, the application performs several critical 
 - Updated screen transitions
 - Added conditional routing logic
 - Synchronized with new documentation standard from `docs/screens/kivy-screens/splash_screen.md`
+
+# Implementation Gaps and Differences (2024-07-29)
+
+A review of the current implementation versus this documentation reveals the following:
+
+| Feature/Behavior          | Docs/Memories | Implementation   | Gap? |
+| ------------------------- | ------------- | ---------------- | ---- |
+| Loading indicator         | Required      | Not shown in UI  | Yes  |
+| Network check             | Required      | Implemented      | No   |
+| QR code generation        | Required      | Implemented      | No   |
+| QR code display           | Optional      | Not shown        | Yes  |
+| Start button              | Required      | Implemented      | No   |
+| Error label               | Required      | Not present      | Yes  |
+| Status label              | Required      | Implemented      | No   |
+| on_enter/on_leave         | Required      | Not implemented  | Yes  |
+| Kivy events               | Required      | Not implemented  | Yes  |
+| Synchronization w/clients | Required      | Not in this code | Yes  |
+
+**Summary of Gaps:**
+
+- No loading spinner is shown, though the property exists.
+- No dedicated error label; status label is used for all messages.
+- No Kivy events (`on_loading_complete`, `on_error`).
+- No `on_enter`/`on_leave` methods; background tasks are scheduled in `__init__`.
+- QR codes are generated but not displayed on the splash screen.
+- No explicit synchronization with clients in this screen's code.
+
+These gaps should be addressed to bring the implementation in line with the documentation and intended user experience.

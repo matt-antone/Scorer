@@ -10,5 +10,8 @@ export SDL_VIDEO_KMSDRM_CONNECTOR=36
 export SDL_LOG_PRIORITY=VERBOSE
 export SDL_LOG_CATEGORY_VIDEO=VERBOSE
 
+# Activate virtual environment
+source /home/matthewantone/Scorer/pi_app/.venv/bin/activate
+
 # Run the tests
-python3 -m pi_app.tests.graphical.run_tests 
+python -m pi_app.tests.graphical.run_tests 

@@ -10,6 +10,11 @@ export SDL_VIDEO_KMSDRM_CONNECTOR=36
 export SDL_LOG_PRIORITY=VERBOSE
 export SDL_LOG_CATEGORY_VIDEO=VERBOSE
 
+# Set Kivy to use framebuffer
+export KIVY_WINDOW=sdl2
+export KIVY_GL_BACKEND=sdl2
+export KIVY_GRAPHICS=gl
+
 # Activate virtual environment
 source /home/matthewantone/Scorer/pi_app/.venv/bin/activate
 

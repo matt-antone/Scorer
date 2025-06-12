@@ -25,7 +25,8 @@ NO EXCEPTIONS: The assistant MUST:
 2. Read ALL relevant documentation
 3. Explicitly confirm having read both
 4. Only then proceed with any task or response
-5. when adding new functionalty, modifying existing functionalty or fixing a bug read /memory-blocks as instructed and read the related docs in /docs
+5. when adding new functionalty, modifying existing functionalty or fixing a bug read /memory-bank as instructed and read the related docs in /docs before beginning
+6. When functionality, modifications or bug fixing are complete, check solutions against the /memory-bank and /docs
 
 ## MANDATORY DEBUGGING REQUIREMENTS
 
@@ -102,3 +103,36 @@ NO EXCEPTIONS: The assistant MUST:
 - Known challenges
 - Evolution of project decisions
 - Tool usage patterns
+
+## Test-Driven Documentation Principles (MANDATORY)
+
+1. Documentation is the Source of Truth
+
+   - All tests MUST be based on documentation requirements
+   - Tests can NEVER be modified to match implementation
+   - Implementation must be modified to match tests
+   - Documentation drives all test changes
+
+2. Test Implementation Rules
+
+   - Tests must be written based on documented requirements
+   - Tests must validate documented behavior
+   - Tests must cover all documented features
+   - Tests must include documented error cases
+   - Tests must verify documented state transitions
+
+3. Documentation-Implementation Relationship
+
+   - Documentation is the contract
+   - Tests verify the contract
+   - Implementation fulfills the contract
+   - If implementation differs from documentation:
+     a. Update implementation to match documentation
+     b. NEVER modify tests to match implementation
+     c. NEVER modify documentation to match implementation
+
+4. Test Maintenance
+   - When documentation changes, tests must be updated
+   - When tests fail, implementation must be fixed
+   - When implementation changes, tests must still pass
+   - Test modifications require documentation updates first

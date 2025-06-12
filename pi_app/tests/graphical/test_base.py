@@ -3,6 +3,7 @@ Base test class for graphical tests.
 Provides common setup and teardown functionality.
 """
 import unittest
+import os
 from kivy.tests.common import GraphicUnitTest
 from kivy.clock import Clock
 
@@ -14,6 +15,8 @@ class BaseScreenTest(GraphicUnitTest):
     def setUp(self):
         """Set up the test environment."""
         super().setUp()
+        # Set the working directory to the pi_app directory
+        os.chdir(os.path.join(os.path.dirname(__file__), '../..'))
         self.app = ScorerApp()
         self.app.run()
         self.advance_frames(1)

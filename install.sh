@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Set up logging
+LOG_FILE="install.log"
+exec 1> >(tee -a "$LOG_FILE")
+exec 2> >(tee -a "$LOG_FILE" >&2)
+
+echo ">>> Starting Scorer installation at $(date)"
+
 # Refuse to run as root
 if [ "$EUID" -eq 0 ]; then
   echo "ERROR: Do not run this script as root or with sudo. Dependencies must be installed as your user."
@@ -96,4 +103,4 @@ if [ -f /proc/device-tree/model ] && grep -q "Raspberry Pi" /proc/device-tree/mo
     fi
 fi
 
-echo ">>> Installation complete!" 
+echo ">>> Installation complete at $(date)!" 

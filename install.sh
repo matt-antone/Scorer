@@ -81,12 +81,13 @@ if [ -f ../state_server/db/alembic.ini ]; then
     source ../pi_app/.venv/bin/activate
     
     # Check if migrations directory is empty
-    if [ ! -f db/migrations/versions/*.py ]; then
+    if [ ! "$(ls -A db/migrations/versions/*.py 2>/dev/null)" ]; then
         echo ">>> Generating initial migration..."
         alembic -c db/alembic.ini revision --autogenerate -m "Initial migration"
     fi
     
     # Run migrations
+    echo ">>> Applying migrations..."
     alembic -c db/alembic.ini upgrade head
     cd ../pi_app
 else

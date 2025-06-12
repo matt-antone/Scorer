@@ -12,9 +12,9 @@ def run_tests():
     # Add the parent directory to the Python path
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
     
-    # Discover all tests in the tests directory
+    # Discover all tests in the pi_app/tests directory
     test_loader = unittest.TestLoader()
-    test_suite = test_loader.discover(os.path.dirname(__file__), pattern='test_*.py')
+    test_suite = test_loader.discover(os.path.abspath(os.path.dirname(__file__)), pattern='test_*.py')
     
     # Run the tests
     test_runner = unittest.TextTestRunner(verbosity=2)

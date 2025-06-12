@@ -183,5 +183,4 @@ class BaseScreenTest(GraphicUnitTest):
         self.assertFalse(self.screen.is_syncing)
         self.assertIsNone(self.screen._sync_event)
 
-if __name__ == '__main__':
-    unittest.main() 
+# ... existing code ... 

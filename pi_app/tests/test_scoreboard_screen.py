@@ -207,5 +207,4 @@ class ScoreboardScreenTest(GraphicUnitTest):
         with self.assertRaises(StateError):
             self.screen.validate_state(['missing_key'])
 
-if __name__ == '__main__':
-    unittest.main() 
+# ... existing code ... 

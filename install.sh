@@ -80,15 +80,19 @@ if [ -f ../state_server/db/alembic.ini ]; then
     cd ../state_server
     source ../pi_app/.venv/bin/activate
     
+    # Ensure we're in the right environment
+    echo ">>> Using Python: $(which python)"
+    echo ">>> Python version: $(python --version)"
+    
     # Check if migrations directory is empty
     if [ ! "$(ls -A db/migrations/versions/*.py 2>/dev/null)" ]; then
         echo ">>> Generating initial migration..."
-        PYTHONPATH=. alembic -c db/alembic.ini revision --autogenerate -m "Initial migration"
+        PYTHONPATH=. python -m alembic -c db/alembic.ini revision --autogenerate -m "Initial migration"
     fi
     
     # Run migrations
     echo ">>> Applying migrations..."
-    PYTHONPATH=. alembic -c db/alembic.ini upgrade head
+    PYTHONPATH=. python -m alembic -c db/alembic.ini upgrade head
     cd ../pi_app
 else
     echo "Alembic config not found at state_server/db/alembic.ini, skipping migrations."

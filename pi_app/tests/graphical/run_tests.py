@@ -5,7 +5,7 @@ Script to run graphical tests on Raspberry Pi.
 import os
 import sys
 import time
-from test_suite import test_suite
+from pi_app.tests.graphical.test_suite import test_suite
 
 def main():
     """Run the graphical test suite."""

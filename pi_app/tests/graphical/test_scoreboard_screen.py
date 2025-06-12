@@ -1,7 +1,7 @@
 """
 Tests for the Scoreboard Screen.
 """
-from .test_base import BaseScreenTest
+from pi_app.tests.graphical.test_base import BaseScreenTest
 
 class TestScoreboardScreen(BaseScreenTest):
     """Tests for the Scoreboard Screen."""

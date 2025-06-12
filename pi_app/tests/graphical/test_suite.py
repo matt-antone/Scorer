@@ -2,14 +2,14 @@
 Test suite for running all graphical tests.
 """
 import pytest
-from .test_splash_screen import TestSplashScreen
-from .test_resume_game_screen import TestResumeGameScreen
-from .test_name_entry_screen import TestNameEntryScreen
-from .test_deployment_setup_screen import TestDeploymentSetupScreen
-from .test_initiative_screen import TestInitiativeScreen
-from .test_scoreboard_screen import TestScoreboardScreen
-from .test_game_over_screen import TestGameOverScreen
-from .test_settings_screen import TestSettingsScreen
+from pi_app.tests.graphical.test_splash_screen import TestSplashScreen
+from pi_app.tests.graphical.test_resume_game_screen import TestResumeGameScreen
+from pi_app.tests.graphical.test_name_entry_screen import TestNameEntryScreen
+from pi_app.tests.graphical.test_deployment_setup_screen import TestDeploymentSetupScreen
+from pi_app.tests.graphical.test_initiative_screen import TestInitiativeScreen
+from pi_app.tests.graphical.test_scoreboard_screen import TestScoreboardScreen
+from pi_app.tests.graphical.test_game_over_screen import TestGameOverScreen
+from pi_app.tests.graphical.test_settings_screen import TestSettingsScreen
 
 def test_suite():
     """Run all graphical tests in sequence."""

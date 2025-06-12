@@ -10,6 +10,8 @@ class TestNameEntryScreen(BaseScreenTest):
         """Set up the test environment."""
         super().setUp()
         self.screen = self.get_screen('name_entry')
+        self.screen.on_enter()
+        self.advance_frames(1)
     
     def test_initial_state(self):
         """Test the initial state of the screen."""
@@ -22,47 +24,47 @@ class TestNameEntryScreen(BaseScreenTest):
         self.assert_widget_text(self.screen, 'p1_name_input', '')
         self.assert_widget_text(self.screen, 'p2_name_input', '')
         
-        # Check initial button state
+        # Check button state
         self.assert_widget_disabled(self.screen, 'continue_button', True)
     
-    def test_name_validation(self):
-        """Test name validation."""
-        # Test empty names
+    def test_input_validation(self):
+        """Test input validation."""
+        # Test empty inputs
         self.screen.p1_name_input.text = ''
         self.screen.p2_name_input.text = ''
-        self.screen.validate_names()
+        self.screen.validate_inputs()
         self.advance_frames(1)
         self.assert_widget_disabled(self.screen, 'continue_button', True)
         
-        # Test one empty name
+        # Test partial inputs
         self.screen.p1_name_input.text = 'Player 1'
         self.screen.p2_name_input.text = ''
-        self.screen.validate_names()
+        self.screen.validate_inputs()
         self.advance_frames(1)
         self.assert_widget_disabled(self.screen, 'continue_button', True)
         
-        # Test both names filled
+        # Test valid inputs
         self.screen.p1_name_input.text = 'Player 1'
         self.screen.p2_name_input.text = 'Player 2'
-        self.screen.validate_names()
+        self.screen.validate_inputs()
         self.advance_frames(1)
         self.assert_widget_disabled(self.screen, 'continue_button', False)
     
     def test_continue_button(self):
         """Test the continue button functionality."""
-        # Set names
+        # Set valid inputs
         self.screen.p1_name_input.text = 'Player 1'
         self.screen.p2_name_input.text = 'Player 2'
-        self.screen.validate_names()
+        self.screen.validate_inputs()
         self.advance_frames(1)
         
         # Click continue button
         self.screen.continue_button.trigger_action()
         self.advance_frames(1)
         
-        # Check that we moved to the initiative screen
-        assert self.app.root.current == 'initiative'
+        # Check that we moved to the deployment setup screen
+        assert self.app.root.current == 'deployment_setup'
         
-        # Check that names were saved in game state
+        # Check that names were saved
         assert self.app.game_state['p1_name'] == 'Player 1'
         assert self.app.game_state['p2_name'] == 'Player 2' 

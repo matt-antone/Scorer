@@ -10,69 +10,42 @@ class TestInitiativeScreen(BaseScreenTest):
         """Set up the test environment."""
         super().setUp()
         self.screen = self.get_screen('initiative')
+        self.screen.on_enter()
+        self.advance_frames(1)
     
     def test_initial_state(self):
         """Test the initial state of the screen."""
         # Check that all required widgets exist
-        self.assert_widget_exists(self.screen, 'p1_roll_button')
-        self.assert_widget_exists(self.screen, 'p2_roll_button')
-        self.assert_widget_exists(self.screen, 'p1_roll_label')
-        self.assert_widget_exists(self.screen, 'p2_roll_label')
+        self.assert_widget_exists(self.screen, 'p1_initiative_label')
+        self.assert_widget_exists(self.screen, 'p2_initiative_label')
         self.assert_widget_exists(self.screen, 'continue_button')
         
-        # Check initial button states
-        self.assert_widget_disabled(self.screen, 'p1_roll_button', False)
-        self.assert_widget_disabled(self.screen, 'p2_roll_button', False)
-        self.assert_widget_disabled(self.screen, 'continue_button', True)
-        
         # Check initial label states
-        self.assert_widget_text(self.screen, 'p1_roll_label', '')
-        self.assert_widget_text(self.screen, 'p2_roll_label', '')
-    
-    def test_roll_die_player1(self):
-        """Test rolling the die for player 1."""
-        # Roll die for player 1
-        self.screen.roll_die(1)
-        self.advance_frames(1)
+        self.assert_widget_text(self.screen, 'p1_initiative_label', 'Player 1: Roll for Initiative')
+        self.assert_widget_text(self.screen, 'p2_initiative_label', 'Player 2: Roll for Initiative')
         
-        # Check button states
-        self.assert_widget_disabled(self.screen, 'p1_roll_button', True)
-        self.assert_widget_disabled(self.screen, 'p2_roll_button', False)
+        # Check button state
         self.assert_widget_disabled(self.screen, 'continue_button', True)
-        
-        # Check that roll label has a value
-        assert self.screen.p1_roll_label.text != ''
     
-    def test_roll_die_player2(self):
-        """Test rolling the die for player 2."""
-        # Roll die for player 1 first
-        self.screen.roll_die(1)
+    def test_initiative_roll(self):
+        """Test initiative roll functionality."""
+        # Roll initiative for both players
+        self.screen.p1_initiative = 5
+        self.screen.p2_initiative = 3
+        self.screen.validate_initiative()
         self.advance_frames(1)
         
-        # Roll die for player 2
-        self.screen.roll_die(2)
-        self.advance_frames(1)
-        
-        # Check button states
-        self.assert_widget_disabled(self.screen, 'p1_roll_button', True)
-        self.assert_widget_disabled(self.screen, 'p2_roll_button', True)
+        # Check button state
         self.assert_widget_disabled(self.screen, 'continue_button', False)
-        
-        # Check that both roll labels have values
-        assert self.screen.p1_roll_label.text != ''
-        assert self.screen.p2_roll_label.text != ''
-    
-    def test_continue_button(self):
-        """Test the continue button functionality."""
-        # Roll dice for both players
-        self.screen.roll_die(1)
-        self.advance_frames(1)
-        self.screen.roll_die(2)
-        self.advance_frames(1)
         
         # Click continue button
         self.screen.continue_button.trigger_action()
         self.advance_frames(1)
         
         # Check that we moved to the scoreboard screen
-        assert self.app.root.current == 'scoreboard' 
+        assert self.app.root.current == 'scoreboard'
+        
+        # Check that initiative was saved
+        assert self.app.game_state['p1_initiative'] == 5
+        assert self.app.game_state['p2_initiative'] == 3
+        assert self.app.game_state['first_player'] == 1 

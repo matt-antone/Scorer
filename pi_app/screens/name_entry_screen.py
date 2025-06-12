@@ -2,7 +2,7 @@ from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.lang import Builder
 from kivy.uix.label import Label
-from strings import UI_STRINGS
+from pi_app.strings import UI_STRINGS
 import os
 
 class NameEntryScreen(Screen):

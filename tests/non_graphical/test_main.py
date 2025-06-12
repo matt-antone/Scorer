@@ -1,7 +1,7 @@
 import pytest
 import os
 import json
-from main import ScorerApp
+from pi_app.main import ScorerApp
 
 @pytest.fixture
 def app(tmpdir):

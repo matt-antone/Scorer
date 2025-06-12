@@ -1,11 +1,11 @@
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from widgets.number_pad_popup import NumberPadPopup
-from widgets.concede_confirm_popup import ConcedeConfirmPopup
+from pi_app.widgets.number_pad_popup import NumberPadPopup
+from pi_app.widgets.concede_confirm_popup import ConcedeConfirmPopup
 from kivy.clock import Clock
 import time
 import logging
-from state.game_state import GameStatus
+from pi_app.state import GameStatus
 
 class ScoreboardScreen(Screen):
     timer_event = None

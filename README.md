@@ -89,6 +89,95 @@ Each component has its own:
 - Development guidelines
 - Testing framework
 
+## Testing
+
+The project includes two types of tests: non-graphical (logic and state management) and graphical (Kivy UI) tests.
+
+### Non-Graphical Tests
+
+These tests verify core functionality and can be run on any platform (macOS, Raspberry Pi, CI, etc.).
+
+#### Prerequisites
+
+- Python 3.8 or higher
+- pytest installed (`pip install pytest`)
+
+#### Running Non-Graphical Tests
+
+1. **Ensure you are in the project root directory:**
+
+   ```bash
+   cd /path/to/Scorer
+   ```
+
+2. **Activate the virtual environment:**
+
+   ```bash
+   source pi_app/.venv/bin/activate
+   ```
+
+3. **Run the tests using pytest:**
+   ```bash
+   python -m pytest tests/non_graphical/ -v
+   ```
+
+#### What's Tested
+
+- Game state management
+- Score calculations
+- Player management
+- Initiative tracking
+- Game flow logic
+
+#### Troubleshooting
+
+- If you see import errors, ensure all imports use absolute paths (e.g., `from pi_app.screens...`)
+- If you add new non-graphical tests, place them in `tests/non_graphical/`
+
+### Graphical Tests (Kivy)
+
+These tests verify the UI components and must be run on the Raspberry Pi with a display.
+
+#### Prerequisites
+
+- Raspberry Pi 5 with 5-inch touchscreen
+- All dependencies installed via `install.sh`
+- Virtual environment activated
+
+#### Running Graphical Tests
+
+1. **Ensure you are in the project root directory:**
+
+   ```bash
+   cd /path/to/Scorer
+   ```
+
+2. **Activate the virtual environment:**
+
+   ```bash
+   source pi_app/.venv/bin/activate
+   ```
+
+3. **Run the tests using pytest:**
+   ```bash
+   python -m pytest tests/graphical/ -v
+   ```
+
+#### What's Tested
+
+- Screen transitions
+- UI component behavior
+- Touch interactions
+- Visual feedback
+- Layout rendering
+
+#### Troubleshooting
+
+- Ensure the display is connected and working
+- Check that Kivy is properly installed
+- Verify all dependencies are installed
+- Run tests in a graphical environment (not headless)
+
 ## Documentation
 
 - `docs/`: Technical documentation and implementation details
@@ -101,6 +190,58 @@ Each component has its own:
 2. Follow the development guidelines
 3. Update the memory bank as you make changes
 4. Test thoroughly before submitting changes
+
+## Version Control
+
+### Git Branch Management
+
+#### Switching Branches
+
+1. **List all branches:**
+
+   ```bash
+   git branch -a
+   ```
+
+   - Local branches are shown without prefix
+   - Remote branches are prefixed with `remotes/origin/`
+
+2. **Switch to an existing branch:**
+
+   ```bash
+   git checkout <branch-name>
+   ```
+
+   or using the newer syntax:
+
+   ```bash
+   git switch <branch-name>
+   ```
+
+3. **Create and switch to a new branch:**
+
+   ```bash
+   git checkout -b <new-branch-name>
+   ```
+
+   or using the newer syntax:
+
+   ```bash
+   git switch -c <new-branch-name>
+   ```
+
+4. **Update your local repository:**
+   ```bash
+   git fetch origin
+   git pull origin <branch-name>
+   ```
+
+#### Best Practices
+
+- Always create feature branches from the latest `main` branch
+- Use descriptive branch names (e.g., `feature/scoreboard-updates`, `fix/initiative-bug`)
+- Keep branches up to date with `main` to avoid merge conflicts
+- Delete branches after they're merged
 
 ## License
 

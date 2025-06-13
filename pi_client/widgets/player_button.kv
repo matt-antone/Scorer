@@ -1,0 +1,16 @@
+#:kivy 2.3.0
+
+<PlayerButton@Button>:
+    font_name: 'assets/fonts/Inter/static/Inter_18pt-Bold.ttf'
+    font_size: '18sp'
+    color: 1, 1, 1, 1
+    background_color: 0, 0, 0, 0
+    size_hint: None, None
+    size: 200, 50
+    canvas.before:
+        Color:
+            rgba: 0.2, 0.2, 0.2, 1
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [10,] 

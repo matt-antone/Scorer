@@ -2,8 +2,9 @@ import unittest
 from kivy.tests.common import GraphicUnitTest
 from kivy.app import App
 from kivy.clock import Clock
-from pi_app.screens.game_over_screen import GameOverScreen
-from pi_app.screens.base_screen import ValidationError, StateError
+from pi_client.screens.game_over_screen import GameOverScreen
+from pi_client.screens.base_screen import ValidationError, StateError
+from pi_client.tests.graphical.test_base import BaseScreenTest
 
 class TestApp(App):
     """Test application with game state."""
@@ -18,27 +19,17 @@ class TestApp(App):
             'save_game': False
         }
 
-class GameOverScreenTest(GraphicUnitTest):
+class TestGameOverScreen(BaseScreenTest):
     """Test cases for GameOverScreen."""
+
+    app_class = TestApp
 
     def setUp(self):
         """Set up test environment."""
-        self.app = TestApp()
-        self.screen = GameOverScreen()
-        self.app.game_state = {
-            'players': [],
-            'scores': {},
-            'winner': None,
-            'game_history': [],
-            'cleanup_required': False,
-            'save_game': False
-        }
-
-    def tearDown(self):
-        """Clean up test environment."""
-        self.screen.stop_sync()
-        if self.screen._error_timeout:
-            self.screen._error_timeout.cancel()
+        super().setUp()
+        self.screen = self.get_screen('game_over')
+        self.screen.on_enter()
+        self.advance_frames(1)
 
     def test_initial_state(self):
         """Test initial state of GameOverScreen."""
@@ -51,47 +42,6 @@ class GameOverScreenTest(GraphicUnitTest):
         self.assertEqual(len(self.screen.game_history), 0)
         self.assertFalse(self.screen.cleanup_required)
         self.assertFalse(self.screen.save_game)
-
-    def test_final_score_display(self):
-        """Test final score display functionality."""
-        # Test score initialization
-        self.screen.initialize_scores()
-        self.assertEqual(len(self.screen.scores), 0)
-        
-        # Test score update
-        self.screen.update_scores({'Player1': 10, 'Player2': 5})
-        self.assertEqual(len(self.screen.scores), 2)
-        self.assertEqual(self.screen.scores['Player1'], 10)
-        self.assertEqual(self.screen.scores['Player2'], 5)
-        
-        # Test score validation
-        self.assertTrue(self.screen.validate_scores())
-        
-        # Test score display
-        score_display = self.screen.get_score_display()
-        self.assertIn('Player1', score_display)
-        self.assertIn('Player2', score_display)
-        self.assertIn('10', score_display)
-        self.assertIn('5', score_display)
-
-    def test_winner_determination(self):
-        """Test winner determination functionality."""
-        # Test winner calculation
-        self.screen.update_scores({'Player1': 10, 'Player2': 5})
-        self.screen.determine_winner()
-        self.assertEqual(self.screen.winner, 'Player1')
-        
-        # Test tie handling
-        self.screen.update_scores({'Player1': 10, 'Player2': 10})
-        self.screen.determine_winner()
-        self.assertIsNone(self.screen.winner)
-        
-        # Test winner display
-        self.screen.update_scores({'Player1': 10, 'Player2': 5})
-        self.screen.determine_winner()
-        winner_display = self.screen.get_winner_display()
-        self.assertIn('Player1', winner_display)
-        self.assertIn('winner', winner_display.lower())
 
     def test_game_state_cleanup(self):
         """Test game state cleanup functionality."""
@@ -139,6 +89,76 @@ class GameOverScreenTest(GraphicUnitTest):
         self.assertTrue(self.screen.has_error)
         self.assertIn('cleanup', self.screen._current_error.lower())
 
+    def test_input_validation(self):
+        """Test input validation."""
+        # Test valid input
+        self.assertTrue(self.screen.validate_input({
+            'score': 10
+        }, {
+            'score': lambda x: isinstance(x, int) and x >= 0
+        }))
+        
+        # Test invalid input
+        with self.assertRaises(ValidationError):
+            self.screen.validate_input({
+                'score': -1
+            }, {
+                'score': lambda x: isinstance(x, int) and x >= 0
+            })
+
+    def test_state_validation(self):
+        """Test state validation."""
+        # Test valid state
+        self.assertTrue(self.screen.validate_state([
+            'players', 'scores', 'winner', 'game_history',
+            'cleanup_required', 'save_game'
+        ]))
+        
+        # Test invalid state
+        with self.assertRaises(StateError):
+            self.screen.validate_state(['missing_key'])
+
+    def test_final_score_display(self):
+        """Test final score display functionality."""
+        # Test score initialization
+        self.screen.initialize_scores()
+        self.assertEqual(len(self.screen.scores), 0)
+        
+        # Test score update
+        self.screen.update_scores({'Player1': 10, 'Player2': 5})
+        self.assertEqual(len(self.screen.scores), 2)
+        self.assertEqual(self.screen.scores['Player1'], 10)
+        self.assertEqual(self.screen.scores['Player2'], 5)
+        
+        # Test score validation
+        self.assertTrue(self.screen.validate_scores())
+        
+        # Test score display
+        score_display = self.screen.get_score_display()
+        self.assertIn('Player1', score_display)
+        self.assertIn('Player2', score_display)
+        self.assertIn('10', score_display)
+        self.assertIn('5', score_display)
+
+    def test_winner_determination(self):
+        """Test winner determination functionality."""
+        # Test winner calculation
+        self.screen.update_scores({'Player1': 10, 'Player2': 5})
+        self.screen.determine_winner()
+        self.assertEqual(self.screen.winner, 'Player1')
+        
+        # Test tie handling
+        self.screen.update_scores({'Player1': 10, 'Player2': 10})
+        self.screen.determine_winner()
+        self.assertIsNone(self.screen.winner)
+        
+        # Test winner display
+        self.screen.update_scores({'Player1': 10, 'Player2': 5})
+        self.screen.determine_winner()
+        winner_display = self.screen.get_winner_display()
+        self.assertIn('Player1', winner_display)
+        self.assertIn('winner', winner_display.lower())
+
     def test_client_synchronization(self):
         """Test client synchronization functionality."""
         # Test start sync
@@ -162,34 +182,5 @@ class GameOverScreenTest(GraphicUnitTest):
             self.screen.handle_client_update({
                 'type': 'invalid_type'
             })
-
-    def test_input_validation(self):
-        """Test input validation."""
-        # Test valid input
-        self.assertTrue(self.screen.validate_input({
-            'action': 'new_game'
-        }, {
-            'action': lambda x: x in ['new_game', 'return_to_splash']
-        }))
-        
-        # Test invalid input
-        with self.assertRaises(ValidationError):
-            self.screen.validate_input({
-                'action': 'invalid_action'
-            }, {
-                'action': lambda x: x in ['new_game', 'return_to_splash']
-            })
-
-    def test_state_validation(self):
-        """Test state validation."""
-        # Test valid state
-        self.assertTrue(self.screen.validate_state([
-            'players', 'scores', 'winner', 'game_history',
-            'cleanup_required', 'save_game'
-        ]))
-        
-        # Test invalid state
-        with self.assertRaises(StateError):
-            self.screen.validate_state(['missing_key'])
 
 # ... existing code ... 

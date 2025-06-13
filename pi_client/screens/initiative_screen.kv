@@ -1,0 +1,102 @@
+#:kivy 2.3.0
+#:import UI_STRINGS pi_client.strings.UI_STRINGS
+
+<InitiativeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            text: 'Roll for Initiative!'
+            font_size: '24sp'
+            size_hint_y: None
+            height: '48dp'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+
+            Label:
+                id: p1_name_label
+                text: root.p1_name
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+            Label:
+                id: p2_name_label
+                text: root.p2_name
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+
+            RoundedButton:
+                id: p1_roll_button
+                text: 'Roll'
+                size_hint_x: 0.5
+                on_release: root.roll_die(1)
+
+            RoundedButton:
+                id: p2_roll_button
+                text: 'Roll'
+                size_hint_x: 0.5
+                on_release: root.roll_die(2)
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+
+            Label:
+                id: p1_roll_label
+                text: '0'
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+            Label:
+                id: p2_roll_label
+                text: '0'
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+
+            RoundedButton:
+                id: p1_choice_box
+                text: 'Go First'
+                size_hint_x: 0.5
+                opacity: 0
+                disabled: True
+                on_release: root.select_first_turn(1)
+
+            RoundedButton:
+                id: p2_choice_box
+                text: 'Go First'
+                size_hint_x: 0.5
+                opacity: 0
+                disabled: True
+                on_release: root.select_first_turn(2)
+
+        Label:
+            id: status_label
+            text: 'Roll for initiative!'
+            font_size: '20sp'
+            size_hint_y: None
+            height: '48dp'
+
+        RoundedButton:
+            id: continue_button
+            text: 'Continue to Game'
+            size_hint_y: None
+            height: '48dp'
+            opacity: 0
+            disabled: True
+            on_release: root.continue_to_game() 

@@ -1,7 +1,9 @@
 import pytest
+from kivy.app import App
+from kivy.tests.common import GraphicUnitTest
 import os
 import json
-from pi_app.main import ScorerApp
+from pi_client.main import ScorerApp
 
 @pytest.fixture
 def app(tmpdir):

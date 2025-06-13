@@ -1,0 +1,34 @@
+#:kivy 2.2.1
+#:import UI_STRINGS pi_client.strings.UI_STRINGS
+
+<ConcedeConfirmPopup@Popup>:
+    title: UI_STRINGS['concede_confirm']['title']
+    size_hint: 0.8, 0.4
+    auto_dismiss: False
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            text: UI_STRINGS['concede_confirm']['question']
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '40dp'
+
+        BoxLayout:
+            orientation: 'horizontal'
+            spacing: '20dp'
+            size_hint_y: None
+            height: '50dp'
+
+            Button:
+                text: UI_STRINGS['common']['no']
+                font_size: '20sp'
+                on_release: root.dismiss()
+            Button:
+                text: UI_STRINGS['common']['yes']
+                font_size: '20sp'
+                on_release: root.confirm_concede() 

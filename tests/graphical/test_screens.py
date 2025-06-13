@@ -2,8 +2,8 @@ import pytest
 from kivy.app import App
 from kivy.tests.common import GraphicUnitTest
 from kivy.base import EventLoop
-from pi_app.main import ScorerApp
-from pi_app.widgets.number_pad_popup import NumberPadPopup
+from pi_client.main import ScorerApp
+from pi_client.widgets.number_pad_popup import NumberPadPopup
 
 
 class InitiativeScreenTests(GraphicUnitTest):

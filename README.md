@@ -4,7 +4,7 @@ A comprehensive scoring system for Warhammer 40k games, consisting of three main
 
 ## Project Structure
 
-### 1. Pi App (`pi_app/`)
+### 1. Pi Client (`pi_client/`)
 
 The core Kivy application running on Raspberry Pi 5 with a 5-inch touchscreen.
 
@@ -59,15 +59,15 @@ Web-based applications for player interaction via mobile devices.
    - Do NOT use sudo. The script will handle all dependencies as your user.
    - The installer will:
      - Install and link Homebrew dependencies (ffmpeg@6, SDL2, etc.)
-     - Create a virtual environment for the Pi App
-     - Install all Python dependencies (including ffpyplayer) in the Pi App's virtual environment
+     - Create a virtual environment for the Pi Client
+     - Install all Python dependencies (including ffpyplayer) in the Pi Client's virtual environment
      - Build ffpyplayer from source with system libraries
-     - Run Alembic migrations using the Pi App's virtual environment
+     - Run Alembic migrations using the Pi Client's virtual environment
 
-3. **Launch the Pi App:**
+3. **Launch the Pi Client:**
 
    ```bash
-   cd pi_app
+   cd pi_client
    ./launch_scorer.sh
    ```
 
@@ -76,7 +76,7 @@ Web-based applications for player interaction via mobile devices.
 4. **(Optional) Launch the State Server:**
    ```bash
    cd state_server
-   source ../pi_app/.venv/bin/activate
+   source ../pi_client/.venv/bin/activate
    python main.py
    ```
 
@@ -113,7 +113,7 @@ These tests verify core functionality and can be run on any platform (macOS, Ras
 2. **Activate the virtual environment:**
 
    ```bash
-   source pi_app/.venv/bin/activate
+   source pi_client/.venv/bin/activate
    ```
 
 3. **Run the tests using pytest:**
@@ -131,7 +131,7 @@ These tests verify core functionality and can be run on any platform (macOS, Ras
 
 #### Troubleshooting
 
-- If you see import errors, ensure all imports use absolute paths (e.g., `from pi_app.screens...`)
+- If you see import errors, ensure all imports use absolute paths (e.g., `from pi_client.screens...`)
 - If you add new non-graphical tests, place them in `tests/non_graphical/`
 
 ### Graphical Tests (Kivy)
@@ -155,7 +155,7 @@ These tests verify the UI components and must be run on the Raspberry Pi with a 
 2. **Activate the virtual environment:**
 
    ```bash
-   source pi_app/.venv/bin/activate
+   source pi_client/.venv/bin/activate
    ```
 
 3. **Run the tests using pytest:**

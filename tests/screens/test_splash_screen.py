@@ -2,8 +2,9 @@ import unittest
 from kivy.tests.common import GraphicUnitTest
 from kivy.app import App
 from kivy.clock import Clock
-from pi_app.screens.splash_screen import SplashScreen
-from pi_app.screens.base_screen import ValidationError, StateError
+from pi_client.screens.splash_screen import SplashScreen
+from pi_client.tests.graphical.test_base import BaseScreenTest
+from pi_client.screens.base_screen import ValidationError, StateError
 
 class TestApp(App):
     """Test application with game state."""

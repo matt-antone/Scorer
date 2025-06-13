@@ -1,10 +1,12 @@
 # Cursor Rules
 
+You are not lazy. It's hard. that's why you want to do it.
+
 ## MANDATORY READING REQUIREMENTS
 
 BEFORE ANY TASK EXECUTION OR RESPONSE, THE FOLLOWING MUST BE READ AND CONFIRMED:
 
-1. Memory Bank Files (MUST READ ALL, IN ORDER):
+1. Memory Bank Files (MUST READ ALL, IN ORDER, FOLLOW REFERENCES):
 
    - projectbrief.md
    - productContext.md
@@ -14,19 +16,15 @@ BEFORE ANY TASK EXECUTION OR RESPONSE, THE FOLLOWING MUST BE READ AND CONFIRMED:
    - progress.md
    - im-a-dummy.md
 
-2. Relevant Documentation (MUST READ ALL PERTINENT FILES):
+2. Relevant Documentation (MUST READ ALL PERTINENT FILES, FOLLOW REFERENCES):
    - All files in docs/ directory pertaining to the specific feature or component being worked with
    - Any screen-specific documentation if working with UI components
-   - Any system pattern documentation if implementing new features
-
-NO EXCEPTIONS: The assistant MUST:
-
-1. Read ALL Memory Bank files
-2. Read ALL relevant documentation
-3. Explicitly confirm having read both
-4. Only then proceed with any task or response
-5. when adding new functionalty, modifying existing functionalty or fixing a bug read /memory-bank as instructed and read the related docs in /docs before beginning
-6. When functionality, modifications or bug fixing are complete, check solutions against the /memory-bank and /docs
+   - Any system pattern documentation if implementing new features1. Read ALL Memory Bank files
+3. Read ALL relevant documentation
+4. Explicitly confirm having read both
+5. Only then proceed with any task or response
+6. when adding new functionalty, modifying existing functionalty or fixing a bug read /memory-bank as instructed and read the related docs in /docs before beginning
+7. When functionality, modifications or bug fixing are complete, check that the soulution aligns with /memory-bank and /docs
 
 ## MANDATORY DEBUGGING REQUIREMENTS
 
@@ -136,3 +134,9 @@ NO EXCEPTIONS: The assistant MUST:
    - When tests fail, implementation must be fixed
    - When implementation changes, tests must still pass
    - Test modifications require documentation updates first
+
+# MANDATORY EXECUTION ORDER
+
+# CRITICAL PI DEVELOPMENT RULE
+
+# Never edit project files directly on the Pi. All changes must be made on the development machine and pushed via git. This is a mandatory workflow rule for all development and testing.

@@ -1,0 +1,78 @@
+#:kivy 2.3.0
+#:import UI_STRINGS pi_client.strings.UI_STRINGS
+
+<NameEntryScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            text: 'Enter Player Names'
+            font_size: '24sp'
+            size_hint_y: None
+            height: '48dp'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '120dp'
+            spacing: '10dp'
+
+            Label:
+                text: 'Player 1'
+                font_size: '20sp'
+                size_hint_y: None
+                height: '30dp'
+
+            TextInput:
+                id: p1_name_input
+                multiline: False
+                font_size: '20sp'
+                size_hint_y: None
+                height: '40dp'
+                on_text: root.p1_name = self.text
+
+            Label:
+                text: 'Player 2'
+                font_size: '20sp'
+                size_hint_y: None
+                height: '30dp'
+
+            TextInput:
+                id: p2_name_input
+                multiline: False
+                font_size: '20sp'
+                size_hint_y: None
+                height: '40dp'
+                on_text: root.p2_name = self.text
+
+        Label:
+            id: error_label
+            text: ''
+            font_size: '16sp'
+            color: 1, 0, 0, 1
+            size_hint_y: None
+            height: '30dp'
+            opacity: 0
+
+        Widget:
+            size_hint_y: 1
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+            spacing: '20dp'
+
+            RoundedButton:
+                text: 'Back'
+                size_hint_x: 0.5
+                on_release: root.back_to_resume()
+
+            RoundedButton:
+                id: continue_button
+                text: 'Continue'
+                size_hint_x: 0.5
+                disabled: True
+                on_release: root.proceed_to_deployment() 

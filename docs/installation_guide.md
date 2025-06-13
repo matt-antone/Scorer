@@ -31,20 +31,20 @@ The project includes an automated installer script that handles all setup tasks:
 The installer will:
 
 1. Install and link Homebrew dependencies (ffmpeg@6, SDL2, etc.)
-2. Create a virtual environment for the Pi App
-3. Install all Python dependencies (including ffpyplayer) in the Pi App's virtual environment
+2. Create a virtual environment for the Pi Client
+3. Install all Python dependencies (including ffpyplayer) in the Pi Client's virtual environment
 4. Build ffpyplayer from source with system libraries
-5. Run Alembic migrations using the Pi App's virtual environment
+5. Run Alembic migrations using the Pi Client's virtual environment
 6. Configure the environment
 
 ### 3. Verify Installation
 
 After installation, verify that all components are set up correctly:
 
-#### Pi App
+#### Pi Client
 
 ```bash
-cd pi_app
+cd pi_client
 ./launch_scorer.sh
 ```
 
@@ -54,7 +54,7 @@ If you see the app launch without errors, the installation was successful and al
 
 ```bash
 cd state_server
-source ../pi_app/.venv/bin/activate
+source ../pi_client/.venv/bin/activate
 python main.py
 ```
 
@@ -62,7 +62,7 @@ python main.py
 
 ```
 Scorer/
-├── pi_app/              # Kivy application for Raspberry Pi
+├── pi_client/              # Kivy application for Raspberry Pi
 │   ├── assets/         # Application assets
 │   ├── screens/        # Kivy screen definitions
 │   ├── widgets/        # Custom Kivy widgets

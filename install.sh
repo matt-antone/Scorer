@@ -59,9 +59,9 @@ else
     exit 1
 fi
 
-# Install Pi App dependencies
-echo ">>> Installing Pi App Python dependencies..."
-cd pi_app
+# Install Pi Client dependencies
+echo ">>> Installing Pi Client Python dependencies..."
+cd pi_client
 python3 -m venv .venv || true
 source .venv/bin/activate
 pip install --upgrade pip
@@ -78,7 +78,7 @@ USE_SYSTEM_LIBS=1 pip install --no-binary ffpyplayer ffpyplayer==4.5.2
 if [ -f ../state_server/db/alembic.ini ]; then
     echo ">>> Running Alembic migrations..."
     cd ../state_server
-    source ../pi_app/.venv/bin/activate
+    source ../pi_client/.venv/bin/activate
     
     # Ensure we're in the right environment
     echo ">>> Using Python: $(which python)"
@@ -93,7 +93,7 @@ if [ -f ../state_server/db/alembic.ini ]; then
     # Run migrations
     echo ">>> Applying migrations..."
     PYTHONPATH=. python -m alembic -c db/alembic.ini upgrade head
-    cd ../pi_app
+    cd ../pi_client
 else
     echo "Alembic config not found at state_server/db/alembic.ini, skipping migrations."
 fi

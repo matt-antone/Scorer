@@ -1,5 +1,40 @@
 # System Patterns
 
+## Directory Structure
+
+```
+pi_app/
+│  ├── screens/
+│  ├── widgets/
+│  ├── state/
+│  ├── scorer.kv
+│  └── strings.py
+├── __init__.py
+├── main.py
+├── setup.py
+└── launch_scorer.sh
+```
+
+## Canonical Directory Structure for pi_app/src
+
+- The canonical structure for `pi_app/src` is as follows:
+
+```
+pi_app/
+│  ├── screens/
+│  ├── widgets/
+│  ├── state/
+│  ├── scorer.kv
+│  └── strings.py
+├── __init__.py
+├── main.py
+├── setup.py
+└── launch_scorer.sh
+```
+
+- This structure is defined by the user and takes precedence over any other documentation or inferred structure.
+- No extra folders are to be created unless explicitly requested by the user.
+
 ## Architecture Overview
 
 ### Component Structure
@@ -377,3 +412,46 @@ graph LR
    - Update tests before changing implementation
    - Verify implementation matches documentation
    - Ensure tests remain valid and comprehensive
+
+## Kivy and Python Import Path Patterns (Critical)
+
+### Problem
+
+- Kivy's `#:import` in `.kv` files does not use the same import resolution as standard Python imports.
+- If you use `#:import UI_STRINGS strings.UI_STRINGS`, Kivy looks for a top-level `strings.py` in the current working directory or in `PYTHONPATH`.
+- If you use `from strings import UI_STRINGS` in Python, it only works if `strings.py` is in the current directory or in `PYTHONPATH`.
+- Running the app or tests from different directories (project root vs. `pi_app`) changes what works.
+- On the Pi, or in CI, the working directory is usually the project root, so `strings.py` is not found unless you use the full package path or set `PYTHONPATH`.
+
+### What Doesn't Work
+
+- Using `#:import UI_STRINGS strings.UI_STRINGS` in `.kv` files if `strings.py` is not in the root directory or not in `PYTHONPATH`.
+- Using relative imports in Python (e.g., `from .strings import UI_STRINGS`) if the module is run as `__main__` or from a different directory.
+- Relying on the dev machine's environment ("just work" without replicating the same setup on the Pi.
+
+### Solution / Pattern
+
+- **Always use the full package path in both Python and KV files:**
+  - In Python: `from pi_app.strings import UI_STRINGS`
+  - In KV: `#:import UI_STRINGS pi_app.strings.UI_STRINGS`
+- **Set `PYTHONPATH` to include the project root** before running the app or tests:
+  - `export PYTHONPATH=/path/to/Scorer:$PYTHONPATH`
+- **Run the app/tests from the project root** for consistency.
+- **Never use ambiguous or relative imports** in `.kv` or `.py` files for shared modules.
+- **Document this pattern in both systemPatterns.md and .cursorrules.**
+
+### Example
+
+```kv
+#:import UI_STRINGS pi_app.strings.UI_STRINGS
+```
+
+```python
+from pi_app.strings import UI_STRINGS
+```
+
+### Summary
+
+- Consistency in import paths and environment is critical for cross-platform (dev/Pi/CI) reliability.
+- Always use absolute package paths and set `PYTHONPATH` to the project root.
+- This avoids repeated import errors and environment-specific bugs.

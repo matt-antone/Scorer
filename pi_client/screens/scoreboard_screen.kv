@@ -1,0 +1,195 @@
+#:kivy 2.2.1
+#:import UI_STRINGS pi_client.strings.UI_STRINGS
+
+<ScoreboardScreen>:
+    title: UI_STRINGS['scoreboard']['title']
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
+
+        Label:
+            id: header
+            text: UI_STRINGS['scoreboard']['title']
+            font_size: '32sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '60dp'
+
+        # Total Time Label
+        Label:
+            id: total_time_label
+            text: "Total Time: 00:00:00"
+            font_size: '24sp'
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: '40dp'
+
+        # Player 1 Section
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
+            canvas.before:
+                Color:
+                    rgba: 0.1, 0.1, 0.1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Label:
+                id: p1_name_label
+                text: UI_STRINGS['common']['player1']
+                font_size: '24sp'
+                size_hint_y: None
+                height: '40dp'
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Label:
+                    id: p1_total_score_label
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Label:
+                    id: p1_cp_label
+                    text: UI_STRINGS['common']['command_points']
+                    font_size: '24sp'
+                    size_hint_x: 0.4
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['minus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.decrement_score(1)
+
+                Label:
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['plus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.increment_score(1)
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Button:
+                    text: UI_STRINGS['common']['primary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('primary', 1)
+
+                Button:
+                    text: UI_STRINGS['common']['secondary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('secondary', 1)
+
+                Button:
+                    id: p1_end_turn_button
+                    text: UI_STRINGS['common']['end_turn']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    opacity: 0
+                    disabled: True
+                    on_release: root.end_turn(1)
+
+        # Player 2 Section
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: '200dp'
+            canvas.before:
+                Color:
+                    rgba: 0.1, 0.1, 0.1, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Label:
+                id: p2_name_label
+                text: UI_STRINGS['common']['player2']
+                font_size: '24sp'
+                size_hint_y: None
+                height: '40dp'
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Label:
+                    id: p2_total_score_label
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Label:
+                    id: p2_cp_label
+                    text: UI_STRINGS['common']['command_points']
+                    font_size: '24sp'
+                    size_hint_x: 0.4
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['minus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.decrement_score(2)
+
+                Label:
+                    text: UI_STRINGS['scoreboard']['zero']
+                    font_size: '24sp'
+                    size_hint_x: 0.3
+
+                Button:
+                    text: UI_STRINGS['scoreboard']['plus']
+                    font_size: '24sp'
+                    size_hint_x: 0.15
+                    on_release: root.increment_score(2)
+
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
+
+                Button:
+                    text: UI_STRINGS['common']['primary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('primary', 2)
+
+                Button:
+                    text: UI_STRINGS['common']['secondary']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    on_release: root.show_number_pad('secondary', 2)
+
+                Button:
+                    id: p2_end_turn_button
+                    text: UI_STRINGS['common']['end_turn']
+                    font_size: '20sp'
+                    size_hint_x: 0.45
+                    opacity: 0
+                    disabled: True
+                    on_release: root.end_turn(2) 

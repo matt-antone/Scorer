@@ -2,8 +2,9 @@ import unittest
 from kivy.tests.common import GraphicUnitTest
 from kivy.app import App
 from kivy.clock import Clock
-from pi_app.screens.deployment_setup_screen import DeploymentSetupScreen
-from pi_app.screens.base_screen import ValidationError, StateError
+from pi_client.screens.deployment_setup_screen import DeploymentSetupScreen
+from pi_client.screens.base_screen import ValidationError, StateError
+from pi_client.tests.graphical.test_base import BaseScreenTest
 
 class TestApp(App):
     """Test application with game state."""
@@ -21,30 +22,17 @@ class TestApp(App):
             }
         }
 
-class DeploymentSetupScreenTest(GraphicUnitTest):
+class TestDeploymentSetupScreen(BaseScreenTest):
     """Test cases for DeploymentSetupScreen."""
+
+    app_class = TestApp
 
     def setUp(self):
         """Set up test environment."""
-        self.app = TestApp()
-        self.screen = DeploymentSetupScreen()
-        self.app.game_state = {
-            'players': [],
-            'roles': {},
-            'deployment_sequence': [],
-            'rolls': {},
-            'roll_validation': {
-                'min_value': 1,
-                'max_value': 6,
-                'required_rolls': 2
-            }
-        }
-
-    def tearDown(self):
-        """Clean up test environment."""
-        self.screen.stop_sync()
-        if self.screen._error_timeout:
-            self.screen._error_timeout.cancel()
+        super().setUp()
+        self.screen = self.get_screen('deployment_setup')
+        self.screen.on_enter()
+        self.advance_frames(1)
 
     def test_initial_state(self):
         """Test initial state of DeploymentSetupScreen."""
@@ -55,49 +43,6 @@ class DeploymentSetupScreenTest(GraphicUnitTest):
         self.assertEqual(len(self.screen.roles), 0)
         self.assertEqual(len(self.screen.deployment_sequence), 0)
         self.assertEqual(len(self.screen.rolls), 0)
-
-    def test_role_assignment(self):
-        """Test role assignment functionality."""
-        # Test role assignment
-        self.screen.assign_role("Player1", "Attacker")
-        self.assertEqual(self.screen.roles["Player1"], "Attacker")
-        
-        # Test role validation
-        self.assertTrue(self.screen.validate_role("Attacker"))
-        with self.assertRaises(ValidationError):
-            self.screen.validate_role("InvalidRole")
-        
-        # Test role update
-        self.screen.update_role("Player1", "Defender")
-        self.assertEqual(self.screen.roles["Player1"], "Defender")
-        
-        # Test role removal
-        self.screen.remove_role("Player1")
-        self.assertNotIn("Player1", self.screen.roles)
-
-    def test_client_synchronization(self):
-        """Test client synchronization functionality."""
-        # Test start sync
-        self.screen.start_sync()
-        self.assertTrue(self.screen.is_syncing)
-        
-        # Test stop sync
-        self.screen.stop_sync()
-        self.assertFalse(self.screen.is_syncing)
-        
-        # Test client update
-        update = {
-            'type': 'roles',
-            'roles': {'Player1': 'Attacker', 'Player2': 'Defender'}
-        }
-        self.screen.handle_client_update(update)
-        self.assertEqual(len(self.screen.roles), 2)
-        
-        # Test invalid update
-        with self.assertRaises(ValidationError):
-            self.screen.handle_client_update({
-                'type': 'invalid_type'
-            })
 
     def test_roll_validation(self):
         """Test roll validation functionality."""

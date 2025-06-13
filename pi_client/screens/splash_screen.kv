@@ -1,0 +1,55 @@
+#:kivy 2.2.1
+#:import UI_STRINGS pi_client.strings.UI_STRINGS
+
+<SplashScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '40dp'
+        spacing: '40dp'
+
+        # Title
+        Label:
+            id: title_label
+            text: UI_STRINGS['splash']['title']
+            font_size: '32sp'
+            size_hint_y: None
+            height: '100dp'
+
+        # Version
+        Label:
+            id: version_label
+            text: root.app_version
+            font_size: '18sp'
+            size_hint_y: None
+            height: '30dp'
+
+        # Loading Status
+        Label:
+            id: loading_label
+            text: root.loading_status
+            font_size: '20sp'
+            size_hint_y: None
+            height: '40dp'
+
+        # Status
+        Label:
+            text: root.status_text
+            font_size: '24sp'
+            size_hint_y: None
+            height: '50dp'
+
+        # Start Button
+        Button:
+            text: UI_STRINGS['splash']['start']
+            font_size: '28sp'
+            size_hint_y: None
+            height: '80dp'
+            disabled: not root.start_enabled
+            on_release: root.on_start_button() 

@@ -4,7 +4,7 @@ Tests for the GameState class.
 
 import pytest
 from datetime import datetime
-from game_state import GameState, GameStatus
+from pi_client.state.game_state import GameState, GameStatus
 
 
 def test_initial_state():

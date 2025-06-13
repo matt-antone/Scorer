@@ -2,140 +2,163 @@
 
 ## Current Focus
 
-### State Synchronization
+### State Server Rewrite
 
-1. **Recent Changes**
+1. **Implementation Plan**
 
-   - Implemented WebSocket server
-   - Added state broadcasting
-   - Enhanced error handling
-   - Improved client management
-
-2. **Current Work**
-   - Testing state synchronization
-   - Verifying client connections
-   - Ensuring data consistency
-   - Validating error recovery
-
-### Client Management
-
-1. **Recent Changes**
-
-   - Added client authentication
-   - Implemented session management
-   - Enhanced connection handling
-   - Added client state tracking
+   - Complete rewrite of state server
+   - Maintain compatibility with Pi client
+   - Follow documentation exactly
+   - No changes to existing interfaces
 
 2. **Current Work**
-   - Testing client connections
-   - Verifying authentication
-   - Ensuring session persistence
-   - Validating error handling
+   - Planning implementation phases
+   - Setting up project structure
+   - Preparing test infrastructure
+   - Documenting migration strategy
 
 ## Implementation Details
 
-### WebSocket Server
+### Project Structure
 
-1. **Class Structure**
+```
+state_server/
+├── src/
+│   ├── database/
+│   │   ├── __init__.py
+│   │   ├── schema.py        # Database schema matching docs
+│   │   └── manager.py       # Database operations
+│   ├── websocket/
+│   │   ├── __init__.py
+│   │   ├── server.py        # WebSocket server matching docs
+│   │   └── messages.py      # Message handling
+│   ├── state/
+│   │   ├── __init__.py
+│   │   ├── manager.py       # State management
+│   │   └── validation.py    # State validation
+│   ├── security/
+│   │   ├── __init__.py
+│   │   ├── auth.py         # Authentication
+│   │   └── rate_limit.py   # Rate limiting
+│   └── error/
+│       ├── __init__.py
+│       └── handler.py      # Error handling
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── performance/
+└── config/
+    └── settings.py         # Configuration
+```
 
-   ```python
-   class GameStateServer:
-       def __init__(self):
-           self.app = Flask(__name__)
-           self.socketio = SocketIO(self.app)
-           self.clients = {}
-           self.game_state = {}
-   ```
+### Implementation Phases
 
-2. **Key Methods**
-   - `handle_connect()`: Client connection
-   - `handle_disconnect()`: Client disconnection
-   - `broadcast_state()`: State updates
-   - `handle_client_message()`: Client messages
+1. **Phase 1: Core Infrastructure (Week 1)**
 
-### State Management
+   - Database schema implementation
+   - Database manager
+   - Project structure setup
+   - Initial testing
 
-1. **State Structure**
+2. **Phase 2: WebSocket Server (Week 2)**
 
-   ```python
-   class GameState:
-       def __init__(self):
-           self.p1_name = ""
-           self.p2_name = ""
-           self.current_round = 1
-           self.current_player_id = 1
-           self.status = "not_started"
-   ```
+   - Server implementation
+   - Message handling
+   - Connection management
+   - Integration testing
 
-2. **State Operations**
-   - State updates
-   - Client synchronization
-   - Error recovery
-   - Data validation
+3. **Phase 3: State Management (Week 3)**
+
+   - State manager
+   - State validation
+   - State synchronization
+   - State testing
+
+4. **Phase 4: Security Implementation (Week 4)**
+
+   - Authentication
+   - Rate limiting
+   - Security testing
+   - Performance testing
+
+5. **Phase 5: Testing and Migration (Week 5)**
+   - Comprehensive testing
+   - Migration preparation
+   - Initial deployment
+   - Monitoring
+
+### Migration Strategy
+
+1. **Parallel Operation**
+
+   - Run new server alongside existing one
+   - Both servers receive updates
+   - New server processes but doesn't broadcast
+
+2. **Validation Phase**
+
+   - Compare state between servers
+   - Verify all operations match
+   - Test error handling
+
+3. **Switchover**
+   - Enable broadcasting on new server
+   - Monitor for issues
+   - Keep old server as backup
 
 ## Current Issues
 
-### Connection Management
+### Implementation
 
-1. **Client Handling**
+1. **Database**
 
-   - [ ] Test connection limits
-   - [ ] Verify reconnection
-   - [ ] Check session persistence
-   - [ ] Validate error recovery
+   - [ ] Implement schema
+   - [ ] Create manager
+   - [ ] Test operations
+   - [ ] Verify persistence
 
-2. **State Synchronization**
-   - [ ] Test state updates
-   - [ ] Verify broadcasting
-   - [ ] Check data consistency
-   - [ ] Validate error handling
+2. **WebSocket**
+   - [ ] Implement server
+   - [ ] Handle messages
+   - [ ] Test connections
+   - [ ] Verify communication
 
-### Error Handling
+### Testing
 
-1. **Connection Issues**
+1. **Unit Tests**
 
-   - [ ] Test disconnections
-   - [ ] Verify recovery
-   - [ ] Check state preservation
-   - [ ] Validate error messages
+   - [ ] Database tests
+   - [ ] WebSocket tests
+   - [ ] State tests
+   - [ ] Security tests
 
-2. **State Issues**
-   - [ ] Test invalid states
-   - [ ] Verify validation
-   - [ ] Check error recovery
-   - [ ] Validate error messages
+2. **Integration Tests**
+   - [ ] Pi client tests
+   - [ ] State sync tests
+   - [ ] Error handling
+   - [ ] Performance tests
 
 ## Next Steps
 
-### Immediate Tasks
+1. **Immediate Tasks**
 
-1. **Connection Management**
+   - Set up project structure
+   - Implement database schema
+   - Create test infrastructure
+   - Begin WebSocket implementation
 
-   - Complete connection testing
-   - Verify all scenarios
-   - Test error recovery
-   - Document patterns
+2. **Short-term Goals**
 
-2. **State Management**
-   - Complete state testing
-   - Verify synchronization
-   - Test recovery
-   - Document patterns
+   - Complete Phase 1
+   - Begin Phase 2
+   - Set up CI/CD
+   - Document progress
 
-### Future Work
-
-1. **Enhancements**
-
-   - Add state history
-   - Improve recovery
-   - Enhance validation
-   - Add debugging
-
-2. **Features**
-   - Add statistics
-   - Improve monitoring
-   - Enhance security
-   - Add logging
+3. **Long-term Goals**
+   - Complete all phases
+   - Implement migration
+   - Monitor performance
+   - Document lessons learned
 
 ## Related Documentation
 

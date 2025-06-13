@@ -1,4 +1,4 @@
-from game_state import GameState, GameStatus
+from pi_client.state.game_state import GameState, GameStatus
 
 print("--- GameState Integration Test ---")
 

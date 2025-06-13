@@ -455,3 +455,146 @@ from pi_app.strings import UI_STRINGS
 - Consistency in import paths and environment is critical for cross-platform (dev/Pi/CI) reliability.
 - Always use absolute package paths and set `PYTHONPATH` to the project root.
 - This avoids repeated import errors and environment-specific bugs.
+
+## 2024-06-13: Shared Widget Style Pattern
+
+- All shared widget styles (e.g., RoundedButton) must be defined in a single KV file (e.g., button_styles.kv).
+- Include this file only once (in scorer.kv).
+- Do not use direct Builder.load_file for shared styles in screen files.
+- This prevents duplicate class warnings and ensures maintainability.
+- See .cursorrules for enforcement.
+
+## Screen Implementation Patterns
+
+### Base Screen Requirements
+
+1. All screens must inherit from `BaseScreen`
+2. Required method implementations:
+   - `update_view_from_state()`
+   - `recover_from_error()`
+   - `broadcast_state()`
+   - `handle_client_update()`
+
+### Error Handling Pattern
+
+1. Use standardized error types
+2. Implement error recovery methods
+3. Display user-friendly error messages
+4. Log errors for debugging
+5. Update UI to reflect error state
+
+### State Management Pattern
+
+1. Use game state as source of truth
+2. Implement state validation methods
+3. Update UI based on state changes
+4. Broadcast state changes to clients
+5. Handle state synchronization errors
+
+### UI Update Pattern
+
+1. Update UI elements through KV bindings
+2. Use properties for dynamic updates
+3. Implement update methods for complex changes
+4. Handle UI state transitions
+5. Maintain consistent UI state
+
+### Validation Pattern
+
+1. Implement validation methods
+2. Check input constraints
+3. Update UI for validation results
+4. Handle validation errors
+5. Maintain validation state
+
+### Cleanup Pattern
+
+1. Implement cleanup methods
+2. Reset state to initial values
+3. Clear UI elements
+4. Handle cleanup errors
+5. Update game state
+
+## Screen-Specific Patterns
+
+### DeploymentSetupScreen
+
+1. Roll validation
+   - Check roll bounds
+   - Validate roll sequence
+   - Update UI for valid/invalid rolls
+   - Handle validation errors
+
+### GameOverScreen
+
+1. Game state cleanup
+   - Reset game state
+   - Save game history
+   - Clear UI elements
+   - Handle cleanup errors
+
+### InitiativeScreen
+
+1. Initiative determination
+   - Compare roll results
+   - Update game state
+   - Handle ties
+   - Update UI for results
+
+### NameEntryScreen
+
+1. Name validation
+   - Check name constraints
+   - Update UI for valid/invalid names
+   - Handle validation errors
+   - Update game state
+
+## Implementation Guidelines
+
+### Method Implementation
+
+1. Follow error handling pattern
+2. Use state management pattern
+3. Implement UI update pattern
+4. Follow validation pattern
+5. Use cleanup pattern
+
+### State Management
+
+1. Validate state changes
+2. Update UI elements
+3. Broadcast changes
+4. Handle errors
+5. Maintain consistency
+
+### Error Handling
+
+1. Use error types
+2. Display errors
+3. Handle recovery
+4. Clear errors
+5. Log issues
+
+### UI Updates
+
+1. Use KV bindings
+2. Update properties
+3. Handle transitions
+4. Maintain state
+5. Show feedback
+
+### Validation
+
+1. Check constraints
+2. Update UI
+3. Handle errors
+4. Maintain state
+5. Show feedback
+
+### Cleanup
+
+1. Reset state
+2. Clear UI
+3. Handle errors
+4. Update state
+5. Show feedback

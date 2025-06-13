@@ -375,3 +375,135 @@ def handle_client_update(self, update):
     """Handle client updates."""
     # Child classes should implement specific update handling
 ```
+
+## I'm a Dummy
+
+## Screen Implementation Rules
+
+### Base Screen Rules
+
+1. ALWAYS inherit from BaseScreen
+2. ALWAYS implement required methods
+3. NEVER skip error handling
+4. NEVER skip state management
+5. NEVER skip UI updates
+
+### Error Handling Rules
+
+1. ALWAYS use standardized error types
+2. ALWAYS implement error recovery
+3. ALWAYS display user-friendly errors
+4. ALWAYS log errors for debugging
+5. ALWAYS update UI for error state
+
+### State Management Rules
+
+1. ALWAYS use game state as source of truth
+2. ALWAYS validate state changes
+3. ALWAYS update UI for state changes
+4. ALWAYS broadcast state changes
+5. ALWAYS handle sync errors
+
+### UI Update Rules
+
+1. ALWAYS use KV bindings
+2. ALWAYS use properties for updates
+3. ALWAYS handle transitions
+4. ALWAYS maintain UI state
+5. ALWAYS show feedback
+
+### Validation Rules
+
+1. ALWAYS implement validation
+2. ALWAYS check constraints
+3. ALWAYS update UI for results
+4. ALWAYS handle errors
+5. ALWAYS maintain state
+
+### Cleanup Rules
+
+1. ALWAYS implement cleanup
+2. ALWAYS reset state
+3. ALWAYS clear UI
+4. ALWAYS handle errors
+5. ALWAYS update state
+
+## Screen-Specific Rules
+
+### DeploymentSetupScreen
+
+1. ALWAYS validate roll bounds
+2. ALWAYS validate roll sequence
+3. ALWAYS update UI for rolls
+4. ALWAYS handle validation errors
+
+### GameOverScreen
+
+1. ALWAYS reset game state
+2. ALWAYS save game history
+3. ALWAYS clear UI elements
+4. ALWAYS handle cleanup errors
+
+### InitiativeScreen
+
+1. ALWAYS compare roll results
+2. ALWAYS update game state
+3. ALWAYS handle ties
+4. ALWAYS update UI for results
+
+### NameEntryScreen
+
+1. ALWAYS check name constraints
+2. ALWAYS update UI for names
+3. ALWAYS handle validation errors
+4. ALWAYS update game state
+
+## Implementation Rules
+
+### Method Rules
+
+1. ALWAYS follow error handling pattern
+2. ALWAYS use state management pattern
+3. ALWAYS implement UI update pattern
+4. ALWAYS follow validation pattern
+5. ALWAYS use cleanup pattern
+
+### State Rules
+
+1. ALWAYS validate changes
+2. ALWAYS update UI
+3. ALWAYS broadcast changes
+4. ALWAYS handle errors
+5. ALWAYS maintain consistency
+
+### Error Rules
+
+1. ALWAYS use error types
+2. ALWAYS display errors
+3. ALWAYS handle recovery
+4. ALWAYS clear errors
+5. ALWAYS log issues
+
+### UI Rules
+
+1. ALWAYS use KV bindings
+2. ALWAYS update properties
+3. ALWAYS handle transitions
+4. ALWAYS maintain state
+5. ALWAYS show feedback
+
+### Validation Rules
+
+1. ALWAYS check constraints
+2. ALWAYS update UI
+3. ALWAYS handle errors
+4. ALWAYS maintain state
+5. ALWAYS show feedback
+
+### Cleanup Rules
+
+1. ALWAYS reset state
+2. ALWAYS clear UI
+3. ALWAYS handle errors
+4. ALWAYS update state
+5. ALWAYS show feedback

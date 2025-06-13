@@ -7,6 +7,7 @@ import os
 from kivy.tests.common import GraphicUnitTest
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager
+from kivy.lang import Builder
 
 from pi_client.main import ScorerApp
 from pi_client.screens.splash_screen import SplashScreen
@@ -25,6 +26,33 @@ class BaseScreenTest(GraphicUnitTest):
     def setUp(self):
         """Set up test environment."""
         super().setUp()
+        
+        # Load all required KV files
+        kv_files = [
+            'scorer.kv',
+            'screens/splash_screen.kv',
+            'screens/name_entry_screen.kv',
+            'screens/deployment_setup_screen.kv',
+            'screens/initiative_screen.kv',
+            'screens/scoreboard_screen.kv',
+            'screens/game_over_screen.kv',
+            'screens/resume_or_new_screen.kv',
+            'widgets/button_styles.kv',
+            'widgets/header_widget.kv',
+            'widgets/number_pad_popup.kv',
+            'widgets/concede_confirm_popup.kv'
+        ]
+        
+        # Get the absolute path to the pi_client directory
+        pi_client_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        
+        for kv_file in kv_files:
+            kv_path = os.path.join(pi_client_dir, kv_file)
+            if os.path.exists(kv_path):
+                Builder.load_file(kv_path)
+            else:
+                print(f"Warning: KV file not found: {kv_path}")
+        
         self.app = self.app_class()
         self.app.game_state = {
             'players': [],

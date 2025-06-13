@@ -12,7 +12,6 @@ from .base_screen import BaseScreen, ValidationError, StateError, SyncError
 
 logger = logging.getLogger(__name__)
 
-Builder.load_file(os.path.join(os.path.dirname(__file__), "../widgets/rounded_button.kv"))
 Builder.load_file(os.path.join(os.path.dirname(__file__), "initiative_screen.kv"))
 
 class InitiativeScreen(BaseScreen):
@@ -86,39 +85,52 @@ class InitiativeScreen(BaseScreen):
         return True
             
     def determine_initiative(self):
-        """Determine initiative order based on rolls."""
+        """Determine initiative based on roll results."""
         try:
-            if not self.rolls or not isinstance(self.rolls, dict):
-                raise ValidationError("No rolls to determine initiative")
-                
-            # Check if all players have rolled
             if None in self.rolls.values():
-                raise ValidationError("Not all players have rolled")
-                
-            # Find the highest roll
-            max_roll = max(self.rolls.values())
-            winners = [p for p, r in self.rolls.items() if r == max_roll]
-            
-            if len(winners) > 1:
-                # Handle tie
-                self.handle_initiative_tie()
                 return
-                
-            # Set winner and loser
-            self.initiative_winner = winners[0]
-            self.initiative_loser = [p for p in self.rolls.keys() if p != self.initiative_winner][0]
+            
+            # Get roll values
+            p1_roll = self.rolls.get(self.players[0], 0)
+            p2_roll = self.rolls.get(self.players[1], 0)
+            
+            # Update UI with roll results
+            self.ids.p1_roll_label.text = str(p1_roll)
+            self.ids.p2_roll_label.text = str(p2_roll)
+            
+            # Determine winner
+            if p1_roll > p2_roll:
+                self.winner_id = 1
+                self.initiative_winner = self.players[0]
+                self.initiative_loser = self.players[1]
+                self.ids.status_label.text = f"{self.initiative_winner} won initiative!"
+                self.ids.p1_choice_box.opacity = 1
+                self.ids.p1_choice_box.disabled = False
+            elif p2_roll > p1_roll:
+                self.winner_id = 2
+                self.initiative_winner = self.players[1]
+                self.initiative_loser = self.players[0]
+                self.ids.status_label.text = f"{self.initiative_winner} won initiative!"
+                self.ids.p2_choice_box.opacity = 1
+                self.ids.p2_choice_box.disabled = False
+            else:
+                # Tie - reset for re-roll
+                self.reset_rolls()
+                self.ids.status_label.text = "It's a tie! Roll again."
+                return
             
             # Update game state
             if self.app:
-                self.app.game_state['initiative_winner'] = self.initiative_winner
-                self.app.game_state['initiative_loser'] = self.initiative_loser
+                self.app.game_state.update({
+                    'initiative_winner': self.initiative_winner,
+                    'initiative_loser': self.initiative_loser,
+                    'current_round': self.current_round
+                })
                 
-            # Update UI
-            self.update_ui()
-            
         except Exception as e:
-            self.handle_initiative_determination_error()
-            
+            logger.error(f"Error in determine_initiative: {str(e)}")
+            self.handle_winner_validation_error()
+
     def handle_initiative_tie(self):
         """Handle initiative tie by having tied players roll again."""
         try:
@@ -319,25 +331,25 @@ class InitiativeScreen(BaseScreen):
             logger.error(f"Error in determine_winner: {str(e)}")
             self.handle_winner_validation_error()
 
-    def select_first_turn(self, player):
-        """Handles the winner's choice of who goes first."""
+    def select_first_turn(self, player_id):
+        """Handle first turn selection."""
         try:
-            if not self.app:
-                self.app = App.get_running_app()
-            
-            if player == 1:
-                first_player = self.ids.p1_name_label.text
-                second_player = self.ids.p2_name_label.text
-            else:  # player == 2
-                first_player = self.ids.p2_name_label.text
-                second_player = self.ids.p1_name_label.text
+            if player_id not in [1, 2]:
+                raise ValidationError("Invalid player ID")
                 
-            self.app.game_state.update({
-                'first_player': first_player,
-                'second_player': second_player
-            })
+            # Set first player in game state
+            if self.app:
+                self.app.game_state['first_player'] = player_id
+                
+            # Update UI
+            self.ids.status_label.text = f"{self.players[player_id-1]} will go first!"
+            self.ids.continue_button.opacity = 1
+            self.ids.continue_button.disabled = False
             
-            self.proceed_to_scoreboard()
+            # Disable choice boxes
+            self.ids.p1_choice_box.disabled = True
+            self.ids.p2_choice_box.disabled = True
+            
         except Exception as e:
             logger.error(f"Error in select_first_turn: {str(e)}")
             self.handle_winner_validation_error()

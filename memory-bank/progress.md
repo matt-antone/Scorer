@@ -1,65 +1,81 @@
-# Progress Report
+# Progress
 
 ## Completed
 
 1. Package Structure
 
-   - Moved `widgets` from `src/` to top level
-   - Moved `screens` from `src/` to top level
-   - Moved `assets` from `src/` to top level
-   - Moved `state` from `src/` to top level
-   - Updated import paths to match new structure
+   - All app modules at top level of `pi_client`
+   - Import paths updated to match new structure
+   - Removed `src` prefix from imports
 
-2. Screen Implementation Status
-   - DeploymentSetupScreen: Missing properties (p1_name, p2_name)
-   - GameOverScreen: Pending implementation
-   - InitiativeScreen: Pending implementation
-   - NameEntryScreen: Pending implementation
+2. Screen Implementations
+
+   - SplashScreen (Implemented)
+   - ResumeOrNewScreen (Implemented)
+   - NameEntryScreen (Implemented)
+   - DeploymentSetupScreen (Implemented)
+   - InitiativeScreen (Implemented)
+   - ScoreboardScreen (Implemented)
+   - GameOverScreen (Implemented)
+
+3. Screen Methods
+   - DeploymentSetupScreen
+     - Added `validate_roll`
+     - Added `validate_roll_sequence`
+   - GameOverScreen
+     - Added `cleanup_game_state`
+     - Added `handle_cleanup_error`
+   - InitiativeScreen
+     - Added `determine_initiative`
+     - Added `select_first_turn`
+   - NameEntryScreen
+     - Added `handle_name_validation_error`
 
 ## In Progress
 
-1. Screen Property Implementation
+1. Testing
 
-   - Adding missing properties to match KV file bindings
-   - Ensuring all screen properties are properly initialized
-   - Fixing property binding issues
+   - Need to run full test suite on Raspberry Pi
+   - Verify screen functionality on target platform
+   - Address any issues found during testing
 
-2. Test Suite
-   - Running tests to verify changes
-   - Fixing test failures
-   - Ensuring all screens pass tests
+2. Documentation
+   - Update screen documentation with new methods
+   - Document any new patterns discovered
+   - Update test documentation
 
 ## Pending
 
-1. Screen Implementation
+1. Screens
 
-   - Complete property implementations
-   - Fix KV file bindings
-   - Implement missing methods
-   - Add proper state management
+   - ScreensaverScreen (Missing)
+   - SettingsScreen (Missing)
 
-2. Testing
-   - Run full test suite
-   - Verify all screens
-   - Fix any remaining test failures
+2. Features
+   - Display rotation settings
+   - Screensaver timeout configuration
+   - Game history persistence
+   - Settings synchronization
 
 ## Known Issues
 
-1. Missing Properties
+1. Testing
 
-   - DeploymentSetupScreen: p1_name, p2_name
-   - Other screens pending verification
+   - Graphical tests require Raspberry Pi with display
+   - Some tests may need adjustment for target platform
 
-2. KV File Bindings
-   - Need to verify all bindings match screen properties
-   - Fix any mismatched bindings
+2. Documentation
+   - Need to update screen documentation with new methods
+   - Need to document new patterns and requirements
 
 ## Next Steps
 
-1. Complete property implementations in screens
-2. Fix KV file bindings
-3. Run full test suite
-4. Verify screen functionality
+1. Run full test suite on Raspberry Pi
+2. Verify screen functionality
+3. Address any issues found
+4. Update documentation
+5. Implement remaining screens
+6. Add missing features
 
 ## What Works
 
@@ -270,3 +286,10 @@ pi_app/
 ```
 
 - No extra folders are to be created unless explicitly requested.
+
+## 2024-06-13: UI Modularization and KV Warning Cleanup
+
+- All button styles consolidated in `button_styles.kv`.
+- Only one include in `scorer.kv`.
+- Duplicate KV/class warnings resolved.
+- Next: Monitor for regressions and ensure new widgets follow this pattern.

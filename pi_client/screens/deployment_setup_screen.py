@@ -11,7 +11,6 @@ from .base_screen import BaseScreen, ValidationError, StateError, SyncError
 
 logger = logging.getLogger(__name__)
 
-Builder.load_file(os.path.join(os.path.dirname(__file__), "../widgets/rounded_button.kv"))
 Builder.load_file(os.path.join(os.path.dirname(__file__), "deployment_setup_screen.kv"))
 
 class DeploymentSetupScreen(BaseScreen):
@@ -264,32 +263,28 @@ class DeploymentSetupScreen(BaseScreen):
     def validate_roll(self, roll):
         """Validate a roll value."""
         try:
-            if not isinstance(roll, (int, float)):
-                raise ValidationError("Roll must be a number")
-            if roll < self.roll_validation.get('min_value', 1):
-                raise ValidationError("Roll too low")
-            if roll > self.roll_validation.get('max_value', 6):
-                raise ValidationError("Roll too high")
+            if not isinstance(roll, int):
+                raise ValidationError("Roll must be an integer")
+            if roll < self.roll_validation['min_value'] or roll > self.roll_validation['max_value']:
+                raise ValidationError(f"Roll must be between {self.roll_validation['min_value']} and {self.roll_validation['max_value']}")
             return True
         except Exception as e:
             logger.error(f"Error in validate_roll: {str(e)}")
-            raise ValidationError(str(e))
+            self.handle_roll_validation_error()
+            return False
 
     def validate_roll_sequence(self, player):
         """Validate a player's roll sequence."""
         try:
             if player not in self.rolls:
+                raise ValidationError(f"Invalid player: {player}")
+            player_rolls = [r for r in self.rolls.values() if r is not None]
+            if len(player_rolls) < self.roll_validation['required_rolls']:
                 return False
-            player_rolls = self.rolls[player]
-            required_rolls = self.roll_validation.get('required_rolls', 2)
-            if len(player_rolls) != required_rolls:
-                return False
-            for roll in player_rolls:
-                if not self.validate_roll(roll):
-                    return False
             return True
         except Exception as e:
             logger.error(f"Error in validate_roll_sequence: {str(e)}")
+            self.handle_roll_validation_error()
             return False
 
     def add_roll(self, player, roll):
@@ -334,7 +329,7 @@ class DeploymentSetupScreen(BaseScreen):
         """Validate the current state."""
         try:
             if not isinstance(required_keys, list):
-                return False
+                raise StateError("required_keys must be a list")
             for key in required_keys:
                 # Check both app.game_state and self.<property>
                 gs_value = self.app.game_state.get(key, None)
@@ -350,11 +345,11 @@ class DeploymentSetupScreen(BaseScreen):
                     if gs_value is not None or prop_value is not None:
                         valid = True
                 if not valid:
-                    return False
+                    raise StateError(f"Missing or invalid required state key: {key}")
             return True
         except Exception as e:
             logger.error(f"Error in validate_state: {str(e)}")
-            return False
+            raise
 
     def start_sync(self):
         """Start synchronization."""

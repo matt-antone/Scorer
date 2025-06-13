@@ -19,11 +19,14 @@ logger = logging.getLogger(__name__)
 class SplashScreen(BaseScreen):
     """Splash screen for the application."""
 
+    start_enabled = BooleanProperty(False)
+    status_text = StringProperty('')
+    loading_status = StringProperty('Initializing...')
+    app_version = StringProperty('1.0.0')
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app_version = '1.0.0'
         self.loading_progress = 0
-        self.loading_status = 'Initializing...'
         self.is_loading = False
         self.is_syncing = False
         self.has_error = False
@@ -54,20 +57,27 @@ class SplashScreen(BaseScreen):
         self.loading_status = 'Initializing...'
         self._loading_timeout = Clock.schedule_once(self.check_network, 1)
 
-    def check_network(self, dt):
+    def check_network(self, dt=None):
         """Check network connectivity."""
         try:
-            # Simulate network check
+            # Real network check
+            try:
+                socket.create_connection(("8.8.8.8", 53), timeout=3)
+                self.system_checks['network'] = True
+            except OSError:
+                self.system_checks['network'] = False
+                self.handle_network_error()
+                return
             self.loading_progress = 20
             self.loading_status = 'Checking network...'
-            self.system_checks['network'] = True
             self._loading_timeout = Clock.schedule_once(self.check_resources, 1)
         except Exception as e:
             self.handle_error(str(e))
 
-    def check_resources(self, dt):
+    def check_resources(self, dt=None):
         """Check required resources."""
         try:
+            self.load_resources()
             # Simulate resource check
             self.loading_progress = 40
             self.loading_status = 'Loading resources...'
@@ -87,8 +97,8 @@ class SplashScreen(BaseScreen):
         except Exception as e:
             self.handle_error(str(e))
 
-    def check_saved_game(self, dt):
-        """Check for saved game."""
+    def check_saved_game(self, dt=None):
+        """Check for saved game (scheduled by Clock)."""
         try:
             # Simulate saved game check
             self.loading_progress = 80
@@ -105,6 +115,7 @@ class SplashScreen(BaseScreen):
             self.loading_progress = 100
             self.loading_status = 'Ready!'
             self.is_loading = False
+            self.start_enabled = True
             
             # Transition to next screen
             app = App.get_running_app()
@@ -148,17 +159,8 @@ class SplashScreen(BaseScreen):
         self.load_resources()
         self.update_loading_progress(100, "Ready")
 
-    def check_network(self):
-        """Check network connectivity."""
-        try:
-            socket.create_connection(("8.8.8.8", 53), timeout=3)
-            self.system_checks['network'] = True
-        except OSError:
-            self.system_checks['network'] = False
-            self.handle_network_error()
-
-    def check_saved_game(self):
-        """Check for saved game."""
+    def _check_saved_game_logic(self):
+        """Logic-only: Check for saved game."""
         app = App.get_running_app()
         if app and hasattr(app, 'game_state'):
             self.has_saved_game = app.game_state.get('has_saved_game', False)
@@ -232,9 +234,6 @@ class SplashScreen(BaseScreen):
     def load_images(self):
         self.load_resources()
 
-    def check_resources(self):
-        self.load_resources()
-
     def generate_qr_code(self, data):
         """Generate QR code for given data."""
         try:
@@ -254,7 +253,7 @@ class SplashScreen(BaseScreen):
         """Start the game"""
         app = App.get_running_app()
         if app:
-            if self.check_saved_game():
+            if self._check_saved_game_logic():
                 app.root.current = 'resume_or_new'
             else:
                 app.root.current = 'name_entry'
@@ -412,3 +411,15 @@ class SplashScreen(BaseScreen):
         if self._loading_timeout:
             self._loading_timeout.cancel()
             self._loading_timeout = None
+
+    def on_start_button(self):
+        """Handle start button press."""
+        if not self.start_enabled:
+            return
+            
+        app = App.get_running_app()
+        if app and hasattr(app, 'root'):
+            if self.has_saved_game:
+                app.root.current = 'resume_or_new'
+            else:
+                app.root.current = 'name_entry'

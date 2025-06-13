@@ -21,8 +21,8 @@ if ! pip show kivy &> /dev/null; then
     pip install kivy
 fi
 
-# Set PYTHONPATH to include src directory
-export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+# Set PYTHONPATH to include the current directory
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 if [ "$1" = "test" ]; then
     echo ">>> Running unit tests..."
@@ -30,5 +30,5 @@ if [ "$1" = "test" ]; then
     pi_client/.venv/bin/python3 tests/screens/test_suite.py
 else
     # Run the application using the venv's python
-    .venv/bin/python3 src/main.py 
+    .venv/bin/python3 main.py 
 fi 

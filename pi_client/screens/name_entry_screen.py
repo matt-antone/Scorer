@@ -10,7 +10,6 @@ from .base_screen import BaseScreen, ValidationError, StateError, SyncError
 
 logger = logging.getLogger(__name__)
 
-Builder.load_file(os.path.join(os.path.dirname(__file__), "../widgets/rounded_button.kv"))
 Builder.load_file(os.path.join(os.path.dirname(__file__), "name_entry_screen.kv"))
 
 class NameEntryScreen(BaseScreen):
@@ -242,9 +241,27 @@ class NameEntryScreen(BaseScreen):
             self.handle_name_validation_error()
 
     def handle_name_validation_error(self):
-        """Handle name validation error."""
+        """Handle name validation errors."""
         try:
-            self.show_error("Invalid player name")
+            self.has_error = True
+            self.name_validation = False
+            self.qr_code_valid = False
+            self.qr_code_error = "Invalid player names"
+            self.update_ui()
+            
+            # Show error in UI
+            if hasattr(self, 'ids') and 'error_label' in self.ids:
+                self.ids.error_label.text = "Please enter valid player names"
+                self.ids.error_label.color = (1, 0, 0, 1)  # Red color for error
+                
+            # Update game state
+            if self.app:
+                self.app.game_state.update({
+                    'name_validation': False,
+                    'qr_code_valid': False,
+                    'qr_code_error': "Invalid player names"
+                })
+                
         except Exception as e:
             logger.error(f"Error in handle_name_validation_error: {str(e)}")
             self.show_error("Critical error in name validation")

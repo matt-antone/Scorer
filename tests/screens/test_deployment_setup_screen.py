@@ -11,15 +11,17 @@ class TestApp(App):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.game_state = {
-            'players': [],
-            'roles': {},
+            'players': ['Player1', 'Player2'],
+            'roles': ['Attacker', 'Defender'],
             'deployment_sequence': [],
             'rolls': {},
             'roll_validation': {
                 'min_value': 1,
                 'max_value': 6,
                 'required_rolls': 2
-            }
+            },
+            'attacker_name': 'Player1',
+            'defender_name': 'Player2'
         }
 
 class TestDeploymentSetupScreen(BaseScreenTest):
@@ -31,11 +33,16 @@ class TestDeploymentSetupScreen(BaseScreenTest):
         """Set up test environment."""
         super().setUp()
         self.screen = DeploymentSetupScreen()
+        self.screen.app = self.app
         self.screen.deployment_sequence = []
-        self.screen.players = ['Player1', 'Player2']  # Add test players
-        self.screen.roles = ['Attacker', 'Defender']  # Roles as a list
+        self.screen.players = ['Player1', 'Player2']
+        self.screen.roles = ['Attacker', 'Defender']
         self.screen.rolls = {}
-        self.screen.roll_validation = {}
+        self.screen.roll_validation = {
+            'min_value': 1,
+            'max_value': 6,
+            'required_rolls': 2
+        }
         self.screen._current_error = None
         self.screen.has_error = False
         # Update app.game_state to match screen properties
@@ -44,6 +51,9 @@ class TestDeploymentSetupScreen(BaseScreenTest):
         self.screen.app.game_state['deployment_sequence'] = self.screen.deployment_sequence
         self.screen.app.game_state['rolls'] = self.screen.rolls
         self.screen.app.game_state['roll_validation'] = self.screen.roll_validation
+        self.screen.app.game_state['attacker_name'] = 'Player1'
+        self.screen.app.game_state['defender_name'] = 'Player2'
+        self.screen.update_view_from_state()
         self.screen.on_enter()
         self.advance_frames(1)
 
@@ -147,13 +157,20 @@ class TestDeploymentSetupScreen(BaseScreenTest):
 
     def test_state_validation(self):
         """Test state validation."""
+        # Set up non-empty state for validation
+        self.screen.deployment_sequence = ['Player1', 'Player2']
+        self.screen.rolls = {'Player1': [3, 4], 'Player2': [4, 3]}
+        self.screen.app.game_state['deployment_sequence'] = self.screen.deployment_sequence
+        self.screen.app.game_state['rolls'] = self.screen.rolls
+        self.screen.update_view_from_state()
         # Test valid state
-        self.assertTrue(self.screen.validate_state([
+        result = self.screen.validate_state([
             'players', 'roles', 'deployment_sequence', 'rolls',
             'roll_validation'
-        ]))
-        
+        ])
+        self.assertTrue(result)
         # Test invalid state
-        self.assertFalse(self.screen.validate_state(['missing_key']))
+        with self.assertRaises(StateError):
+            self.screen.validate_state(['missing_key'])
 
 # ... existing code ... 

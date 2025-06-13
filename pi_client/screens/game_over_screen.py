@@ -11,7 +11,6 @@ from kivy.logger import Logger
 
 logger = logging.getLogger(__name__)
 
-Builder.load_file(os.path.join(os.path.dirname(__file__), "../widgets/rounded_button.kv"))
 Builder.load_file(os.path.join(os.path.dirname(__file__), "game_over_screen.kv"))
 
 class GameOverScreen(BaseScreen):
@@ -111,26 +110,53 @@ class GameOverScreen(BaseScreen):
         self.game_history = self.app.game_state.get('game_history', [])
 
     def cleanup_game_state(self):
-        """Clean up the game state."""
+        """Clean up the game state after game over."""
         try:
-            if not self.cleanup_required:
-                return
-                
-            # Add current game to history
-            game_summary = {
-                'players': self.players,
-                'scores': self.scores,
-                'winner': self.winner,
-                'timestamp': Clock.get_time()
-            }
-            self.game_history.append(game_summary)
+            if not self.app:
+                self.app = App.get_running_app()
             
-            # Clear game state
-            self.app.game_state.clear()
-            self.cleanup_required = False
+            # Save game history if needed
+            if self.save_game:
+                self.game_history.append({
+                    'winner': self.winner,
+                    'scores': self.scores,
+                    'duration': self.game_duration,
+                    'victory_type': self.victory_type
+                })
+                self.app.game_state['game_history'] = self.game_history
+            
+            # Reset game state
+            self.app.game_state.update({
+                'p1_name': '',
+                'p2_name': '',
+                'p1_primary_score': 0,
+                'p2_primary_score': 0,
+                'p1_secondary_score': 0,
+                'p2_secondary_score': 0,
+                'p1_cp': 0,
+                'p2_cp': 0,
+                'winner': 0,
+                'current_round': 1,
+                'game_phase': 'setup'
+            })
+            
+            # Reset screen state
+            self.reset_screen()
             
         except Exception as e:
+            logger.error(f"Error in cleanup_game_state: {str(e)}")
             self.handle_cleanup_error()
+
+    def handle_cleanup_error(self):
+        """Handle errors during game state cleanup."""
+        try:
+            self.has_error = True
+            self.show_error("Error cleaning up game state")
+            self.cleanup_required = False
+            self.update_ui()
+        except Exception as e:
+            logger.error(f"Error in handle_cleanup_error: {str(e)}")
+            self.show_error("Critical error in cleanup")
 
     def update_scores(self, new_scores):
         """Update the scores with new values and update final_scores."""
@@ -205,10 +231,6 @@ class GameOverScreen(BaseScreen):
     def handle_score_validation_error(self):
         """Handle score validation errors."""
         self.show_error("Invalid score value")
-
-    def handle_cleanup_error(self):
-        """Handle cleanup errors."""
-        self.show_error("Failed to clean up game state: cleanup error")
 
     def validate_state(self, state):
         """Validate a state dict for test compatibility."""

@@ -12,143 +12,212 @@ from .base_screen import BaseScreen, ValidationError, StateError, SyncError
 logger = logging.getLogger(__name__)
 
 class ResumeOrNewScreen(BaseScreen):
-    """Screen for choosing to resume or start a new game."""
+    """Screen for choosing to resume a saved game or start a new one."""
     
     # Properties
     has_saved_game = BooleanProperty(False)
-    saved_game_info = ObjectProperty(None)  # Changed from StringProperty to ObjectProperty
-    save_file_path = StringProperty('')
-    save_file_valid = BooleanProperty(False)
+    saved_game_info = ObjectProperty(None)
+    save_file_path = ObjectProperty(None)
     save_file_error = StringProperty('')
-    game_resumed = BooleanProperty(False)  # Added missing property
+    game_resumed = BooleanProperty(False)
+    is_loading = BooleanProperty(False)
+    status_text = StringProperty('')
+    has_error = BooleanProperty(False)
+    save_file_valid = BooleanProperty(False)
+    new_game_started = BooleanProperty(False)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
         self.logger.info("ResumeOrNewScreen: Initializing")
-        self.save_file_path = os.path.join(os.path.expanduser('~'), '.scorer', 'saved_game.json')
+        self._loading_timeout = None
+        self._error_timeout = None
+        self._start_background_tasks()
+
+    def _start_background_tasks(self):
+        """Start background tasks for initialization."""
+        self.logger.info("ResumeOrNewScreen: Scheduling background tasks")
+        Clock.schedule_once(self._perform_background_tasks)
+
+    def _perform_background_tasks(self, dt):
+        """Perform background initialization tasks."""
         self.detect_save_file()
-        kv_path = os.path.join(os.path.dirname(__file__), 'resume_or_new_screen.kv')
-        Builder.load_file(kv_path)
-        if not self.children:
-            self.add_widget(Label(text='ResumeOrNewScreen loaded (no KV)'))
+        self.check_saved_game()
+
+    def on_enter(self):
+        """Called when the screen is entered."""
+        super().on_enter()
+        self.detect_save_file()
+        self.check_saved_game()
+        self.update_view_from_state()
+
+    def update_view_from_state(self):
+        """Update the view based on the current state."""
+        if hasattr(self, 'resume_button'):
+            self.resume_button.disabled = not self.has_saved_game
+        if hasattr(self, 'new_game_button'):
+            self.new_game_button.disabled = False
 
     def detect_save_file(self):
-        """Detect if a save file exists and is valid."""
+        """Detect if there is a save file."""
         try:
-            if os.path.exists(self.save_file_path):
+            save_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'saves')
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            
+            default_save_path = os.path.join(save_dir, 'game_save.json')
+            if os.path.exists(default_save_path):
+                self.save_file_path = default_save_path
+                self.has_saved_game = True
+            else:
+                self.save_file_path = None
+                self.has_saved_game = False
+        except Exception as e:
+            self.handle_save_file_error(str(e))
+
+    def check_saved_game(self):
+        """Check if there is a saved game."""
+        if self.save_file_path and os.path.exists(self.save_file_path):
+            try:
                 with open(self.save_file_path, 'r') as f:
                     saved_game = json.load(f)
-                if self.validate_saved_game(saved_game):
-                    self.has_saved_game = True
-                    self.saved_game_info = saved_game
-                    self.save_file_valid = True
-                    self.save_file_error = ''
-                else:
-                    self.save_file_valid = False
-                    self.save_file_error = 'Invalid save file format'
-            else:
-                self.has_saved_game = False
-                self.saved_game_info = None
-                self.save_file_valid = False
-                self.save_file_error = ''
-        except Exception as e:
-            self.logger.error(f"Error detecting save file: {str(e)}")
+                self.validate_saved_game(saved_game)
+                self.saved_game_info = saved_game
+                self.has_saved_game = True
+                self.save_file_valid = True
+            except (json.JSONDecodeError, ValidationError, StateError) as e:
+                self.handle_save_file_error(str(e))
+        else:
+            self.has_saved_game = False
+            self.saved_game_info = None
             self.save_file_valid = False
-            self.save_file_error = str(e)
-
-    def handle_save_file_error(self):
-        """Handle save file error."""
-        self.show_error(f"Save file error: {self.save_file_error}")
-
-    def handle_validation_error(self):
-        """Handle validation error."""
-        self.show_error("Invalid game state format")
-        self.save_file_valid = False
-        self.save_file_error = "Invalid game state format"
-
-    def handle_client_update(self, update):
-        """Handle client update."""
-        if update.get('type') == 'game_state':
-            try:
-                if self.validate_saved_game(update.get('state', {})):
-                    self.has_saved_game = True
-                    self.saved_game_info = update['state']
-                    self.save_file_valid = True
-                    self.save_file_error = ''
-                else:
-                    self.handle_validation_error()
-            except (ValidationError, StateError) as e:
-                self.logger.error(f"Validation error: {str(e)}")
-                self.handle_validation_error()
-
-    def broadcast_state(self):
-        """Broadcast current state to all clients."""
-        app = App.get_running_app()
-        if app and hasattr(app, 'game_state'):
-            app.game_state['has_saved_game'] = self.has_saved_game
-            app.game_state['saved_game_info'] = self.saved_game_info
-            if hasattr(app, 'broadcast_state'):
-                app.broadcast_state()
 
     def resume_game(self):
-        """Resume the saved game."""
-        if self.has_saved_game and self.save_file_valid:
+        """Resume a saved game."""
+        try:
+            if not self.has_saved_game or not self.saved_game_info:
+                raise StateError("No saved game to resume")
+            
             app = App.get_running_app()
-            if app:
-                try:
-                    app.load_game_state(self.saved_game_info)
-                    self.game_resumed = True
-                    app.root.current = 'scoreboard'
-                except Exception as e:
-                    self.logger.error(f"Failed to resume game: {str(e)}")
-                    self.handle_state_error()
+            if app and hasattr(app, 'game_state'):
+                app.game_state.update(self.saved_game_info)
+                self.game_resumed = True
+                app.root.current = 'scoreboard'
+        except Exception as e:
+            self.handle_error(str(e))
 
     def start_new_game(self):
         """Start a new game."""
-        logging.info("Starting new game")
-        app = App.get_running_app()
-        if app:
-            try:
-                if hasattr(app, 'initialize_game_state'):
-                    app.initialize_game_state()
+        try:
+            app = App.get_running_app()
+            if app and hasattr(app, 'game_state'):
+                app.game_state.clear()
+                app.game_state.update({
+                    'p1_name': '',
+                    'p2_name': '',
+                    'p1_primary_score': 0,
+                    'p2_primary_score': 0,
+                    'p1_secondary_score': 0,
+                    'p2_secondary_score': 0,
+                    'p1_cp': 0,
+                    'p2_cp': 0,
+                    'winner': 0
+                })
+                self.game_resumed = False
+                self.new_game_started = True
                 app.root.current = 'name_entry'
-            except Exception as e:
-                self.logger.error(f"Failed to start new game: {str(e)}")
-                self.handle_state_error()
+        except Exception as e:
+            self.handle_error(str(e))
 
     def validate_saved_game(self, saved_game):
         """Validate saved game data."""
         if not isinstance(saved_game, dict):
             raise ValidationError("Saved game must be a dictionary")
         
-        required_keys = ['players', 'current_round', 'scores']
+        required_keys = ['p1_name', 'p2_name', 'p1_primary_score', 'p2_primary_score']
         for key in required_keys:
             if key not in saved_game:
-                raise ValidationError(f"Missing required saved game key: {key}")
+                raise StateError(f"Missing required saved game key: {key}")
         
-        if not isinstance(saved_game['players'], list) or len(saved_game['players']) != 2:
-            raise ValidationError("Players must be a list of exactly 2 players")
+        if not isinstance(saved_game['p1_name'], str) or not saved_game['p1_name']:
+            raise ValidationError("Player 1 name must be a non-empty string")
         
-        if not isinstance(saved_game['current_round'], int) or saved_game['current_round'] < 1:
-            raise ValidationError("Current round must be a positive integer")
+        if not isinstance(saved_game['p2_name'], str) or not saved_game['p2_name']:
+            raise ValidationError("Player 2 name must be a non-empty string")
         
-        if not isinstance(saved_game['scores'], dict):
-            raise ValidationError("Scores must be a dictionary")
+        if not isinstance(saved_game['p1_primary_score'], (int, float)) or saved_game['p1_primary_score'] < 0:
+            raise ValidationError("Player 1 primary score must be a non-negative number")
+        
+        if not isinstance(saved_game['p2_primary_score'], (int, float)) or saved_game['p2_primary_score'] < 0:
+            raise ValidationError("Player 2 primary score must be a non-negative number")
         
         return True
 
-    def update_view_from_state(self):
-        """Update view from state."""
-        super().update_view_from_state()
-        self.has_saved_game = self.app.game_state.get('has_saved_game', False)
-        if self.has_saved_game:
-            self.saved_game_info = self.app.game_state.get('saved_game_info')
-            self.save_file_valid = True
-            self.save_file_error = ''
-
-    def handle_state_error(self):
-        """Handle state error."""
-        self.show_error("Invalid game state")
+    def handle_save_file_error(self, message):
+        """Handle save file error."""
+        self.save_file_error = message
+        self.has_saved_game = False
+        self.saved_game_info = None
+        self.save_file_path = None
         self.save_file_valid = False
-        self.save_file_error = "Invalid game state" 
+        self.handle_error(message)
+
+    def handle_error(self, message):
+        """Handle error."""
+        self.show_error(message)
+        self.has_error = True
+
+    def clear_error(self):
+        """Clear error state."""
+        self.has_error = False
+        if self._error_timeout:
+            self._error_timeout.cancel()
+            self._error_timeout = None
+
+    def show_error(self, message):
+        """Show error message."""
+        self.status_text = message
+        if self._error_timeout:
+            self._error_timeout.cancel()
+        self._error_timeout = Clock.schedule_once(lambda dt: self.clear_error(), 5)
+
+    def on_pre_enter(self):
+        """Called before screen is entered."""
+        super().on_pre_enter()
+        self._start_background_tasks()
+
+    def on_leave(self):
+        """Called when leaving the screen."""
+        super().on_leave()
+        if self._loading_timeout:
+            self._loading_timeout.cancel()
+        if self._error_timeout:
+            self._error_timeout.cancel()
+
+    def handle_client_update(self, update):
+        """Handle client update."""
+        if update.get('type') == 'saved_game':
+            try:
+                has_saved = update.get('has_saved_game', False)
+                game_info = update.get('game_info')
+                if has_saved and game_info:
+                    self.validate_saved_game(game_info)
+                    self.has_saved_game = True
+                    self.saved_game_info = game_info
+                else:
+                    self.has_saved_game = False
+                    self.saved_game_info = None
+            except (ValidationError, StateError) as e:
+                self.handle_error(str(e))
+
+    def validate_game_state(self, state):
+        """Validate game state."""
+        if not isinstance(state, dict):
+            raise ValidationError("Game state must be a dictionary")
+        
+        required_keys = ['players', 'current_round', 'scores']
+        for key in required_keys:
+            if key not in state:
+                raise StateError(f"Missing required state key: {key}")
+        
+        return True 

@@ -53,4 +53,7 @@
   - Initiative winner/loser logic
   - Tie handling
   - Added reset_rolls for test compatibility
-- Next: Systematically fix NameEntryScreen, DeploymentSetupScreen, and GameOverScreen test failures.
+- All NameEntryScreen tests now pass after fixing:
+  - Validation and state properties
+  - Ensuring player_names, qr_code, qr_code_valid, qr_code_error, and name_validation are always set in game state
+- Next: Proceed to DeploymentSetupScreen and GameOverScreen to fix remaining test failures.

@@ -28,6 +28,7 @@ class NameEntryScreen(BaseScreen):
     players = ListProperty([])
     player_names = ListProperty([])
     qr_code = StringProperty('')
+    name_validation = BooleanProperty(True)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -45,10 +46,12 @@ class NameEntryScreen(BaseScreen):
                 self.app = App.get_running_app()
             self.reset_screen()
             self.update_view_from_state()
-            # Always set player_names, qr_code, and qr_code_valid in game state
+            # Always set player_names, qr_code, qr_code_valid, qr_code_error, and name_validation in game state
             self.app.game_state['player_names'] = [self.p1_name, self.p2_name]
             self.app.game_state['qr_code'] = self.qr_code
             self.app.game_state['qr_code_valid'] = self.qr_code_valid
+            self.app.game_state['qr_code_error'] = self.qr_code_error
+            self.app.game_state['name_validation'] = self.name_validation
         except Exception as e:
             logger.error(f"Error in on_enter: {str(e)}")
             self.handle_name_validation_error()
@@ -203,10 +206,12 @@ class NameEntryScreen(BaseScreen):
             self.p1_name = self.app.game_state.get('p1_name', '')
             self.p2_name = self.app.game_state.get('p2_name', '')
             self.player_names = [self.p1_name, self.p2_name]
-            # Always set player_names, qr_code, and qr_code_valid in game state
+            # Always set player_names, qr_code, qr_code_valid, qr_code_error, and name_validation in game state
             self.app.game_state['player_names'] = self.player_names
             self.app.game_state['qr_code'] = self.qr_code
             self.app.game_state['qr_code_valid'] = self.qr_code_valid
+            self.app.game_state['qr_code_error'] = self.qr_code_error
+            self.app.game_state['name_validation'] = self.name_validation
             # Update UI
             self.update_ui()
         except Exception as e:
@@ -262,16 +267,12 @@ class NameEntryScreen(BaseScreen):
 
     def validate_state(self, required_keys):
         """Validate the current state has all required keys."""
-        try:
-            if not self.app:
-                self.app = App.get_running_app()
-            for key in required_keys:
-                if key not in self.app.game_state:
-                    raise StateError(f"Missing required state key: {key}")
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_state: {str(e)}")
-            return False
+        if not self.app:
+            self.app = App.get_running_app()
+        for key in required_keys:
+            if key not in self.app.game_state:
+                raise StateError(f"Missing required state key: {key}")
+        return True
 
     def start_sync(self):
         """Start synchronization."""

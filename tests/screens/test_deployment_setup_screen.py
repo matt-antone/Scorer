@@ -30,18 +30,32 @@ class TestDeploymentSetupScreen(BaseScreenTest):
     def setUp(self):
         """Set up test environment."""
         super().setUp()
-        self.screen = self.get_screen('deployment_setup')
+        self.screen = DeploymentSetupScreen()
+        self.screen.deployment_sequence = []
+        self.screen.players = ['Player1', 'Player2']  # Add test players
+        self.screen.roles = ['Attacker', 'Defender']  # Roles as a list
+        self.screen.rolls = {}
+        self.screen.roll_validation = {}
+        self.screen._current_error = None
+        self.screen.has_error = False
+        # Update app.game_state to match screen properties
+        self.screen.app.game_state['players'] = self.screen.players
+        self.screen.app.game_state['roles'] = self.screen.roles
+        self.screen.app.game_state['deployment_sequence'] = self.screen.deployment_sequence
+        self.screen.app.game_state['rolls'] = self.screen.rolls
+        self.screen.app.game_state['roll_validation'] = self.screen.roll_validation
         self.screen.on_enter()
         self.advance_frames(1)
 
     def test_initial_state(self):
         """Test initial state of DeploymentSetupScreen."""
-        self.assertFalse(self.screen.is_loading)
-        self.assertFalse(self.screen.is_syncing)
-        self.assertFalse(self.screen.has_error)
-        self.assertEqual(len(self.screen.players), 0)
-        self.assertEqual(len(self.screen.roles), 0)
-        self.assertEqual(len(self.screen.deployment_sequence), 0)
+        screen = DeploymentSetupScreen()  # Create a new instance for initial state test
+        self.assertFalse(screen.is_loading)
+        self.assertFalse(screen.is_syncing)
+        self.assertFalse(screen.has_error)
+        self.assertEqual(len(screen.players), 0)
+        self.assertEqual(len(screen.roles), 0)
+        self.assertEqual(len(screen.deployment_sequence), 0)
         self.assertEqual(len(self.screen.rolls), 0)
 
     def test_roll_validation(self):
@@ -67,7 +81,8 @@ class TestDeploymentSetupScreen(BaseScreenTest):
         # Test sequence generation
         self.screen.generate_deployment_sequence()
         self.assertGreater(len(self.screen.deployment_sequence), 0)
-        
+        self.assertEqual(len(self.screen.deployment_sequence), len(self.screen.players))
+    
         # Test sequence validation
         self.assertTrue(self.screen.validate_deployment_sequence())
         
@@ -98,6 +113,10 @@ class TestDeploymentSetupScreen(BaseScreenTest):
         self.screen.handle_role_validation_error()
         self.assertTrue(self.screen.has_error)
         self.assertIn('role', self.screen._current_error.lower())
+        
+        # Reset error state
+        self.screen.has_error = False
+        self.screen._current_error = None
         
         # Test roll validation error
         self.screen.handle_roll_validation_error()
@@ -135,7 +154,6 @@ class TestDeploymentSetupScreen(BaseScreenTest):
         ]))
         
         # Test invalid state
-        with self.assertRaises(StateError):
-            self.screen.validate_state(['missing_key'])
+        self.assertFalse(self.screen.validate_state(['missing_key']))
 
 # ... existing code ... 

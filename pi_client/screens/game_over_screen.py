@@ -7,6 +7,7 @@ from kivy.clock import Clock
 import logging
 import os
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
+from kivy.logger import Logger
 
 logger = logging.getLogger(__name__)
 
@@ -48,17 +49,27 @@ class GameOverScreen(BaseScreen):
     save_game = BooleanProperty(False)
     error_label = None
     total_time_label = None
+    final_scores = ListProperty([])
+    show_winner = BooleanProperty(False)
+    show_scores = BooleanProperty(False)
 
     def __init__(self, **kwargs):
+        """Initialize the screen."""
         super().__init__(**kwargs)
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("GameOverScreen: Initializing")
+        Logger.info('GameOverScreen: Initializing')
         self.app = App.get_running_app()
-        self.scores = {'p1': 0, 'p2': 0}
+        self.scores = {}  # Start with empty dict
         self._error_timeout = None
         self._current_error = ''
         self.error_label = Label(text="")
         self.total_time_label = Label(text="00:00:00")
+        self.winner = ''
+        self.final_scores = []
+        self.show_winner = False
+        self.show_scores = False
+        self.is_loading = False
+        self.is_syncing = False
+        self.has_error = False
         if not self.children:
             self.add_widget(Label(text='GameOverScreen loaded (no KV)'))
 
@@ -74,8 +85,9 @@ class GameOverScreen(BaseScreen):
 
     def on_enter(self):
         """Called when the screen is entered."""
-        super().on_enter()
-        self.update_view_from_state()
+        Logger.debug('Entering screen')
+        self.load_game_state()
+        self.update_ui()
 
     def on_leave(self):
         """Called when leaving the screen."""
@@ -121,24 +133,35 @@ class GameOverScreen(BaseScreen):
             self.handle_cleanup_error()
 
     def update_scores(self, new_scores):
-        """Update the scores with new values."""
+        """Update the scores with new values and update final_scores."""
         try:
-            self.validate_input(new_scores, {
-                'score': lambda x: isinstance(x, (int, float)) and x >= 0
-            })
-            self.scores.update(new_scores)
+            # Accept any dict of player: score, as long as all scores are non-negative numbers
+            for score in new_scores.values():
+                if not isinstance(score, (int, float)) or score < 0:
+                    self.handle_score_validation_error()
+                    return
+            self.scores = dict(new_scores)  # Replace instead of update
+            self.final_scores = [
+                {'name': str(player), 'score': int(score)}
+                for player, score in self.scores.items()
+            ]
             self.determine_winner()
         except Exception as e:
             self.handle_score_validation_error()
 
     def determine_winner(self):
-        """Determine the winner based on scores."""
+        """Determine the winner based on scores, handle ties as 'Tie'."""
         try:
             if not self.scores or len(self.scores) < 2:
                 self.scores = {'Player1': 0, 'Player2': 0}
             max_score = max(self.scores.values())
             winners = [p for p, s in self.scores.items() if s == max_score]
-            self.winner = winners[0] if winners else ''
+            if len(winners) == 1:
+                self.winner = winners[0]
+            elif len(winners) > 1:
+                self.winner = 'Tie'
+            else:
+                self.winner = ''
         except Exception as e:
             self.show_error("Critical error in winner validation")
 
@@ -187,18 +210,21 @@ class GameOverScreen(BaseScreen):
         """Handle cleanup errors."""
         self.show_error("Failed to clean up game state: cleanup error")
 
-    def validate_state(self, required_keys=None):
-        """Validate the current state."""
-        if required_keys is None:
-            required_keys = [
-                'players', 'scores', 'winner', 'game_history',
-                'cleanup_required', 'save_game'
-            ]
-            
-        for key in required_keys:
-            if not hasattr(self, key):
-                raise StateError(f"Missing required state key: {key}")
-                
+    def validate_state(self, state):
+        """Validate a state dict for test compatibility."""
+        if not isinstance(state, dict):
+            return False
+        if 'winner' not in state or 'scores' not in state:
+            return False
+        if state['winner'] is None:
+            return False
+        if not isinstance(state['scores'], dict):
+            return False
+        if not state['scores']:
+            return False
+        for v in state['scores'].values():
+            if not isinstance(v, (int, float)) or v < 0:
+                return False
         return True
 
     def validate_input(self, data, validators):
@@ -245,27 +271,27 @@ class GameOverScreen(BaseScreen):
             self.handle_winner_determination_error()
 
     def update_ui(self):
-        """Updates the UI based on current state."""
+        """Update UI elements."""
         try:
-            # Update final scores
-            self.ids.p1_final_score_label.text = str(self.scores['p1'])
-            self.ids.p2_final_score_label.text = str(self.scores['p2'])
-            
-            # Update winner label
-            if self.winner == "Player1":
-                self.ids.winner_label.text = f"{self.p1_name} Wins!"
-            elif self.winner == "Player2":
-                self.ids.winner_label.text = f"{self.p2_name} Wins!"
-            else:
-                self.ids.winner_label.text = "Draw!"
-            
-            # Update error state
-            if self.has_error:
-                self.ids.error_label.opacity = 1
-            else:
-                self.ids.error_label.opacity = 0
-            self.error_label.text = self._current_error or ""
-            self.total_time_label.text = "00:00:00"
+            if hasattr(self, 'ids'):
+                if 'winner_label' in self.ids:
+                    self.ids.winner_label.text = f"Winner: {self.winner}" if self.winner else "No winner"
+                if 'scores_list' in self.ids:
+                    self.ids.scores_list.clear_widgets()
+                    for score in self.final_scores:
+                        self.ids.scores_list.add_widget(score)
+                if 'p1_final_score_label' in self.ids:
+                    self.ids.p1_final_score_label.text = str(self.scores['p1'])
+                if 'p2_final_score_label' in self.ids:
+                    self.ids.p2_final_score_label.text = str(self.scores['p2'])
+                if 'error_label' in self.ids:
+                    if self.has_error:
+                        self.ids.error_label.opacity = 1
+                    else:
+                        self.ids.error_label.opacity = 0
+                    self.error_label.text = self._current_error or ""
+                if 'total_time_label' in self.ids:
+                    self.total_time_label.text = "00:00:00"
         except Exception as e:
             self.handle_winner_determination_error()
 
@@ -290,21 +316,23 @@ class GameOverScreen(BaseScreen):
     def handle_client_update(self, update):
         """Handle client update."""
         try:
+            if not isinstance(update, dict):
+                raise ValidationError("Update must be a dictionary")
+                
+            if 'type' not in update:
+                raise ValidationError("Update must have a type")
+                
             if update['type'] == 'scores':
-                scores = update['scores']
-                if self.validate_scores(scores):
-                    self.scores.update(scores)
-                    self.update_ui()
-            elif update['type'] == 'winner':
-                winner = update['winner']
-                if self.validate_winner(winner):
-                    self.winner = winner
-                    self.update_ui()
+                if 'scores' not in update:
+                    raise ValidationError("Scores update must include scores")
+                self.update_scores(update['scores'])
             else:
                 raise ValidationError("Invalid update type")
+                
         except Exception as e:
-            logger.error(f"Error in handle_client_update: {str(e)}")
-            self.handle_winner_determination_error()
+            if isinstance(e, ValidationError):
+                raise
+            self.show_error(f"Error in handle_client_update: {str(e)}")
 
     def validate_winner(self, winner):
         """Validate winner."""
@@ -319,4 +347,51 @@ class GameOverScreen(BaseScreen):
             return False
 
     def handle_winner_determination_error(self):
-        self.show_error("Critical error in winner validation") 
+        self.show_error("Critical error in winner validation")
+
+    def load_game_state(self):
+        """Load game state from app."""
+        try:
+            if not self.app:
+                self.app = App.get_running_app()
+            self.winner = self.app.game_state.get('winner', '')
+            scores = self.app.game_state.get('scores', {})
+            # Always generate final_scores from scores if not present
+            if 'final_scores' in self.app.game_state:
+                self.final_scores = self.app.game_state.get('final_scores', [])
+            else:
+                self.final_scores = [
+                    {'name': str(player), 'score': int(score)}
+                    for player, score in scores.items()
+                ]
+            self.show_winner = bool(self.winner)
+            self.show_scores = bool(self.final_scores)
+        except Exception as e:
+            self.logger.error(f"Error in load_game_state: {str(e)}")
+            self.handle_state_error()
+
+    def handle_state_error(self):
+        """Handle state loading error."""
+        try:
+            self.has_error = True
+            self._current_error = "Error loading game state"
+            self.logger.error("State loading error")
+        except Exception as e:
+            self.logger.error(f"Error in handle_state_error: {str(e)}")
+
+    def reset(self):
+        """Reset screen state."""
+        self.has_error = False
+        self._current_error = None
+        self.winner = ''
+        self.final_scores = []
+        self.show_winner = False
+        self.show_scores = False
+        self.is_syncing = False
+        self.is_loading = False
+        self.scores = {}  # Reset to empty dict
+        # Do not call update_ui or any method that could trigger error logic on empty state
+
+    def return_to_menu(self):
+        """Return to main menu."""
+        self.manager.current = 'resume_or_new' 

@@ -1,382 +1,113 @@
 # State Server System Patterns
 
-## Architecture Overview
+## System Architecture
 
-### Component Structure
+### Overview
 
-1. **Database Layer**
+The state server is designed to manage the state of the game, handle client connections, and ensure data persistence. It is built using Python and leverages asynchronous programming for efficient handling of WebSocket connections.
 
-   - SQLite database
-   - Schema matching documentation
-   - Transaction management
-   - Data persistence
+### Key Components
 
-2. **WebSocket Layer**
+1. **Database**
 
-   - Server implementation
-   - Message handling
-   - Connection management
-   - State broadcasting
+   - **Schema**: Defines the structure of the database, including tables for state and client information.
+   - **Manager**: Handles database operations, including creating, updating, and querying state.
+
+2. **WebSocket Server**
+
+   - **Server**: Manages WebSocket connections, handling client connections and disconnections.
+   - **Message Handler**: Processes incoming messages, validates them, and updates the state accordingly.
 
 3. **State Management**
 
-   - State structure
-   - State validation
-   - State synchronization
-   - Error recovery
-
-4. **Security Layer**
-
-   - Authentication
-   - Rate limiting
-   - Access control
-   - Session management
-
-### Communication Flow
-
-1. **Client Communication**
-
-   - WebSocket connections
-   - Message processing
-   - State updates
-   - Error handling
-
-2. **State Flow**
-   - State creation
-   - State updates
-   - State validation
-   - State broadcasting
-
-## Implementation Patterns
-
-### Database Pattern
-
-1. **Schema Design**
-
-   ```python
-   class DatabaseSchema:
-       def __init__(self):
-           self.tables = {
-               'game_state': {
-                   'game_id': 'TEXT PRIMARY KEY',
-                   'status': 'TEXT',
-                   'current_player': 'TEXT',
-                   'scores': 'JSON',
-                   'timer': 'JSON',
-                   'settings': 'JSON'
-               },
-               'scores': {
-                   'game_id': 'TEXT',
-                   'player_id': 'TEXT',
-                   'score': 'INTEGER',
-                   'timestamp': 'DATETIME'
-               },
-               'timers': {
-                   'game_id': 'TEXT',
-                   'player_id': 'TEXT',
-                   'time_remaining': 'INTEGER',
-                   'timestamp': 'DATETIME'
-               },
-               'settings': {
-                   'game_id': 'TEXT',
-                   'setting_key': 'TEXT',
-                   'setting_value': 'TEXT',
-                   'timestamp': 'DATETIME'
-               }
-           }
-   ```
-
-2. **Manager Implementation**
-
-   ```python
-   class DatabaseManager:
-       def __init__(self, db_path):
-           self.db_path = db_path
-           self.connection = None
-           self.schema = DatabaseSchema()
-
-       def initialize(self):
-           # Create tables
-           # Set up indexes
-           # Configure constraints
-
-       def execute_query(self, query, params=None):
-           # Execute query
-           # Handle errors
-           # Return results
-
-       def begin_transaction(self):
-           # Start transaction
-           # Handle errors
-           # Return transaction
-
-       def commit_transaction(self, transaction):
-           # Commit transaction
-           # Handle errors
-           # Verify success
-   ```
-
-### WebSocket Pattern
-
-1. **Server Implementation**
-
-   ```python
-   class WebSocketServer:
-       def __init__(self, host, port):
-           self.host = host
-           self.port = port
-           self.clients = {}
-           self.message_handlers = {}
-
-       def start(self):
-           # Start server
-           # Handle connections
-           # Process messages
-
-       def handle_connection(self, client):
-           # Validate client
-           # Track connection
-           # Handle errors
-
-       def handle_message(self, client, message):
-           # Validate message
-           # Process message
-           # Send response
-   ```
-
-2. **Message Handling**
-
-   ```python
-   class MessageHandler:
-       def __init__(self):
-           self.handlers = {
-               'CONNECT': self.handle_connect,
-               'DISCONNECT': self.handle_disconnect,
-               'HEARTBEAT': self.handle_heartbeat,
-               'STATE_UPDATE': self.handle_state_update,
-               'ERROR': self.handle_error
-           }
-
-       def handle_message(self, message):
-           # Validate message
-           # Get handler
-           # Process message
-           # Return response
-   ```
-
-### State Management Pattern
-
-1. **State Structure**
-
-   ```python
-   class GameState:
-       def __init__(self):
-           self.game_id = None
-           self.status = None
-           self.current_player = None
-           self.scores = {}
-           self.timer = {}
-           self.settings = {}
-
-       def update(self, updates):
-           # Validate updates
-           # Apply changes
-           # Broadcast state
-
-       def validate(self):
-           # Check structure
-           # Verify values
-           # Return status
-   ```
-
-2. **State Operations**
-
-   ```python
-   class StateManager:
-       def __init__(self, db_manager):
-           self.db_manager = db_manager
-           self.states = {}
-
-       def create_state(self, game_id):
-           # Create state
-           # Initialize values
-           # Store state
-
-       def update_state(self, game_id, updates):
-           # Validate updates
-           # Apply changes
-           # Broadcast state
-
-       def get_state(self, game_id):
-           # Get state
-           # Validate state
-           # Return state
-   ```
-
-### Security Pattern
-
-1. **Authentication**
-
-   ```python
-   class AuthenticationManager:
-       def __init__(self):
-           self.tokens = {}
-           self.sessions = {}
-
-       def authenticate(self, client_id, credentials):
-           # Validate credentials
-           # Create token
-           # Track session
-
-       def validate_token(self, token):
-           # Check token
-           # Verify expiration
-           # Return status
-   ```
-
-2. **Rate Limiting**
-
-   ```python
-   class RateLimiter:
-       def __init__(self, limits):
-           self.limits = limits
-           self.requests = {}
-
-       def check_limit(self, client_id):
-           # Check limits
-           # Update counts
-           # Return status
-
-       def reset_limits(self):
-           # Reset counts
-           # Update timestamps
-           # Clear expired
-   ```
-
-## Error Handling Pattern
-
-1. **Error Types**
-
-   ```python
-   class StateServerError(Exception):
-       pass
-
-   class DatabaseError(StateServerError):
-       pass
-
-   class WebSocketError(StateServerError):
-       pass
-
-   class StateError(StateServerError):
-       pass
-
-   class SecurityError(StateServerError):
-       pass
-   ```
-
-2. **Error Handling**
-
-   ```python
-   class ErrorHandler:
-       def __init__(self):
-           self.handlers = {
-               DatabaseError: self.handle_database_error,
-               WebSocketError: self.handle_websocket_error,
-               StateError: self.handle_state_error,
-               SecurityError: self.handle_security_error
-           }
-
-       def handle_error(self, error):
-           # Get handler
-           # Process error
-           # Return response
-   ```
-
-## Testing Pattern
-
-1. **Unit Tests**
-
-   ```python
-   class TestDatabase(unittest.TestCase):
-       def setUp(self):
-           self.db = DatabaseManager(':memory:')
-           self.db.initialize()
-
-       def test_create_state(self):
-           # Test state creation
-           # Verify state
-           # Check persistence
-
-       def test_update_state(self):
-           # Test state update
-           # Verify changes
-           # Check broadcasting
-   ```
-
-2. **Integration Tests**
-
-   ```python
-   class TestWebSocket(unittest.TestCase):
-       def setUp(self):
-           self.server = WebSocketServer('localhost', 8000)
-           self.server.start()
-
-       def test_client_connection(self):
-           # Test connection
-           # Verify state
-           # Check communication
-
-       def test_state_sync(self):
-           # Test sync
-           # Verify state
-           # Check broadcasting
-   ```
-
-## Migration Pattern
-
-1. **Parallel Operation**
-
-   ```python
-   class MigrationManager:
-       def __init__(self, old_server, new_server):
-           self.old_server = old_server
-           self.new_server = new_server
-           self.state_comparator = StateComparator()
-
-       def start_parallel_operation(self):
-           # Start both servers
-           # Monitor states
-           # Compare results
-
-       def validate_states(self):
-           # Compare states
-           # Verify operations
-           # Check consistency
-   ```
-
-2. **Switchover**
-
-   ```python
-   class SwitchoverManager:
-       def __init__(self, old_server, new_server):
-           self.old_server = old_server
-           self.new_server = new_server
-           self.monitor = StateMonitor()
-
-       def prepare_switchover(self):
-           # Verify states
-           # Check readiness
-           # Prepare clients
-
-       def execute_switchover(self):
-           # Enable new server
-           # Monitor states
-           # Handle issues
-   ```
+   - **State Manager**: Manages the game state, ensuring consistency and synchronization across clients.
+   - **State Operations**: Includes operations for creating, updating, and validating state.
+
+4. **Security**
+
+   - **Authentication**: Verifies client identities and manages access control.
+   - **Rate Limiting**: Prevents abuse by limiting the number of requests a client can make.
+
+5. **Error Handling**
+
+   - **Error Manager**: Manages errors, providing detailed logs and recovery mechanisms.
+   - **Recovery**: Includes strategies for recovering from errors and maintaining system stability.
+
+### Design Patterns
+
+1. **Singleton Pattern**
+
+   - Used for database and state managers to ensure a single instance is used throughout the application.
+
+2. **Observer Pattern**
+
+   - Implemented in the state manager to notify clients of state changes.
+
+3. **Factory Pattern**
+
+   - Used for creating instances of database and state managers.
+
+4. **Strategy Pattern**
+
+   - Applied in message handling to process different types of messages.
+
+## Implementation Details
+
+### Database
+
+- **Schema**: Implemented with tables for state and client information.
+- **Manager**: Provides methods for database operations, ensuring data integrity and persistence.
+
+### WebSocket Server
+
+- **Server**: Handles client connections, ensuring efficient communication.
+- **Message Handler**: Processes messages, updating the state and broadcasting changes to clients.
+
+### State Management
+
+- **State Manager**: Manages the game state, ensuring consistency and synchronization.
+- **State Operations**: Includes operations for creating, updating, and validating state.
+
+### Security
+
+- **Authentication**: Verifies client identities and manages access control.
+- **Rate Limiting**: Prevents abuse by limiting the number of requests a client can make.
+
+### Error Handling
+
+- **Error Manager**: Manages errors, providing detailed logs and recovery mechanisms.
+- **Recovery**: Includes strategies for recovering from errors and maintaining system stability.
+
+## Testing Strategy
+
+### Unit Tests
+
+- **Database Tests**: Verify database operations and schema integrity.
+- **WebSocket Tests**: Ensure server and message handling functionality.
+- **State Tests**: Validate state management and operations.
+- **Security Tests**: Test authentication and rate limiting.
+
+### Integration Tests
+
+- **Pi Client Tests**: Verify communication between the state server and Pi client.
+- **State Sync Tests**: Ensure state synchronization across clients.
+- **Error Handling Tests**: Validate error management and recovery.
+
+### Performance Tests
+
+- **Load Testing**: Simulate high traffic to ensure server stability.
+- **Stress Testing**: Test server performance under extreme conditions.
+
+### Migration Tests
+
+- **Parallel Operation**: Test the new server alongside the existing one.
+- **State Validation**: Ensure state consistency during migration.
+- **Switchover**: Verify smooth transition to the new server.
 
 ## Related Documentation
 
+- [Project Brief](projectbrief.md)
+- [Product Context](productContext.md)
 - [Active Context](activeContext.md)
-- [Progress Report](progress.md)
-- [Technical Context](../memory-bank/techContext.md)
-- [Product Context](../memory-bank/productContext.md)
+- [Progress](progress.md)
+- [Technical Context](techContext.md)

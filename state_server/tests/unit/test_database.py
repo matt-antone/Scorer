@@ -5,7 +5,7 @@ Unit tests for the database implementation.
 import unittest
 import tempfile
 from pathlib import Path
-from src.database.manager import DatabaseManager, DatabaseError
+from state_server.src.database.manager import DatabaseManager, DatabaseError
 
 
 class TestDatabaseManager(unittest.TestCase):

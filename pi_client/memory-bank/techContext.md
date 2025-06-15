@@ -1,235 +1,279 @@
-# Pi App Technical Context
+# Pi Client Technical Context
 
 ## Technology Stack
 
 ### Core Technologies
 
-1. **Kivy Framework**
+1. **Python 3.9+**
 
-   - Version: 2.3.1
-   - Used for all UI components
-   - Supports both macOS and Raspberry Pi
+   - Async/await support
+   - Type hints
+   - Modern language features
 
-2. **Python**
+2. **Kivy**
 
-   - Version: 3.11.5
-   - Core application language
-   - Handles game logic and state management
+   - UI framework
+   - Screen management
+   - Widget system
+   - Event handling
 
-3. **SQLite**
-   - Used for game state persistence
-   - Automatic database creation
-   - Efficient state storage
+3. **WebSockets**
+   - Async WebSocket client
+   - Message handling
+   - State synchronization
+   - Error recovery
 
 ### Dependencies
 
-1. **FFmpeg**
+1. **Core Dependencies**
 
-   - Version: 6
-   - Required for video/image processing
-   - Used by ffpyplayer
-
-2. **SDL2**
-
-   - Custom build for KMS/DRM support
-   - Required for Kivy windowing
-   - Platform-specific configurations
-
-3. **ffpyplayer**
-   - Version: 4.5.1
-   - Used for media handling
-   - Built against compatible ffmpeg
-
-## Development Environment
-
-### macOS Development
-
-1. **Setup Requirements**
-
-   - Homebrew for package management
-   - Python virtual environment
-   - SDL2 with specific configuration
-
-2. **Known Issues**
-   - SDL2 environment sensitivity
-   - Dependency conflicts possible
-   - Requires specific build order
-
-### Raspberry Pi Production
-
-1. **Hardware Requirements**
-
-   - Raspberry Pi OS
-   - Touch screen support
-   - Network connectivity
-
-2. **Installation**
-   - Automated install.sh script
-   - Idempotent installation
-   - Handles all dependencies
-
-## Application Structure
-
-### Directory Organization
-
-1. **screens/**
-
-   - One screen per file
-   - Matching KV file for layout
-   - Proper registration in manager
-
-2. **widgets/**
-
-   - Reusable UI components
-   - Custom widget implementations
-   - Shared styling
-
-3. **state/**
-   - Game state management
-   - State persistence
-   - Error handling
-
-### File Organization
-
-1. **Screen Files**
-
-   - One Python file per screen
-   - Matching KV file for layout
-   - Proper registration in manager
-
-2. **State Management**
-
-   - Centralized state handling
-   - Proper serialization
-   - Error handling
-
-3. **Assets**
-   - Centralized in root directory
-   - Shared across components
-   - Proper path references
-
-## Technical Patterns
-
-### Screen Implementation
-
-1. **Class Structure**
-
-   ```python
-   class ScreenName(Screen):
-       def __init__(self, **kwargs):
-           kv_path = os.path.join(os.path.dirname(__file__), 'screen_name.kv')
-           Builder.load_file(kv_path)
-           super().__init__(**kwargs)
+   ```
+   kivy==2.2.1
+   websockets==11.0.3
+   pydantic==2.5.2
+   python-dotenv==1.0.0
    ```
 
-2. **State Access**
-   ```python
-   app = App.get_running_app()
-   state = app.game_state
+2. **Testing Dependencies**
+
+   ```
+   pytest==7.4.3
+   pytest-asyncio==0.21.1
+   pytest-cov==4.1.0
+   pytest-timeout==2.2.0
    ```
 
-### State Management
-
-1. **Serialization**
-
-   ```python
-   def save_game_state(self):
-       state_dict = {
-           'p1_name': self.player1_name,
-           'p2_name': self.player2_name,
-           # ... other state fields
-       }
-       with open('game_state.json', 'w') as f:
-           json.dump(state_dict, f)
+3. **Development Dependencies**
+   ```
+   black==23.11.0
+   isort==5.12.0
+   mypy==1.7.1
+   pylint==3.0.2
    ```
 
-2. **Loading**
-   ```python
-   def load_game_state(self):
-       try:
-           with open('game_state.json', 'r') as f:
-               state = json.load(f)
-           return self.validate_state(state)
-       except FileNotFoundError:
-           return self.initialize_game_state()
+## Development Setup
+
+### Environment
+
+1. **Python Environment**
+
+   - Python 3.9 or higher
+   - Virtual environment
+   - pip for package management
+
+2. **Kivy Setup**
+
+   - Kivy installation
+   - Dependencies
+   - Configuration
+
+3. **WebSocket Client**
+   - Connection setup
+   - Message handling
+   - State synchronization
+
+### Configuration
+
+1. **Environment Variables**
+
+   ```
+   WS_HOST=localhost
+   WS_PORT=8000
+   DEBUG=false
    ```
 
-## Performance Considerations
+2. **Kivy Configuration**
 
-### State Management
+   - Screen settings
+   - Widget properties
+   - Event bindings
 
-1. **Efficient Updates**
-
-   - Only save when necessary
-   - Validate before saving
-   - Handle errors gracefully
-
-2. **Memory Usage**
-   - Clear old states
-   - Proper cleanup
-   - Resource management
-
-### UI Performance
-
-1. **Rendering**
-
-   - Efficient layouts
-   - Proper widget recycling
-   - Smooth transitions
-
-2. **Responsiveness**
-   - Async operations
-   - Background tasks
-   - UI feedback
-
-## Security Considerations
-
-### State Protection
-
-1. **Validation**
-
-   - Input validation
+3. **State Management**
+   - Connection settings
    - State validation
    - Error handling
 
-2. **Access Control**
-   - Proper permissions
-   - Secure storage
-   - Data protection
+## Technical Constraints
 
-### Network Security
+### Performance
 
-1. **Client Communication**
+1. **UI**
 
-   - Secure protocols
-   - Data encryption
-   - Access control
+   - Screen transitions
+   - Widget updates
+   - Event handling
+   - Memory usage
 
-2. **QR Code Security**
-   - Secure generation
-   - Proper validation
-   - Access management
+2. **WebSocket**
+
+   - Connection management
+   - Message processing
+   - State updates
+   - Error recovery
+
+3. **State Management**
+   - State synchronization
+   - Data validation
+   - Error handling
+   - Recovery procedures
+
+### Scalability
+
+1. **Limitations**
+
+   - Single process
+   - Memory constraints
+   - UI responsiveness
+   - State complexity
+
+2. **Optimizations**
+   - Widget recycling
+   - State caching
+   - Connection pooling
+   - Error handling
+
+## Implementation Details
+
+### Screen Management
+
+1. **Screen Structure**
+
+   ```python
+   class BaseScreen(Screen):
+       def __init__(self, **kwargs):
+           super().__init__(**kwargs)
+           self.state_manager = StateManager()
+           self.setup_ui()
+
+       def setup_ui(self):
+           # Initialize UI components
+           # Set up event bindings
+           # Configure state management
+   ```
+
+2. **State Handling**
+
+   ```python
+   class StateManager:
+       def __init__(self):
+           self.connection = None
+           self.state = None
+
+       def connect(self):
+           # Connect to state server
+           # Handle authentication
+           # Initialize state
+
+       def update_state(self, updates):
+           # Validate updates
+           # Apply changes
+           # Update UI
+   ```
+
+### WebSocket Client
+
+1. **Connection**
+
+   - Async implementation
+   - Connection management
+   - Message handling
+   - Error recovery
+
+2. **Messages**
+   - State updates
+   - Client commands
+   - System messages
+   - Error messages
+
+### State Management
+
+1. **State Structure**
+
+   - Game state
+   - Player state
+   - UI state
+   - Settings state
+
+2. **Operations**
+   - State updates
+   - UI synchronization
+   - Error handling
+   - Recovery procedures
+
+## Testing Strategy
+
+### Unit Tests
+
+1. **Screen Tests**
+
+   - UI components
+   - Event handling
+   - State updates
+   - Error scenarios
+
+2. **State Tests**
+   - State management
+   - WebSocket communication
+   - Error handling
+   - Recovery procedures
+
+### Integration Tests
+
+1. **Server Tests**
+
+   - Connection tests
+   - Message tests
+   - State sync tests
+   - Error handling
+
+2. **UI Tests**
+   - Screen transitions
+   - Widget updates
+   - Event handling
+   - State synchronization
+
+## Deployment
+
+### Requirements
+
+1. **Client**
+
+   - Python 3.9+
+   - Kivy
+   - WebSocket support
+   - Sufficient resources
+
+2. **Network**
+   - WebSocket support
+   - Server access
+   - Firewall rules
+
+### Process
+
+1. **Setup**
+
+   - Install dependencies
+   - Configure environment
+   - Initialize state
+   - Test connections
+
+2. **Deployment**
+
+   - Start client
+   - Monitor logs
+   - Verify connections
+   - Test functionality
+
+3. **Monitoring**
+   - Performance metrics
+   - Error tracking
+   - State consistency
+   - Resource utilization
 
 ## Related Documentation
 
-### Core Memory Bank
-
-- [projectbrief.md](../../memory-bank/projectbrief.md)
-- [productContext.md](../../memory-bank/productContext.md)
-- [systemPatterns.md](../../memory-bank/systemPatterns.md)
-- [techContext.md](../../memory-bank/techContext.md)
-- [activeContext.md](../../memory-bank/activeContext.md)
-- [progress.md](../../memory-bank/progress.md)
-- [im-a-dummy.md](../../memory-bank/im-a-dummy.md)
-
-### Component Memory Banks
-
-- [State Server Memory Bank](../../state_server/memory-bank/)
-- [Phone Clients Memory Bank](../../phone_clients/memory-bank/)
-
-### Implementation Files
-
-- [main.py](../main.py)
-- [scorer.kv](../scorer.kv)
-- [screens/](../screens/)
-- [widgets/](../widgets/)
+- [Project Brief](projectbrief.md)
+- [Product Context](productContext.md)
+- [System Patterns](systemPatterns.md)
+- [Active Context](activeContext.md)
+- [Progress](progress.md)

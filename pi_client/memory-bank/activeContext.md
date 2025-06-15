@@ -1,157 +1,187 @@
-# Pi App Active Context
+# Pi Client Active Context
 
 ## Current Focus
 
-### Game Over Screen Implementation
+The Pi client needs to be refactored to use the new state server implementation. This involves replacing the current local state management with WebSocket-based state synchronization.
 
-1. **Recent Changes**
+## Refactoring Plan
 
-   - Added GameOverScreen class
-   - Implemented winner determination
-   - Added score display
-   - Added new game option
+### Phase 1: State Management Refactoring
 
-2. **Current Work**
-   - Testing game over transitions
-   - Verifying score calculations
-   - Ensuring proper state cleanup
-   - Validating UI layout
+1. **State Manager Implementation**
 
-### State Management
+   - Create new StateManager class
+   - Implement WebSocket client
+   - Add state synchronization
+   - Handle connection management
 
-1. **Recent Changes**
+2. **State Structure Updates**
 
-   - Fixed GameStatus enum serialization
-   - Improved state validation
-   - Enhanced error handling
-   - Added state recovery
+   - Define state interfaces
+   - Update state models
+   - Add validation
+   - Implement serialization
 
-2. **Current Work**
-   - Testing state persistence
-   - Verifying state transitions
-   - Ensuring data consistency
-   - Validating error recovery
+3. **Error Handling**
+   - Add connection error handling
+   - Implement state recovery
+   - Add retry mechanisms
+   - Handle disconnections
+
+### Phase 2: Screen Updates
+
+1. **Base Screen Updates**
+
+   - Update BaseScreen class
+   - Add state management
+   - Implement state observers
+   - Handle state updates
+
+2. **Individual Screen Updates**
+
+   - Update SplashScreen
+   - Update ResumeOrNewGameScreen
+   - Update NameEntryScreen
+   - Update DeploymentSetupScreen
+   - Update InitiativeScreen
+   - Update ScoreboardScreen
+   - Update GameOverScreen
+
+3. **UI State Management**
+   - Add loading states
+   - Implement error displays
+   - Add reconnection UI
+   - Handle state transitions
+
+### Phase 3: Testing Implementation
+
+1. **Unit Tests**
+
+   - Test StateManager
+   - Test WebSocket client
+   - Test state validation
+   - Test error handling
+
+2. **Integration Tests**
+
+   - Test server connection
+   - Test state synchronization
+   - Test error recovery
+   - Test UI updates
+
+3. **End-to-End Tests**
+   - Test complete workflows
+   - Test error scenarios
+   - Test recovery procedures
+   - Test performance
 
 ## Implementation Details
 
-### Game Over Screen
+### State Manager
 
-1. **Class Structure**
+```python
+class StateManager:
+    def __init__(self):
+        self.connection = None
+        self.state = None
+        self.observers = []
 
-   ```python
-   class GameOverScreen(Screen):
-       def __init__(self, **kwargs):
-           super().__init__(**kwargs)
-           self.setup_ui()
-           self.update_scores()
-   ```
+    def connect(self):
+        # Connect to state server
+        # Handle authentication
+        # Initialize state
 
-2. **Key Methods**
-   - `update_scores()`: Displays final scores
-   - `determine_winner()`: Calculates game winner
-   - `new_game()`: Resets game state
-   - `setup_ui()`: Initializes UI components
+    def update_state(self, updates):
+        # Validate updates
+        # Apply changes
+        # Notify observers
+```
 
-### State Management
+### WebSocket Client
 
-1. **Game Status**
+```python
+class WebSocketClient:
+    def __init__(self):
+        self.connection = None
+        self.handlers = {}
 
-   ```python
-   class GameStatus(Enum):
-       NOT_STARTED = "not_started"
-       IN_PROGRESS = "in_progress"
-       GAME_OVER = "game_over"
-   ```
+    def connect(self):
+        # Establish connection
+        # Set up handlers
+        # Start listening
 
-2. **State Transitions**
-   - NOT_STARTED → IN_PROGRESS: Game initialization
-   - IN_PROGRESS → GAME_OVER: Round 5 completion
-   - GAME_OVER → NOT_STARTED: New game start
+    def send_message(self, message):
+        # Validate message
+        # Send to server
+        # Handle response
+```
 
 ## Current Issues
 
-### Layout
+1. **State Management**
 
-1. **Game Over Screen**
+   - Need to replace local state
+   - Add WebSocket integration
+   - Implement synchronization
+   - Handle errors
 
-   - [ ] Verify button placement
-   - [ ] Check text alignment
-   - [ ] Test responsive layout
-   - [ ] Validate score display
-
-2. **State Management**
-   - [ ] Test state persistence
-   - [ ] Verify error recovery
-   - [ ] Check data consistency
-   - [ ] Validate transitions
-
-### Functionality
-
-1. **Game Over Logic**
-
-   - [ ] Test winner calculation
-   - [ ] Verify score display
-   - [ ] Check new game reset
-   - [ ] Validate state cleanup
-
-2. **State Handling**
-   - [ ] Test state serialization
-   - [ ] Verify state loading
-   - [ ] Check error handling
-   - [ ] Validate recovery
+2. **Screen Updates**
+   - Update all screens
+   - Add state observers
+   - Handle transitions
+   - Manage loading states
 
 ## Next Steps
 
 ### Immediate Tasks
 
-1. **Game Over Screen**
+1. **State Management**
 
-   - Complete layout testing
-   - Verify all transitions
-   - Test error scenarios
-   - Document edge cases
+   - Create StateManager
+   - Implement WebSocket client
+   - Add state validation
+   - Test basic functionality
 
-2. **State Management**
-   - Complete state testing
-   - Verify persistence
-   - Test recovery
+2. **Screen Updates**
+   - Update BaseScreen
+   - Test with one screen
+   - Verify state flow
    - Document patterns
 
-### Future Work
+### Short-term Goals
 
-1. **Screen Improvements**
+1. **Implementation**
 
-   - Add animations
-   - Enhance feedback
-   - Improve layout
-   - Add statistics
+   - Complete state management
+   - Update all screens
+   - Add error handling
+   - Implement recovery
 
-2. **State Enhancements**
-   - Add state history
-   - Improve recovery
-   - Enhance validation
-   - Add debugging
+2. **Testing**
+   - Write unit tests
+   - Add integration tests
+   - Test error scenarios
+   - Verify performance
+
+### Long-term Goals
+
+1. **Optimization**
+
+   - Improve performance
+   - Reduce latency
+   - Optimize state updates
+   - Enhance error recovery
+
+2. **Monitoring**
+   - Add metrics
+   - Track errors
+   - Monitor performance
+   - Log state changes
 
 ## Related Documentation
 
-### Core Memory Bank
-
-- [projectbrief.md](../../memory-bank/projectbrief.md)
-- [productContext.md](../../memory-bank/productContext.md)
-- [systemPatterns.md](../../memory-bank/systemPatterns.md)
-- [techContext.md](../../memory-bank/techContext.md)
-- [activeContext.md](../../memory-bank/activeContext.md)
-- [progress.md](../../memory-bank/progress.md)
-- [im-a-dummy.md](../../memory-bank/im-a-dummy.md)
-
-### Component Memory Banks
-
-- [State Server Memory Bank](../../state_server/memory-bank/)
-- [Phone Clients Memory Bank](../../phone_clients/memory-bank/)
-
-### Implementation Files
-
-- [main.py](../main.py)
-- [scorer.kv](../scorer.kv)
-- [screens/](../screens/)
-- [widgets/](../widgets/)
+- [Project Brief](projectbrief.md)
+- [Product Context](productContext.md)
+- [System Patterns](systemPatterns.md)
+- [Technical Context](techContext.md)
+- [Progress](progress.md)

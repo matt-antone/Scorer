@@ -1,131 +1,167 @@
-# Product Context: State Server
+# State Server Product Context
 
-## Overview
+## Purpose
 
-The State Server is a Flask-based web server that manages game state synchronization between the Pi App and phone clients. It ensures consistent game state across all connected devices and handles real-time updates via WebSocket connections.
+The state server is a critical component of the game system, responsible for managing game state, handling client connections, and ensuring data persistence. It provides a reliable and efficient way to synchronize game state across multiple clients.
 
-## Core Requirements
+## Problems Solved
 
 1. **State Management**
 
-   - Maintains single source of truth for game state
-   - Handles state sanitization for client consumption
-   - Persists game state in SQLite database
-   - Manages state transitions and validation
+   - Centralized state storage
+   - Real-time state updates
+   - State consistency
+   - State recovery
+
+2. **Client Communication**
+
+   - WebSocket connections
+   - Message handling
+   - State broadcasting
+   - Error handling
+
+3. **Data Persistence**
+   - State storage
+   - Transaction management
+   - Data recovery
+   - Backup support
+
+## Features
+
+### Core Features
+
+1. **State Management**
+
+   - Game state tracking
+   - Player state management
+   - Timer state control
+   - Settings state handling
 
 2. **WebSocket Server**
 
-   - Provides real-time communication channel
-   - Handles client connections and disconnections
-   - Broadcasts state updates to all connected clients
-   - Manages client authentication and session state
-
-3. **API Endpoints**
-
-   - RESTful endpoints for state queries
-   - WebSocket events for real-time updates
-   - Client authentication endpoints
-   - Game state persistence endpoints
-
-4. **Database Management**
-   - SQLite database for game state persistence
-   - Alembic migrations for schema management
-   - Efficient querying and state updates
-   - Data validation and sanitization
-
-## Dependencies
-
-1. **Pi App**
-
-   - Primary source of game state updates
-   - Initiates WebSocket server
-   - Provides client authentication
-   - Manages game flow and state transitions
-
-2. **Phone Clients**
-   - Connect via WebSocket
-   - Request state updates
-   - Submit player actions
-   - Receive real-time updates
-
-## Development Guidelines
-
-1. **State Management**
-
-   - Implement atomic state changes
-   - Ensure reliable real-time updates
-   - Handle concurrent connections
-   - Maintain data consistency
-
-2. **Security**
-
-   - Implement proper authentication
-   - Validate all client inputs
-   - Sanitize state for client consumption
-   - Handle unauthorized access attempts
-
-3. **Performance**
-
-   - Optimize database queries
-   - Handle multiple concurrent connections
-   - Minimize latency for real-time updates
-   - Efficient state broadcasting
-
-4. **Error Handling**
-   - Graceful handling of disconnections
-   - Proper error reporting
-   - State recovery mechanisms
-   - Logging for debugging
-
-## Implementation Status
-
-1. **Core Features**
-
-   - WebSocket server: Implemented
-   - State management: Implemented
-   - Database persistence: Implemented
-   - Client authentication: Implemented
-
-2. **API Endpoints**
-
-   - State queries: Implemented
-   - Real-time updates: Implemented
-   - Authentication: Implemented
-   - Game state persistence: Implemented
+   - Client connections
+   - Message processing
+   - State broadcasting
+   - Error handling
 
 3. **Database**
 
-   - Schema: Implemented
-   - Migrations: Implemented
-   - Queries: Implemented
-   - State persistence: Implemented
+   - State storage
+   - Transaction support
+   - Data persistence
+   - Recovery mechanisms
 
 4. **Security**
-   - Authentication: Implemented
-   - Input validation: Implemented
-   - State sanitization: Implemented
-   - Error handling: Implemented
+   - Authentication
+   - Rate limiting
+   - Access control
+   - Session management
+
+### User Experience
+
+1. **Reliability**
+
+   - Stable connections
+   - Consistent state
+   - Error recovery
+   - Data persistence
+
+2. **Performance**
+
+   - Fast response times
+   - Efficient state updates
+   - Optimized queries
+   - Resource management
+
+3. **Monitoring**
+   - Performance metrics
+   - Error tracking
+   - State consistency
+   - Resource utilization
+
+## Implementation Details
+
+### State Management
+
+1. **State Structure**
+
+   - Game state
+   - Player state
+   - Timer state
+   - Settings state
+
+2. **State Operations**
+   - State creation
+   - State updates
+   - State validation
+   - State recovery
+
+### WebSocket Server
+
+1. **Server Features**
+
+   - Async implementation
+   - Connection management
+   - Message handling
+   - Error handling
+
+2. **Message Types**
+   - State updates
+   - Client commands
+   - System messages
+   - Error messages
+
+### Database
+
+1. **Schema**
+
+   - Game state table
+   - Player state table
+   - Timer state table
+   - Settings table
+
+2. **Operations**
+   - CRUD operations
+   - Transaction support
+   - Error handling
+   - Recovery procedures
+
+## User Experience Goals
+
+### Performance
+
+1. **Response Time**
+
+   - Fast state updates
+   - Quick message processing
+   - Efficient queries
+   - Minimal latency
+
+2. **Resource Usage**
+   - Optimized memory
+   - Efficient CPU usage
+   - Minimal disk I/O
+   - Connection pooling
+
+### Reliability
+
+1. **Stability**
+
+   - Consistent operation
+   - Error recovery
+   - State consistency
+   - Data persistence
+
+2. **Monitoring**
+   - Performance tracking
+   - Error logging
+   - State verification
+   - Resource monitoring
 
 ## Related Documentation
 
-### Core Memory Bank
-
-- [projectbrief.md](../../memory-bank/projectbrief.md)
-- [productContext.md](../../memory-bank/productContext.md)
-- [systemPatterns.md](../../memory-bank/systemPatterns.md)
-- [techContext.md](../../memory-bank/techContext.md)
-- [activeContext.md](../../memory-bank/activeContext.md)
-- [progress.md](../../memory-bank/progress.md)
-- [im-a-dummy.md](../../memory-bank/im-a-dummy.md)
-
-### Component Memory Banks
-
-- [Pi App Memory Bank](../../pi_app/memory-bank/)
-- [Phone Clients Memory Bank](../../phone_clients/memory-bank/)
-
-### Implementation Files
-
-- [db/](../db/)
-- [static/](../static/)
-- [templates/](../templates/)
-- [scorer.db](../scorer.db)
+- [Project Brief](projectbrief.md)
+- [System Patterns](systemPatterns.md)
+- [Technical Context](techContext.md)
+- [Active Context](activeContext.md)
+- [Progress](progress.md)

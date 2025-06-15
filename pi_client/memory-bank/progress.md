@@ -1,119 +1,130 @@
-# Pi App Progress
+# Pi Client Progress
 
 ## Implementation Status
 
-### Core Screens
+### Completed Components
 
-1. **Implemented**
+1. **Core Screens**
 
-   - [x] Splash Screen
-   - [x] Resume/New Game Screen
-   - [x] Name Entry Screen
-   - [x] Deployment Setup Screen
-   - [x] Initiative Screen
-   - [x] Scoreboard Screen
-   - [x] Game Over Screen
+   - Splash Screen
+   - Resume or New Game Screen
+   - Name Entry Screen
+   - Deployment Setup Screen
+   - Initiative Screen
+   - Scoreboard Screen
 
-2. **In Progress**
-   - [ ] Settings Screen
-   - [ ] Screensaver Screen
+2. **Local State Management**
+   - Basic state handling
+   - Screen transitions
+   - Game logic
+   - Score tracking
 
-### Game Logic
+### In Progress
 
-1. **Implemented**
+1. **State Server Integration**
 
-   - [x] Round tracking (5 rounds)
-   - [x] Turn management
-   - [x] Score calculation
-   - [x] Winner determination
-   - [x] State persistence
-   - [x] Error handling
+   - State Manager refactoring
+   - WebSocket client implementation
+   - State synchronization
+   - Error handling
 
-2. **In Progress**
-   - [ ] Advanced statistics
-   - [ ] Custom game rules
-   - [ ] Tournament support
+2. **Screen Updates**
+   - Base Screen modifications
+   - State observer pattern
+   - Loading states
+   - Error displays
 
-### State Management
-
-1. **Implemented**
-
-   - [x] Game state persistence
-   - [x] Save/Load functionality
-   - [x] Error recovery
-   - [x] State validation
-   - [x] GameStatus enum
-   - [x] State transitions
-
-2. **In Progress**
-   - [ ] State history
-   - [ ] Enhanced recovery
-   - [ ] Debug logging
-   - [ ] Performance optimization
-
-## Current Issues
-
-### Layout
-
-1. **Scoreboard Screen**
-
-   - [ ] Verify button placement
-   - [ ] Check text alignment
-   - [ ] Test responsive layout
-   - [ ] Validate score display
-
-2. **Game Over Screen**
-   - [ ] Verify button placement
-   - [ ] Check text alignment
-   - [ ] Test responsive layout
-   - [ ] Validate score display
-
-### Functionality
+### Pending
 
 1. **State Management**
 
-   - [ ] Test state persistence
-   - [ ] Verify error recovery
-   - [ ] Check data consistency
-   - [ ] Validate transitions
+   - WebSocket integration
+   - State validation
+   - Error recovery
+   - Performance optimization
 
-2. **Game Logic**
-   - [ ] Test winner calculation
-   - [ ] Verify score display
-   - [ ] Check new game reset
-   - [ ] Validate state cleanup
+2. **Testing**
+   - Unit tests for new components
+   - Integration tests
+   - End-to-end tests
+   - Performance tests
+
+## Recent Changes
+
+1. **Planning Phase**
+
+   - Defined refactoring strategy
+   - Created implementation plan
+   - Documented requirements
+   - Set up testing framework
+
+2. **Implementation Progress**
+   - Started StateManager refactoring
+   - Created WebSocket client
+   - Updated state models
+   - Added validation
+
+## Known Issues
+
+1. **State Management**
+
+   - Local state needs replacement
+   - Missing WebSocket integration
+   - No error recovery
+   - Limited validation
+
+2. **Screen Integration**
+   - Screens need updating
+   - Missing state observers
+   - No loading states
+   - Limited error handling
 
 ## Next Steps
 
 ### Immediate Tasks
 
-1. **Screen Improvements**
+1. **State Management**
 
-   - Complete layout testing
-   - Verify all transitions
+   - Complete StateManager
+   - Finish WebSocket client
+   - Add state validation
+   - Implement error handling
+
+2. **Screen Updates**
+   - Update BaseScreen
+   - Modify individual screens
+   - Add state observers
+   - Implement loading states
+
+### Short-term Goals
+
+1. **Implementation**
+
+   - Complete refactoring
+   - Update all screens
+   - Add error handling
+   - Implement recovery
+
+2. **Testing**
+   - Write unit tests
+   - Add integration tests
    - Test error scenarios
-   - Document edge cases
+   - Verify performance
 
-2. **State Management**
-   - Complete state testing
-   - Verify persistence
-   - Test recovery
-   - Document patterns
+### Long-term Goals
 
-### Future Work
+1. **Optimization**
 
-1. **New Features**
+   - Improve performance
+   - Reduce latency
+   - Optimize state updates
+   - Enhance error recovery
 
-   - Settings screen
-   - Screensaver screen
-   - Game statistics
-   - Advanced options
-
-2. **Enhancements**
-   - Add animations
-   - Enhance feedback
-   - Improve layout
-   - Add debugging
+2. **Monitoring**
+   - Add metrics
+   - Track errors
+   - Monitor performance
+   - Log state changes
 
 ## Related Documentation
 

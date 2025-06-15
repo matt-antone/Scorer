@@ -1,200 +1,189 @@
-# Pi App System Patterns
+# Pi Client System Patterns
 
-## Screen Implementation
+## System Architecture
 
-### Class Structure
+The Pi client is built using Kivy and follows a modular architecture with clear separation of concerns. The system is designed to work with the new state server implementation, using WebSocket for real-time state synchronization.
 
-1. **Base Pattern**
+## Key Components
 
-   ```python
-   class ScreenName(Screen):
-       def __init__(self, **kwargs):
-           kv_path = os.path.join(os.path.dirname(__file__), 'screen_name.kv')
-           Builder.load_file(kv_path)
-           super().__init__(**kwargs)
-           self.setup_ui()
-   ```
+### 1. UI Layer
 
-2. **State Access**
-   ```python
-   app = App.get_running_app()
-   state = app.game_state
-   ```
+- **Screen Management**
 
-### Screen Transitions
+  - BaseScreen class for common functionality
+  - Individual screen implementations
+  - Screen transitions
+  - State observers
 
-1. **Validation**
+- **Widgets**
+  - Custom widgets for game elements
+  - Reusable components
+  - Layout management
+  - Event handling
 
-   ```python
-   def transition_to_screen(self, screen_name):
-       if not self.manager.has_screen(screen_name):
-           raise ValueError(f"Screen {screen_name} not registered")
-       self.manager.current = screen_name
-   ```
+### 2. State Management
 
-2. **Error Recovery**
-   ```python
-   try:
-       self.manager.current = 'screen_name'
-   except Exception as e:
-       logger.error(f"Screen transition failed: {e}")
-       # Handle error
-   ```
+- **State Manager**
 
-## State Management
+  - WebSocket client integration
+  - State synchronization
+  - Error handling
+  - State validation
 
-### Game State
+- **State Models**
+  - Game state
+  - Player state
+  - Round state
+  - Score state
 
-1. **Structure**
+### 3. Communication
 
-   ```python
-   class GameState:
-       def __init__(self):
-           self.p1_name = ""
-           self.p2_name = ""
-           self.current_round = 1
-           self.current_player_id = 1
-           self.status = GameStatus.NOT_STARTED
-   ```
+- **WebSocket Client**
+  - Connection management
+  - Message handling
+  - State broadcasting
+  - Error recovery
 
-2. **Validation**
-   ```python
-   def validate_state(self, state):
-       required_fields = ['p1_name', 'p2_name', 'current_round']
-       for field in required_fields:
-           if field not in state:
-               raise ValueError(f"Missing required field: {field}")
-       return state
-   ```
+## Design Patterns
 
-### State Persistence
+### 1. UI Patterns
 
-1. **Saving**
+```python
+class BaseScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.state_manager = StateManager()
+        self.observers = []
 
-   ```python
-   def save_game_state(self):
-       state_dict = {
-           'p1_name': self.player1_name,
-           'p2_name': self.player2_name,
-           'status': self.status.name,
-           # ... other state fields
-       }
-       with open('game_state.json', 'w') as f:
-           json.dump(state_dict, f)
-   ```
+    def on_state_update(self, state):
+        # Handle state updates
+        # Update UI
+        # Notify observers
+```
 
-2. **Loading**
-   ```python
-   def load_game_state(self):
-       try:
-           with open('game_state.json', 'r') as f:
-               state = json.load(f)
-           return self.validate_state(state)
-       except FileNotFoundError:
-           return self.initialize_game_state()
-   ```
+### 2. State Management
 
-## Error Handling
+```python
+class StateManager:
+    def __init__(self):
+        self.connection = None
+        self.state = None
+        self.observers = []
 
-### State Validation
+    def connect(self):
+        # Connect to state server
+        # Handle authentication
+        # Initialize state
 
-1. **Type Checking**
+    def update_state(self, updates):
+        # Validate updates
+        # Apply changes
+        # Notify observers
+```
 
-   ```python
-   if not isinstance(state, (dict, GameState)):
-       raise TypeError("Invalid state type")
-   ```
+### 3. Communication
 
-2. **Required Fields**
-   ```python
-   required_fields = ['p1_name', 'p2_name', 'current_round']
-   for field in required_fields:
-       if field not in state:
-           raise ValueError(f"Missing required field: {field}")
-   ```
+```python
+class WebSocketClient:
+    def __init__(self):
+        self.connection = None
+        self.handlers = {}
 
-### Screen Validation
+    def connect(self):
+        # Establish connection
+        # Set up handlers
+        # Start listening
 
-1. **Screen Registration**
+    def send_message(self, message):
+        # Validate message
+        # Send to server
+        # Handle response
+```
 
-   ```python
-   if not self.manager.has_screen('screen_name'):
-       raise ValueError("Screen not registered")
-   ```
+## Implementation Details
 
-2. **State Requirements**
-   ```python
-   if not self.validate_state_requirements():
-       raise ValueError("Invalid state for screen")
-   ```
+### 1. Screen Management
 
-## Best Practices
+- **Base Screen**
 
-### Code Organization
+  - Common functionality
+  - State management
+  - Error handling
+  - Loading states
 
-1. **Screen Files**
+- **Individual Screens**
+  - Specific functionality
+  - State observers
+  - UI updates
+  - Error handling
 
-   - One screen per file
-   - Clear naming convention
-   - Proper imports
+### 2. State Management
 
-2. **State Management**
+- **State Manager**
 
-   - Centralized state handling
-   - Proper serialization
-   - Error handling
+  - WebSocket integration
+  - State synchronization
+  - Error handling
+  - State validation
 
-3. **UI Implementation**
-   - Consistent styling
-   - Proper layout
-   - Responsive design
+- **State Models**
+  - Data structures
+  - Validation rules
+  - Serialization
+  - Deserialization
 
-### Error Handling
+### 3. Communication
 
-1. **Validation**
+- **WebSocket Client**
+  - Connection management
+  - Message handling
+  - State broadcasting
+  - Error recovery
 
-   - Input validation
-   - State validation
-   - Screen validation
+## Testing Strategy
 
-2. **Recovery**
-   - Graceful error handling
-   - User feedback
-   - State recovery
+### 1. Unit Tests
 
-### Performance
+- **State Manager**
 
-1. **State Management**
+  - Connection handling
+  - State updates
+  - Error handling
+  - Validation
 
-   - Efficient updates
-   - Proper serialization
-   - Minimal memory usage
+- **WebSocket Client**
+  - Connection management
+  - Message handling
+  - Error recovery
+  - State synchronization
 
-2. **UI Updates**
-   - Efficient rendering
-   - Proper layout
-   - Smooth transitions
+### 2. Integration Tests
+
+- **Screen Tests**
+
+  - State updates
+  - UI changes
+  - Error handling
+  - Loading states
+
+- **State Tests**
+  - Server connection
+  - State synchronization
+  - Error recovery
+  - Performance
+
+### 3. End-to-End Tests
+
+- **Workflow Tests**
+  - Complete game flow
+  - Error scenarios
+  - Recovery procedures
+  - Performance testing
 
 ## Related Documentation
 
-### Core Memory Bank
-
-- [projectbrief.md](../../memory-bank/projectbrief.md)
-- [productContext.md](../../memory-bank/productContext.md)
-- [systemPatterns.md](../../memory-bank/systemPatterns.md)
-- [techContext.md](../../memory-bank/techContext.md)
-- [activeContext.md](../../memory-bank/activeContext.md)
-- [progress.md](../../memory-bank/progress.md)
-- [im-a-dummy.md](../../memory-bank/im-a-dummy.md)
-
-### Component Memory Banks
-
-- [State Server Memory Bank](../../state_server/memory-bank/)
-- [Phone Clients Memory Bank](../../phone_clients/memory-bank/)
-
-### Implementation Files
-
-- [main.py](../main.py)
-- [scorer.kv](../scorer.kv)
-- [screens/](../screens/)
-- [widgets/](../widgets/)
+- [Project Brief](projectbrief.md)
+- [Product Context](productContext.md)
+- [Technical Context](techContext.md)
+- [Active Context](activeContext.md)
+- [Progress](progress.md)

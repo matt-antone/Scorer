@@ -30,7 +30,7 @@ class DatabaseSchema:
                 'player_id': 'TEXT NOT NULL',
                 'score': 'INTEGER NOT NULL',
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id)'
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
             },
             'timers': {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -38,7 +38,7 @@ class DatabaseSchema:
                 'player_id': 'TEXT NOT NULL',
                 'time_remaining': 'INTEGER NOT NULL',
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id)'
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
             },
             'settings': {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -46,7 +46,7 @@ class DatabaseSchema:
                 'setting_key': 'TEXT NOT NULL',
                 'setting_value': 'TEXT NOT NULL',
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id)'
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
             }
         }
 
@@ -61,7 +61,7 @@ class DatabaseSchema:
             column_defs = []
             for col_name, col_def in columns.items():
                 if col_name.startswith('FOREIGN KEY'):
-                    column_defs.append(col_def)
+                    column_defs.append(f"{col_name} {col_def}")
                 else:
                     column_defs.append(f"{col_name} {col_def}")
             

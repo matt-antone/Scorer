@@ -103,8 +103,13 @@ class SplashScreen(BaseScreen):
             # Simulate saved game check
             self.loading_progress = 80
             self.loading_status = 'Checking for saved game...'
-            self.has_saved_game = False
-            self.saved_game_info = None
+            app = App.get_running_app()
+            if app and hasattr(app, 'game_state'):
+                self.has_saved_game = app.game_state.get('has_saved_game', False)
+                self.saved_game_info = app.game_state.get('saved_game_info')
+            else:
+                self.has_saved_game = False
+                self.saved_game_info = None
             self._loading_timeout = Clock.schedule_once(self.finish_loading, 1)
         except Exception as e:
             self.handle_error(str(e))
@@ -121,7 +126,7 @@ class SplashScreen(BaseScreen):
             app = App.get_running_app()
             if app and hasattr(app, 'root'):
                 if self.has_saved_game:
-                    app.root.current = 'resume_or_new'
+                    app.root.current = 'resume'
                 else:
                     app.root.current = 'name_entry'
         except Exception as e:
@@ -423,3 +428,43 @@ class SplashScreen(BaseScreen):
                 app.root.current = 'resume_or_new'
             else:
                 app.root.current = 'name_entry'
+
+    def on_state_update(self, state):
+        """
+        Called when the state manager notifies of a state update.
+        Updates the UI based on the new state.
+        """
+        self.logger.debug(f"SplashScreen: Received state update: {state}")
+        if 'has_saved_game' in state:
+            self.has_saved_game = state['has_saved_game']
+            self.saved_game_info = state.get('saved_game_info')
+        if 'loading_progress' in state:
+            self.loading_progress = state['loading_progress']
+        if 'loading_status' in state:
+            self.loading_status = state['loading_status']
+        if 'system_checks' in state:
+            self.system_checks = state['system_checks']
+        if 'resources' in state:
+            self.resources = state['resources']
+        self.update_view_from_state()
+
+    def update_view_from_state(self):
+        """
+        Update the UI from the current game state.
+        """
+        self.logger.debug("SplashScreen: Updating view from state")
+        app = App.get_running_app()
+        if not app or not hasattr(app, 'game_state'):
+            raise StateError("Game state not available")
+        state = app.game_state
+        if 'has_saved_game' in state:
+            self.has_saved_game = state['has_saved_game']
+            self.saved_game_info = state.get('saved_game_info')
+        if 'loading_progress' in state:
+            self.loading_progress = state['loading_progress']
+        if 'loading_status' in state:
+            self.loading_status = state['loading_status']
+        if 'system_checks' in state:
+            self.system_checks = state['system_checks']
+        if 'resources' in state:
+            self.resources = state['resources']

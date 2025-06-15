@@ -47,8 +47,9 @@ class ResumeOrNewScreen(BaseScreen):
     def on_enter(self):
         """Called when the screen is entered."""
         super().on_enter()
-        self.detect_save_file()
-        self.check_saved_game()
+        # Register as observer
+        if self.state_manager:
+            self.state_manager.register_observer(self)
         self.update_view_from_state()
 
     def update_view_from_state(self):
@@ -188,11 +189,22 @@ class ResumeOrNewScreen(BaseScreen):
 
     def on_leave(self):
         """Called when leaving the screen."""
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
         super().on_leave()
         if self._loading_timeout:
             self._loading_timeout.cancel()
         if self._error_timeout:
             self._error_timeout.cancel()
+
+    def on_state_update(self, state):
+        """Update screen state from StateManager."""
+        self.logger.debug(f"[ResumeOrNewScreen] Received state update: {state}")
+        self.has_saved_game = state.get('has_saved_game', False)
+        self.saved_game_info = state.get('saved_game_info', None)
+        self.save_file_valid = self.has_saved_game and self.saved_game_info is not None
+        self.update_view_from_state()
 
     def handle_client_update(self, update):
         """Handle client update."""

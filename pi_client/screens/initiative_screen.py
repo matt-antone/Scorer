@@ -60,10 +60,16 @@ class InitiativeScreen(BaseScreen):
     def on_enter(self):
         """Called when the screen is entered."""
         super().on_enter()
+        # Register as observer
+        if self.state_manager:
+            self.state_manager.register_observer(self)
         self.update_view_from_state()
 
     def on_leave(self):
         """Called when leaving the screen."""
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
         super().on_leave()
         self.stop_sync()
         if self._error_timeout:
@@ -478,4 +484,17 @@ class InitiativeScreen(BaseScreen):
             self.rolls[player] = None
         self.initiative_winner = None
         self.initiative_loser = None
+        self.update_ui()
+
+    def on_state_update(self, state):
+        self.logger.debug(f"[InitiativeScreen] Received state update: {state}")
+        self.p1_name = state.get('p1_name', '')
+        self.p2_name = state.get('p2_name', '')
+        self.players = state.get('players', [])
+        self.rolls = state.get('rolls', {})
+        self.roll_validation = state.get('roll_validation', {'min_value': 1, 'max_value': 6})
+        self.current_round = state.get('current_round', 1)
+        self.max_rounds = state.get('max_rounds', 5)
+        self.initiative_winner = state.get('initiative_winner', None)
+        self.initiative_loser = state.get('initiative_loser', None)
         self.update_ui() 

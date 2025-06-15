@@ -85,11 +85,17 @@ class GameOverScreen(BaseScreen):
     def on_enter(self):
         """Called when the screen is entered."""
         Logger.debug('Entering screen')
+        # Register as observer
+        if self.state_manager:
+            self.state_manager.register_observer(self)
         self.load_game_state()
         self.update_ui()
 
     def on_leave(self):
         """Called when leaving the screen."""
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
         super().on_leave()
         self.stop_sync()
         if self._error_timeout:
@@ -416,4 +422,19 @@ class GameOverScreen(BaseScreen):
 
     def return_to_menu(self):
         """Return to main menu."""
-        self.manager.current = 'resume_or_new' 
+        self.manager.current = 'resume_or_new'
+
+    def on_state_update(self, state):
+        self.logger.debug(f"[GameOverScreen] Received state update: {state}")
+        self.p1_name = state.get('p1_name', '')
+        self.p2_name = state.get('p2_name', '')
+        self.p1_primary_score = state.get('p1_primary_score', 0)
+        self.p2_primary_score = state.get('p2_primary_score', 0)
+        self.p1_secondary_score = state.get('p1_secondary_score', 0)
+        self.p2_secondary_score = state.get('p2_secondary_score', 0)
+        self.p1_cp = state.get('p1_cp', 0)
+        self.p2_cp = state.get('p2_cp', 0)
+        self.winner = state.get('winner', '')
+        self.scores = state.get('scores', {})
+        self.final_scores = state.get('final_scores', [])
+        self.update_ui() 

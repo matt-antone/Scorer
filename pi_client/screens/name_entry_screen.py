@@ -43,6 +43,9 @@ class NameEntryScreen(BaseScreen):
         try:
             if not self.app:
                 self.app = App.get_running_app()
+            # Register as observer
+            if self.state_manager:
+                self.state_manager.register_observer(self)
             self.reset_screen()
             self.update_view_from_state()
             # Always set player_names, qr_code, qr_code_valid, qr_code_error, and name_validation in game state
@@ -54,6 +57,23 @@ class NameEntryScreen(BaseScreen):
         except Exception as e:
             logger.error(f"Error in on_enter: {str(e)}")
             self.handle_name_validation_error()
+
+    def on_leave(self):
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
+        super().on_leave()
+
+    def on_state_update(self, state):
+        self.logger.debug(f"[NameEntryScreen] Received state update: {state}")
+        self.p1_name = state.get('p1_name', '')
+        self.p2_name = state.get('p2_name', '')
+        self.player_names = [self.p1_name, self.p2_name]
+        self.qr_code = state.get('qr_code', '')
+        self.qr_code_valid = state.get('qr_code_valid', False)
+        self.qr_code_error = state.get('qr_code_error', '')
+        self.name_validation = state.get('name_validation', True)
+        self.update_ui()
 
     def reset_screen(self):
         """Reset screen state."""

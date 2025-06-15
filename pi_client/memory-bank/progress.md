@@ -14,17 +14,24 @@
    - Scoreboard Screen
 
 2. **Local State Management**
+
    - Basic state handling
    - Screen transitions
    - Game logic
    - Score tracking
 
+3. **WebSocket Client**
+   - Connection management
+   - Message sending/receiving
+   - Handler registration
+   - Error handling
+   - Fully unit tested
+
 ### In Progress
 
 1. **State Server Integration**
 
-   - State Manager refactoring
-   - WebSocket client implementation
+   - State Manager refactoring (next)
    - State synchronization
    - Error handling
 
@@ -38,38 +45,38 @@
 
 1. **State Management**
 
-   - WebSocket integration
+   - WebSocket integration (done for client, pending for manager)
    - State validation
    - Error recovery
    - Performance optimization
 
 2. **Testing**
-   - Unit tests for new components
+   - Unit tests for StateManager
    - Integration tests
    - End-to-end tests
    - Performance tests
 
 ## Recent Changes
 
-1. **Planning Phase**
+1. **WebSocket Client**
 
+   - Implemented WebSocketClient class
+   - Added connection, message, and handler logic
+   - Wrote comprehensive unit tests
+   - All tests pass
+
+2. **Planning Phase**
    - Defined refactoring strategy
    - Created implementation plan
    - Documented requirements
    - Set up testing framework
-
-2. **Implementation Progress**
-   - Started StateManager refactoring
-   - Created WebSocket client
-   - Updated state models
-   - Added validation
 
 ## Known Issues
 
 1. **State Management**
 
    - Local state needs replacement
-   - Missing WebSocket integration
+   - StateManager not yet implemented
    - No error recovery
    - Limited validation
 
@@ -85,10 +92,10 @@
 
 1. **State Management**
 
-   - Complete StateManager
-   - Finish WebSocket client
+   - Implement StateManager (using WebSocketClient)
    - Add state validation
    - Implement error handling
+   - Unit test StateManager
 
 2. **Screen Updates**
    - Update BaseScreen

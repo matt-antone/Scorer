@@ -58,6 +58,9 @@ class DeploymentSetupScreen(BaseScreen):
         try:
             if not self.app:
                 self.app = App.get_running_app()
+            # Register as observer
+            if self.state_manager:
+                self.state_manager.register_observer(self)
             self.ids.p1_name_label.text = self.app.game_state.get('p1_name', 'Player 1')
             self.ids.p2_name_label.text = self.app.game_state.get('p2_name', 'Player 2')
             self.update_roll_validation()
@@ -65,6 +68,25 @@ class DeploymentSetupScreen(BaseScreen):
         except Exception as e:
             logger.error(f"Error in on_enter: {str(e)}")
             self.handle_roll_validation_error()
+
+    def on_leave(self):
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
+        super().on_leave()
+
+    def on_state_update(self, state):
+        self.logger.debug(f"[DeploymentSetupScreen] Received state update: {state}")
+        self.p1_name = state.get('p1_name', 'Player 1')
+        self.p2_name = state.get('p2_name', 'Player 2')
+        self.deployment_sequence = state.get('deployment_sequence', [])
+        self.current_role = state.get('current_role', '')
+        self.players = state.get('players', [])
+        self.roles = state.get('roles', [])
+        self.rolls = state.get('rolls', {})
+        self.p1_deployment = state.get('p1_deployment', '')
+        self.p2_deployment = state.get('p2_deployment', '')
+        self.update_ui()
 
     def reset_screen(self, is_reroll=False):
         """Resets the screen to its initial state."""

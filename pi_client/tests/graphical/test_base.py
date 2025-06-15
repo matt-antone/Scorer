@@ -61,6 +61,7 @@ class BaseScreenTest(GraphicUnitTest):
             'scores': {},
             'winner': None,
             'game_stats': {'duration': 0, 'rounds_played': 0, 'total_points': 0},
+            'has_saved_game': True,
         }
         self.app.root = ScreenManager()
         self.app.root.add_widget(SplashScreen(name='splash'))

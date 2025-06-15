@@ -196,12 +196,18 @@ class ScoreboardScreen(BaseScreen):
     def on_enter(self):
         """Called when the screen is entered."""
         super().on_enter()
+        # Register as observer
+        if self.state_manager:
+            self.state_manager.register_observer(self)
         self.load_game_state()
         self.update_view_from_state()
         self.start_timer_update()
 
     def on_leave(self):
         """Called when the screen is left. Unschedule the timer update."""
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.unregister_observer(self)
         super().on_leave()
         self.stop_timer_update()
         self.stop_sync()
@@ -519,230 +525,13 @@ class ScoreboardScreen(BaseScreen):
             'Player2': app.game_state.get('p2_primary_score', 0) + app.game_state.get('p2_secondary_score', 0)
         }
 
-    def update_ui(self):
-        """Update the UI elements."""
-        try:
-            if hasattr(self, 'ids'):
-                # Update round display
-                if 'round_display' in self.ids:
-                    self.ids.round_display.text = f"Round {self.current_round}"
-                    
-                # Update score displays
-                for player in self.players:
-                    display_id = f'{player}_score_display'
-                    if display_id in self.ids:
-                        score = self.scores.get(player, 0)
-                        self.ids[display_id].text = str(score)
-                        
-                # Update history display
-                if 'history_display' in self.ids:
-                    history_text = "\n".join([
-                        f"Round {r['round']}: {r['scores']}"
-                        for r in self.round_history
-                    ])
-                    self.ids.history_display.text = history_text
-                    
-        except Exception as e:
-            self.handle_error(str(e))
-            
-    def broadcast_state(self):
-        """Broadcast current state to all clients."""
-        app = App.get_running_app()
-        if app and hasattr(app, 'game_state'):
-            state = {
-                'type': 'scoreboard',
-                'scores': self.scores,
-                'current_round': self.current_round,
-                'round_history': self.round_history,
-                'score_history': self.score_history
-            }
-            app.broadcast_state(state)
-
-    def handle_sync_error(self):
-        """Handle synchronization error."""
-        self.show_error("Failed to synchronize game state")
-        self.is_syncing = False
-
-    def get_round_display(self):
-        """Return the current round as a display string, e.g., 'Round 1'."""
-        app = App.get_running_app()
-        round_num = 1
-        if app and hasattr(app, 'game_state'):
-            round_num = app.game_state.get('current_round', 1)
-        return f"Round {round_num}"
-
-    def open_score_popup(self, player_num, score_type):
-        """Open the score input popup."""
-        try:
-            if player_num not in [1, 2]:
-                raise ValidationError(f"Invalid player number: {player_num}")
-            
-            if score_type not in ['primary', 'secondary']:
-                raise ValidationError(f"Invalid score type: {score_type}")
-            
-            title = f"Player {player_num} {score_type.title()} Score"
-            popup = NumberPadPopup(title=title)
-            popup.bind(on_dismiss=self.on_score_popup_dismiss)
-            popup.open()
-        except Exception as e:
-            self.handle_error(str(e))
-
-    def on_score_popup_dismiss(self, popup):
-        """Handle score popup dismissal."""
-        if popup.score is not None:
-            try:
-                player = f"Player{popup.player_num}"
-                self.update_score(player, popup.score)
-            except Exception as e:
-                self.handle_error(str(e))
-
-    def concede_game(self):
-        """Handle game concession."""
-        try:
-            app = App.get_running_app()
-            if not app or not hasattr(app, 'game_state'):
-                raise StateError("Game state not available")
-
-            # Determine winner based on current scores
-            p1_total = app.game_state.get('p1_primary_score', 0) + app.game_state.get('p1_secondary_score', 0)
-            p2_total = app.game_state.get('p2_primary_score', 0) + app.game_state.get('p2_secondary_score', 0)
-            
-            if p1_total > p2_total:
-                app.game_state['winner'] = 1
-            elif p2_total > p1_total:
-                app.game_state['winner'] = 2
-            else:
-                app.game_state['winner'] = 0  # Draw
-
-            app.root.current = 'game_over'
-        except Exception as e:
-            self.handle_error(str(e))
-
-    def continue_to_game_over(self):
-        self.proceed_to_game_over()
-
-    def handle_round_error(self):
-        self.show_error("Invalid round value")
-
-    def proceed_to_game_over(self):
-        """Proceed to the game over screen."""
-        try:
-            if not self.app:
-                self.app = App.get_running_app()
-            self.app.game_state['final_scores'] = self.scores
-            self.app.root.current = 'game_over'
-        except Exception as e:
-            self.handle_error("Failed to proceed to game over")
-
-    def change_cp(self, player, amount):
-        """Handles a command point change request."""
-        app = App.get_running_app()
-        app.update_cp(player, amount)
-        self.update_view_from_state()
-
-    def end_turn(self, outgoing_player_id):
-        """End the current player's turn and switch to the other player."""
-        if outgoing_player_id not in (1, 2):
-            logging.error(f"Invalid player ID: {outgoing_player_id}")
-            return
-
-        app = App.get_running_app()
-        game_state = app.game_state
-        
-        # If we're at round 5 and player 2 is ending their turn, end the game
-        if game_state['current_round'] == 5 and outgoing_player_id == 2:
-            logging.info("Game over: Round 5 completed by both players")
-            game_state['status'] = GameStatus.GAME_OVER
-            app.save_game_state()
-            app.root.current = 'game_over'
-            return
-
-        # Switch to the other player
-        game_state['current_player_id'] = 3 - outgoing_player_id  # Switch between 1 and 2
-        
-        # If we're switching back to player 1, increment the round
-        if game_state['current_player_id'] == 1:
-            if game_state['current_round'] < 5:
-                game_state['current_round'] += 1
-        
-        # Update the current player name
-        game_state['current_player_name'] = game_state['p1_name'] if game_state['current_player_id'] == 1 else game_state['p2_name']
-        
-        app.save_game_state()
-        self.update_view_from_state()
-
-    def show_number_pad(self, player, objective_type):
-        """Opens a number pad popup to set a score."""
-        app = App.get_running_app()
-        
-        def on_confirm(value):
-            logging.info(f"Score update callback called with value: {value} for player {player}, objective {objective_type}")
-            app.set_objective_score(player, objective_type, value)
-            self.update_view_from_state()
-            logging.info("View updated after score change")
-
-        current_score_key = f"p{player}_{objective_type}_score"
-        current_score = app.game_state.get(current_score_key, 0)
-        logging.info(f"Opening score popup for player {player}, {objective_type}, current score: {current_score}")
-
-        popup = NumberPadPopup(
-            callback=on_confirm,
-            initial_value=current_score,
-            score_type=objective_type
-        )
-        
-        # Position the popup on the correct side of the screen
-        if player == 1:
-            popup.pos_hint = {'x': 0.05, 'center_y': 0.5}
-        else: # player == 2
-            popup.pos_hint = {'right': 0.95, 'center_y': 0.5}
-
-        popup.open()
-
-    def increment_score(self, player):
-        """Increments the command points for a player."""
-        self.change_cp(player, 1)
-
-    def decrement_score(self, player):
-        """Decrements the command points for a player."""
-        self.change_cp(player, -1)
-
-    def show_concede_confirm(self):
-        """Shows the concede confirmation popup."""
-        app = App.get_running_app()
-        current_player = 1 if app.game_state.get('current_player_name') == app.game_state.get('p1_name') else 2
-        popup = ConcedeConfirmPopup(player_number=current_player)
-        
-        # Position the popup on the correct side of the screen
-        if current_player == 1:
-            popup.pos_hint = {'x': 0.05, 'center_y': 0.5}
-        else: # player == 2
-            popup.pos_hint = {'right': 0.95, 'center_y': 0.5}
-        
-        popup.open()
-
-    def back_to_initiative(self):
-        """Return to initiative screen."""
-        app = App.get_running_app()
-        if app and hasattr(app, 'root') and app.root is not None:
-            app.root.current = 'initiative'
-
-    def get_score_display(self, player):
-        """Get formatted score display for a player."""
-        return str(self.scores.get(player, 0))
-
-    def handle_score_error(self):
-        """Handle score error."""
-        self.handle_error("Invalid score value")
-
-    def validate_game_state(self, state):
-        """Validate game state."""
-        if not isinstance(state, dict):
-            raise ValidationError("Game state must be a dictionary")
-        
-        required_keys = ['players', 'current_round', 'scores']
-        for key in required_keys:
-            if key not in state:
-                raise StateError(f"Missing required state key: {key}")
-        
-        return True 
+    def on_state_update(self, state):
+        self.logger.debug(f"[ScoreboardScreen] Received state update: {state}")
+        self.scores = state.get('scores', {'Player1': 0, 'Player2': 0})
+        self.current_round = state.get('current_round', 1)
+        self.max_rounds = state.get('max_rounds', 10)
+        self.round_history = state.get('round_history', [])
+        self.score_history = state.get('score_history', {})
+        self.initiative_winner = state.get('initiative_winner', '')
+        self.players = state.get('players', [])
+        self.update_ui() 

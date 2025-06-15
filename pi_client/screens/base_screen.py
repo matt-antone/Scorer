@@ -3,6 +3,7 @@ from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 from kivy.app import App
 import logging
+from pi_client.state.state_manager import StateManager
 
 class ScreenError(Exception):
     """Base exception for screen-related errors."""
@@ -37,6 +38,12 @@ class BaseScreen(Screen):
         self._current_error = None
         self._current_status = None
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
+        # StateManager integration
+        app = App.get_running_app()
+        if hasattr(app, 'state_manager'):
+            self.state_manager = app.state_manager
+        else:
+            self.state_manager = None
 
     def on_pre_enter(self):
         """
@@ -45,6 +52,9 @@ class BaseScreen(Screen):
         """
         self.logger.debug("Pre-entering screen")
         try:
+            # Register as observer
+            if self.state_manager:
+                self.state_manager.register_observer(self.on_state_update)
             self.update_view_from_state()
             self.start_sync()
         except Exception as e:
@@ -70,6 +80,9 @@ class BaseScreen(Screen):
         if self._error_timeout:
             self._error_timeout.cancel()
             self._error_timeout = None
+        # Unregister as observer
+        if self.state_manager:
+            self.state_manager.remove_observer(self.on_state_update)
 
     def update_view_from_state(self):
         """
@@ -167,8 +180,9 @@ class BaseScreen(Screen):
         """Start client synchronization."""
         self.logger.debug("Starting sync")
         self.is_syncing = True
-        # Child classes should implement specific sync logic
-        pass
+        # Use StateManager for sync if available
+        if self.state_manager and self.state_manager.is_connected():
+            pass  # Optionally trigger state fetch or sync
 
     def stop_sync(self):
         """Stop client synchronization."""
@@ -362,4 +376,12 @@ class BaseScreen(Screen):
         self.validate_loading_progress(progress)
         self.loading_progress = progress
         if status:
-            self.loading_status = status 
+            self.loading_status = status
+
+    def on_state_update(self, state):
+        """
+        Called when the state manager notifies of a state update.
+        Child classes should override this to update the UI.
+        """
+        self.logger.debug(f"Received state update: {state}")
+        self.update_view_from_state() 

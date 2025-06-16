@@ -3,8 +3,9 @@
 # Version History
 
 - v1.0.0 (2024-03-21): Initial version
+- v1.0.1 (2024-05-14): Added player roles clarification
 
-Last Updated: 2024-03-21 14:30 UTC
+Last Updated: 2024-05-14 14:30 UTC
 
 # Related Files
 
@@ -68,6 +69,30 @@ This document describes the state management system used in the application for 
   },
   "created_at": "ISO8601",
   "updated_at": "ISO8601"
+}
+```
+
+## Player Roles
+
+The game uses a role-based system where players are assigned either the "attacker" or "defender" role. These roles are stored in the player state's `role` field and must be one of these two values:
+
+- `"attacker"`: The player who initiates the attack phase
+- `"defender"`: The player who defends against the attack
+
+The roles are determined during the deployment setup phase through a roll-off process. The winner of the roll-off can choose their preferred role, which is then stored in their player state.
+
+Example player state with role:
+
+```json
+{
+  "player_id": "player1",
+  "game_id": "game123",
+  "name": "John",
+  "role": "attacker", // Role is stored here
+  "status": "active",
+  "score": 0,
+  "created_at": "2024-05-14T14:30:00Z",
+  "updated_at": "2024-05-14T14:30:00Z"
 }
 ```
 

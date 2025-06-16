@@ -1,201 +1,213 @@
 """
-Unit tests for the WebSocket server implementation.
+Unit tests for WebSocket server functionality.
 """
 
 import asyncio
 import json
 import pytest
-import websockets
-import socket
-import logging
-from datetime import datetime
-from typing import Dict, Any
 import pytest_asyncio
-import random
+import websockets
+from datetime import datetime
+import logging
 
-from state_server.src.websocket.server import WebSocketServer
-from state_server.src.websocket.connection_manager import ConnectionManager
-from state_server.src.websocket.message_handler import MessageHandler
+from src.websocket.server import WebSocketServer
+from src.database.manager import DatabaseManager
+
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-def find_free_port() -> int:
-    """Find a free port for the server."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(('', 0))
-        return s.getsockname()[1]
-
-@pytest.fixture
-def server_settings() -> Dict[str, Any]:
-    """Fixture providing server settings for testing."""
-    return {
-        "host": "localhost",
-        "port": find_free_port(),
-        "max_message_size": 1024 * 1024,  # 1MB
-        "max_messages_per_second": 10,
-        "max_concurrent_connections": 5,
-        "ping_interval": 30,
-        "ping_timeout": 10,
-        "max_queue_size": 32
-    }
 
 @pytest_asyncio.fixture
-async def websocket_server(server_settings: Dict[str, Any]) -> WebSocketServer:
-    """Async fixture providing a WebSocket server instance for testing, with proper teardown."""
-    server = WebSocketServer(server_settings)
-    await server.start()
-    logger.debug(f"Starting WebSocket server on port {server_settings['port']}")
-    yield server
-    logger.info("Stopping WebSocket server")
-    await server.stop()
+async def db_path(tmp_path):
+    """Create a temporary database path."""
+    return str(tmp_path / "test.db")
 
-@pytest.mark.asyncio
-async def test_server_initialization(websocket_server: WebSocketServer, server_settings: Dict[str, Any]) -> None:
-    """Test server initialization with settings."""
-    assert websocket_server.settings == server_settings
-    assert isinstance(websocket_server.connection_manager, ConnectionManager)
-    assert isinstance(websocket_server.message_handler, MessageHandler)
 
 @pytest_asyncio.fixture
-async def server():
-    port = random.randint(8000, 9000)
-    settings = {
-        "host": "localhost",
-        "port": port,
-        "max_message_size": 1024 * 1024,
-        "max_messages_per_second": 10,
-        "max_concurrent_connections": 5,
-        "ping_interval": 30,
-        "ping_timeout": 10,
-        "max_queue_size": 32
-    }
-    server = WebSocketServer(settings)
-    await server.start()
-    logger.debug(f"Server started on port {port}")
-    yield server
-    await server.stop()
-    logger.debug("Server stopped")
+async def db_manager(db_path):
+    """Create a database manager instance."""
+    manager = DatabaseManager(db_path)
+    return manager
+
+
+@pytest_asyncio.fixture
+async def server(db_manager):
+    """Create a WebSocket server instance."""
+    return WebSocketServer(db_manager)
+
+
+# Utility function to receive a specific message type
+async def recv_until(websocket, expected_type):
+    while True:
+        resp = json.loads(await websocket.recv())
+        if resp["type"] == expected_type:
+            return resp
+
 
 @pytest.mark.asyncio
-async def test_connection_handling(server):
-    logger.debug("Starting test_connection_handling")
-    async with websockets.connect(f"ws://localhost:{server.settings['port']}", extra_headers={"Client-Type": "host"}) as websocket:
-        logger.debug("Client connected")
-        await asyncio.sleep(1)  # Wait for server to register client
-        count = server.connection_manager.get_connection_count()
-        logger.debug(f"Connection count: {count}")
-        assert count == 1
-    logger.debug("Test completed")
-
-@pytest.mark.asyncio
-async def test_message_handling(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    async with websockets.connect(uri, extra_headers={"Client-Type": "host"}) as client:
-        await client.recv()  # Discard initial connection_status
-        # Test valid message
-        message = {
-            "type": "ping",
-            "data": {"timestamp": datetime.utcnow().isoformat()}
-        }
-        await client.send(json.dumps(message))
-        response = await asyncio.wait_for(client.recv(), timeout=5)
-        response_data = json.loads(response)
-        assert response_data["type"] == "pong"
-
-        # Test invalid JSON
-        await client.send("invalid json")
-        response = await asyncio.wait_for(client.recv(), timeout=5)
-        response_data = json.loads(response)
-        assert response_data["type"] == "error"
-        assert response_data["data"]["code"] == "invalid_json"
-
-@pytest.mark.asyncio
-async def test_message_rate_limiting(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    async with websockets.connect(uri, extra_headers={"Client-Type": "host"}) as client:
-        await client.recv()  # Discard initial connection_status
-        # Send messages up to rate limit
-        for _ in range(websocket_server.settings["max_messages_per_second"]):
-            message = {
-                "type": "ping",
-                "data": {"timestamp": datetime.utcnow().isoformat()}
+async def test_websocket_player_management(server, db_manager):
+    """Test player management functionality."""
+    async with websockets.serve(server.handle_connection, "localhost", 8772):
+        async with websockets.connect("ws://localhost:8772") as websocket:
+            # Create player
+            create_msg = {
+                "action": "create_player",
+                "player_id": "p4",
+                "game_id": "g4",
+                "name": "Dana",
+                "role": "defender"
             }
-            await client.send(json.dumps(message))
-            response = await asyncio.wait_for(client.recv(), timeout=5)
-            response_data = json.loads(response)
-            assert response_data["type"] == "pong"
+            await websocket.send(json.dumps(create_msg))
+            resp = await recv_until(websocket, "player_created")
+            assert resp["player_id"] == "p4"
 
-        # Send one more message to exceed rate limit
-        message = {
-            "type": "ping",
-            "data": {"timestamp": datetime.utcnow().isoformat()}
-        }
-        await client.send(json.dumps(message))
-        response = await asyncio.wait_for(client.recv(), timeout=5)
-        response_data = json.loads(response)
-        assert response_data["type"] == "error"
-        assert response_data["data"]["code"] == "rate_limit_exceeded"
+            # Get player data
+            get_msg = {"action": "get_player", "player_id": "p4"}
+            await websocket.send(json.dumps(get_msg))
+            resp = await recv_until(websocket, "player_data")
+            assert resp["player"]["player_id"] == "p4"
+            assert resp["player"]["name"] == "Dana"
+            assert resp["player"]["role"] == "defender"
 
-@pytest.mark.asyncio
-async def test_connection_limit(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    clients = []
-    for i in range(websocket_server.settings["max_concurrent_connections"]):
-        client = await websockets.connect(uri, extra_headers={"Client-Type": "player"})
-        await client.recv()  # Discard initial connection_status
-        clients.append(client)
-        assert websocket_server.connection_manager.get_connection_count() == i + 1
-    # Try to connect one more
-    with pytest.raises(websockets.exceptions.ConnectionClosedError) as excinfo:
-        extra_client = await websockets.connect(uri, extra_headers={"Client-Type": "player"})
-        await extra_client.recv()
-    assert excinfo.value.code == 1008
-    for client in clients:
-        await client.close()
+            # Update player
+            update_msg = {
+                "action": "update_player",
+                "player_id": "p4",
+                "updates": {"name": "Dana Updated"}
+            }
+            await websocket.send(json.dumps(update_msg))
+            resp = await recv_until(websocket, "player_updated")
+            assert resp["player"]["name"] == "Dana Updated"
 
-@pytest.mark.asyncio
-async def test_broadcast(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    clients = []
-    for client_type in ["host", "player", "observer"]:
-        client = await websockets.connect(uri, extra_headers={"Client-Type": client_type})
-        await client.recv()  # Discard initial connection_status
-        clients.append(client)
-    message = {"type": "test", "data": {"message": "test broadcast"}}
-    await websocket_server.broadcast(message)
-    for client in clients:
-        # Discard any additional connection_status messages
-        while True:
-            response = await client.recv()
-            response_data = json.loads(response)
-            if response_data["type"] == "test":
-                break
-        assert response_data["type"] == "test"
-        assert response_data["data"]["message"] == "test broadcast"
-    for client in clients:
-        await client.close()
+            # Get all players in game
+            get_all_msg = {"action": "get_game_players", "game_id": "g4"}
+            await websocket.send(json.dumps(get_all_msg))
+            resp = await recv_until(websocket, "game_players")
+            assert len(resp["players"]) == 1
+            assert resp["players"][0]["player_id"] == "p4"
+
+            # Get player by role
+            get_role_msg = {
+                "action": "get_player_by_role",
+                "game_id": "g4",
+                "role": "defender"
+            }
+            await websocket.send(json.dumps(get_role_msg))
+            resp = await recv_until(websocket, "player_data")
+            assert resp["player"]["role"] == "defender"
+
 
 @pytest.mark.asyncio
-async def test_message_too_large(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    async with websockets.connect(uri, extra_headers={"Client-Type": "host"}) as client:
-        await client.recv()  # Discard initial connection_status
-        large_message = "x" * (websocket_server.settings["max_message_size"] + 1)
-        with pytest.raises(websockets.exceptions.ConnectionClosedError) as excinfo:
-            await client.send(large_message)
-            await client.recv()
-        assert excinfo.value.code == 1009
+async def test_websocket_unsupported_action(server):
+    """Test handling of unsupported actions."""
+    async with websockets.serve(server.handle_connection, "localhost", 8773):
+        async with websockets.connect("ws://localhost:8773") as websocket:
+            msg = {"action": "unsupported_action"}
+            await websocket.send(json.dumps(msg))
+            resp = await recv_until(websocket, "error")
+            assert "Unknown action" in resp["message"]
+
 
 @pytest.mark.asyncio
-async def test_unknown_message_type(websocket_server):
-    uri = f"ws://{websocket_server.settings['host']}:{websocket_server.settings['port']}"
-    async with websockets.connect(uri, extra_headers={"Client-Type": "host"}) as client:
-        await client.recv()  # Discard initial connection_status
-        message = {"type": "unknown", "data": {}}
-        await client.send(json.dumps(message))
-        response = await asyncio.wait_for(client.recv(), timeout=5)
-        response_data = json.loads(response)
-        assert response_data["type"] == "error"
-        assert response_data["data"]["code"] == "unknown_type" 
+async def test_player_role_validation(server):
+    """Test player role validation."""
+    async with websockets.serve(server.handle_connection, "localhost", 8774):
+        async with websockets.connect("ws://localhost:8774") as websocket:
+            # Test invalid role
+            create_msg = {
+                "action": "create_player",
+                "player_id": "p8",
+                "game_id": "g8",
+                "name": "Ivy",
+                "role": "invalid_role"
+            }
+            await websocket.send(json.dumps(create_msg))
+            resp = await recv_until(websocket, "error")
+            assert "Invalid role" in resp["message"]
+
+        # Test valid roles with separate connections
+        for role in ["attacker", "defender"]:
+            create_msg = {
+                "action": "create_player",
+                "player_id": f"p8_{role}",
+                "game_id": "g8",
+                "name": "Ivy",
+                "role": role
+            }
+            async with websockets.connect("ws://localhost:8774") as websocket:
+                await websocket.send(json.dumps(create_msg))
+                resp = await recv_until(websocket, "player_created")
+                assert resp["player_id"] == f"p8_{role}"
+                assert resp["role"] == role
+
+
+@pytest.mark.asyncio
+async def test_player_timestamp_validation(server):
+    """Test player timestamp validation."""
+    async with websockets.serve(server.handle_connection, "localhost", 8775):
+        async with websockets.connect("ws://localhost:8775") as websocket:
+            # Create player with timestamp
+            create_msg = {
+                "action": "create_player",
+                "player_id": "p9",
+                "game_id": "g9",
+                "name": "Jack",
+                "role": "attacker",
+                "created_at": datetime.utcnow().isoformat()
+            }
+            await websocket.send(json.dumps(create_msg))
+            resp = await recv_until(websocket, "player_created")
+            assert resp["player_id"] == "p9"
+
+            # Get player and verify timestamp
+            get_msg = {"action": "get_player", "player_id": "p9"}
+            await websocket.send(json.dumps(get_msg))
+            resp = await recv_until(websocket, "player_data")
+            assert "created_at" in resp["player"]
+            assert "updated_at" in resp["player"]
+            assert resp["player"]["created_at"] <= resp["player"]["updated_at"]
+
+
+@pytest.mark.asyncio
+async def test_concurrent_player_operations(server):
+    """Test concurrent player operations."""
+    async with websockets.serve(server.handle_connection, "localhost", 8776):
+        # Create multiple concurrent connections
+        async with websockets.connect("ws://localhost:8776") as ws1, \
+                  websockets.connect("ws://localhost:8776") as ws2:
+
+            # Create players concurrently
+            create_msg1 = {
+                "action": "create_player",
+                "player_id": "p10_1",
+                "game_id": "g10",
+                "name": "Kelly",
+                "role": "attacker"
+            }
+            create_msg2 = {
+                "action": "create_player",
+                "player_id": "p10_2",
+                "game_id": "g10",
+                "name": "Liam",
+                "role": "defender"
+            }
+
+            # Send create requests concurrently
+            await asyncio.gather(
+                ws1.send(json.dumps(create_msg1)),
+                ws2.send(json.dumps(create_msg2))
+            )
+
+            # Get responses (order may vary)
+            responses = [await recv_until(ws1, "player_created"), await recv_until(ws2, "player_created")]
+            player_ids = {resp["player_id"] for resp in responses}
+            assert {"p10_1", "p10_2"} == player_ids
+
+            # Verify both players exist in game
+            get_all_msg = {"action": "get_game_players", "game_id": "g10"}
+            await ws1.send(json.dumps(get_all_msg))
+            resp = await recv_until(ws1, "game_players")
+            returned_ids = {p["player_id"] for p in resp["players"]}
+            assert {"p10_1", "p10_2"} <= returned_ids 

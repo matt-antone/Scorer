@@ -12,6 +12,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 import os
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
+from pi_client.state.scoreboard_state import ScoreboardState
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class ScoreboardScreen(BaseScreen):
     timer_event = None
     _current_error = None
     is_syncing = False
+    state = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -60,6 +62,7 @@ class ScoreboardScreen(BaseScreen):
         self.history_display = Label(text="")
         self.p1_total_score_label = Label(text="0")
         self.p2_total_score_label = Label(text="0")
+        self.state = ScoreboardState()
 
     def _start_background_tasks(self):
         """Start background tasks for initialization."""
@@ -534,4 +537,13 @@ class ScoreboardScreen(BaseScreen):
         self.score_history = state.get('score_history', {})
         self.initiative_winner = state.get('initiative_winner', '')
         self.players = state.get('players', [])
-        self.update_ui() 
+        self.update_ui()
+
+    def validate_scores(self):
+        return self.state.validate_scores()
+
+    def validate_current_round(self):
+        return self.state.validate_current_round()
+
+    def validate_state(self):
+        return self.state.validate_state() 

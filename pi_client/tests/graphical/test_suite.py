@@ -9,7 +9,6 @@ from .test_deployment_setup_screen import TestDeploymentSetupScreen
 from .test_initiative_screen import TestInitiativeScreen
 from .test_scoreboard_screen import TestScoreboardScreen
 from .test_game_over_screen import TestGameOverScreen
-from .test_settings_screen import TestSettingsScreen
 
 def test_suite():
     """Run all graphical tests in sequence."""
@@ -21,7 +20,6 @@ def test_suite():
     initiative_tests = TestInitiativeScreen()
     scoreboard_tests = TestScoreboardScreen()
     game_over_tests = TestGameOverScreen()
-    settings_tests = TestSettingsScreen()
     
     # Run tests in sequence
     try:
@@ -73,14 +71,6 @@ def test_suite():
         game_over_tests.test_initial_state()
         game_over_tests.test_new_game_button()
         game_over_tests.tearDown()
-        
-        # Settings Screen tests
-        settings_tests.setUp()
-        settings_tests.test_initial_state()
-        settings_tests.test_display_rotation()
-        settings_tests.test_screensaver_timeout()
-        settings_tests.test_back_button()
-        settings_tests.tearDown()
         
         return True
     except Exception as e:

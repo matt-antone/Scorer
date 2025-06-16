@@ -598,3 +598,18 @@ from pi_app.strings import UI_STRINGS
 3. Handle errors
 4. Update state
 5. Show feedback
+
+## State Management
+
+- All screen state logic is now implemented in pure Python state classes, fully decoupled from Kivy and UI code.
+- Each screen has a corresponding state class responsible for state properties and validation.
+- All screen tests use these state classes for validation, ensuring tests are independent of Kivy and UI dependencies.
+- This pattern is now required for all future screen/state work.
+
+## References
+
+- @/changes/2024-05-20-state-management-design.md
+- @/changes/2024-05-20-systemic-fixes-analysis.md
+- @/decisions/state_management_design.md
+- @/decisions/common_implementation_patterns.md
+- @/decisions/2024-06-11-pi-app-structure.md

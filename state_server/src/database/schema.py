@@ -24,13 +24,25 @@ class DatabaseSchema:
                 'created_at': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
                 'updated_at': 'DATETIME DEFAULT CURRENT_TIMESTAMP'
             },
+            'players': {
+                'player_id': 'TEXT PRIMARY KEY',
+                'game_id': 'TEXT NOT NULL',
+                'name': 'TEXT NOT NULL',
+                'role': 'TEXT NOT NULL CHECK(role IN ("attacker", "defender"))',
+                'status': 'TEXT NOT NULL',
+                'score': 'INTEGER NOT NULL DEFAULT 0',
+                'created_at': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                'updated_at': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
+            },
             'scores': {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
                 'game_id': 'TEXT NOT NULL',
                 'player_id': 'TEXT NOT NULL',
                 'score': 'INTEGER NOT NULL',
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE',
+                'FOREIGN KEY(player_id)': 'REFERENCES players(player_id) ON DELETE CASCADE'
             },
             'timers': {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -38,7 +50,8 @@ class DatabaseSchema:
                 'player_id': 'TEXT NOT NULL',
                 'time_remaining': 'INTEGER NOT NULL',
                 'timestamp': 'DATETIME DEFAULT CURRENT_TIMESTAMP',
-                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE'
+                'FOREIGN KEY(game_id)': 'REFERENCES game_state(game_id) ON DELETE CASCADE',
+                'FOREIGN KEY(player_id)': 'REFERENCES players(player_id) ON DELETE CASCADE'
             },
             'settings': {
                 'id': 'INTEGER PRIMARY KEY AUTOINCREMENT',
@@ -109,6 +122,12 @@ class DatabaseSchema:
         Args:
             cursor (sqlite3.Cursor): SQLite cursor for executing statements.
         """
+        # Index for players table
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_players_game_id 
+            ON players(game_id)
+        """)
+        
         # Index for scores table
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_scores_game_id 

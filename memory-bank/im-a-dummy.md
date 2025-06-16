@@ -507,3 +507,25 @@ def handle_client_update(self, update):
 3. ALWAYS handle errors
 4. ALWAYS update state
 5. ALWAYS show feedback
+
+## Test Suite Separation Rule
+
+- **State Testing Suite:** All logic and state validation tests must be implemented in a suite that does not depend on Kivy or graphical components. These tests should be runnable in any environment and focus solely on business logic, state transitions, and validation.
+- **Graphic Testing Suite:** All UI and graphical tests (including Kivy widget and screen rendering) must be implemented in a separate suite that requires Kivy and a display environment. These tests are only to be run on appropriate hardware (e.g., Raspberry Pi with display).
+- **Independence:** These two suites must be maintained and run independently. No test should require both state and graphics dependencies simultaneously. This separation is mandatory for maintainability and platform compatibility.
+
+# I'm a Dummy: Implementation Notes
+
+## New Required Pattern
+
+- All screen state logic must be implemented in pure Python state classes, decoupled from Kivy and UI code.
+- All screen tests must use these state classes for validation, not Kivy or UI logic.
+- This is now the required approach for all future screen/state work.
+
+## References
+
+- @/changes/2024-05-20-state-management-design.md
+- @/changes/2024-05-20-systemic-fixes-analysis.md
+- @/decisions/state_management_design.md
+- @/decisions/common_implementation_patterns.md
+- @/decisions/2024-06-11-pi-app-structure.md

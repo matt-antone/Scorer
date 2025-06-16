@@ -35,4 +35,17 @@ class TestSplashScreen(BaseScreenTest):
 
     def test_screen_transition(self):
         """Alias for test_auto_transition to match test suite expectations."""
-        self.test_auto_transition() 
+        self.test_auto_transition()
+
+    def test_failed(self):
+        """Test handling of failed state."""
+        # Simulate a failed state
+        self.screen.state.set_error("Test error")
+        self.advance_frames(1)
+        
+        # Check that error is displayed
+        self.validate_string_field('error_label', 'Test error')
+        
+        # Verify screen still transitions despite error
+        self.advance_frames(120)
+        assert self.app.root.current == 'resume' 

@@ -8,6 +8,7 @@ import logging
 import os
 import json
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
+from pi_client.state.resume_or_new_state import ResumeOrNewState
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class ResumeOrNewScreen(BaseScreen):
         self.logger.info("ResumeOrNewScreen: Initializing")
         self._loading_timeout = None
         self._error_timeout = None
+        self.state = ResumeOrNewState()
         self._start_background_tasks()
 
     def _start_background_tasks(self):
@@ -232,4 +234,10 @@ class ResumeOrNewScreen(BaseScreen):
             if key not in state:
                 raise StateError(f"Missing required state key: {key}")
         
-        return True 
+        return True
+
+    def validate_has_saved_game(self):
+        return self.state.validate_has_saved_game()
+
+    def validate_state(self):
+        return self.state.validate_state() 

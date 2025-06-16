@@ -24,7 +24,11 @@ class DeploymentSetupScreen(BaseScreen):
     players = ListProperty([])
     roles = ListProperty([])
     rolls = DictProperty({})
-    roll_validation = DictProperty({})
+    roll_validation = DictProperty({
+        'min_value': 1,
+        'max_value': 6,
+        'required_rolls': 2
+    })
     app = ObjectProperty(None)
     
     # Player names
@@ -168,26 +172,365 @@ class DeploymentSetupScreen(BaseScreen):
                 self.ids.p2_deployment_label.text = self.p2_deployment
                 self.ids.continue_button.disabled = False
                 self.ids.status_label.text = f"Role selected. Attacker: {self.p1_name if self.p1_deployment == 'Attacker' else self.p2_name}, Defender: {self.p1_name if self.p1_deployment == 'Defender' else self.p2_name}"
-                self.proceed_to_initiative()
+                self.update_role(player, role)
         except Exception as e:
             logger.error(f"Error in select_role: {str(e)}")
             self.handle_roll_validation_error()
 
-    def roll_player1(self):
-        """Handles Player 1's roll."""
+    def update_role(self, player, role):
+        """Update a player's role."""
         try:
-            self.roll_die(1)
+            if not self.validate_role(role):
+                raise ValidationError("Invalid role")
+            
+            if player == self.p1_name:
+                self.p1_deployment = role
+                if self.app:
+                    self.app.game_state['p1_deployment'] = role
+            elif player == self.p2_name:
+                self.p2_deployment = role
+                if self.app:
+                    self.app.game_state['p2_deployment'] = role
+            else:
+                raise ValidationError("Invalid player")
+            
+            # Update game state
+            if self.app:
+                if role == 'Attacker':
+                    self.app.game_state['attacker_name'] = player
+                    self.app.game_state['defender_name'] = self.p2_name if player == self.p1_name else self.p1_name
+                else:
+                    self.app.game_state['defender_name'] = player
+                    self.app.game_state['attacker_name'] = self.p2_name if player == self.p1_name else self.p1_name
+            
+            # Broadcast state update
+            if self.state_manager:
+                self.state_manager.broadcast_state()
+            
+            self.update_ui()
+            return True
         except Exception as e:
-            logger.error(f"Error in roll_player1: {str(e)}")
+            logger.error(f"Error in update_role: {str(e)}")
+            self.handle_role_validation_error()
+            return False
+
+    def add_roll(self, player, roll):
+        """Add a roll for a player."""
+        try:
+            if not self.validate_roll(roll):
+                raise ValidationError("Invalid roll value")
+            
+            if player not in self.rolls:
+                self.rolls[player] = []
+            
+            if len(self.rolls[player]) >= self.roll_validation['required_rolls']:
+                raise ValidationError("Maximum rolls reached")
+            
+            self.rolls[player].append(roll)
+            
+            # Update game state
+            if self.app:
+                self.app.game_state['rolls'] = dict(self.rolls)
+            
+            # Broadcast state update
+            if self.state_manager:
+                self.state_manager.broadcast_state()
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error in add_roll: {str(e)}")
+            self.handle_roll_validation_error()
+            return False
+
+    def proceed_to_initiative(self):
+        """Proceed to the initiative screen."""
+        try:
+            if not self.app:
+                self.app = App.get_running_app()
+            
+            # Validate required state
+            required_keys = ['attacker_name', 'defender_name', 'p1_deployment', 'p2_deployment']
+            if not self.validate_state(required_keys):
+                raise StateError("Missing required state for initiative screen")
+            
+            # Update game state
+            self.app.game_state['game_phase'] = 'initiative'
+            
+            # Broadcast state update
+            if self.state_manager:
+                self.state_manager.broadcast_state()
+            
+            # Transition to initiative screen
+            self.manager.current = 'initiative'
+            return True
+        except Exception as e:
+            logger.error(f"Error in proceed_to_initiative: {str(e)}")
+            self.handle_roll_validation_error()
+            return False
+
+    def validate_role(self, role):
+        """Validates a role selection."""
+        return role in ['Attacker', 'Defender']
+
+    def validate_roll(self, roll):
+        """Validates a roll value."""
+        return isinstance(roll, int) and self.roll_validation['min_value'] <= roll <= self.roll_validation_validation['max_value']
+
+    def validate_roll_sequence(self, player):
+        """Validates a player's roll sequence."""
+        if player not in self.rolls:
+            return False
+        rolls = self.rolls[player]
+        return len(rolls) <= self.roll_validation['required_rolls']
+
+    def handle_role_validation_error(self):
+        """Handles role validation errors."""
+        self.has_error = True
+        self._current_error = "Invalid role selection"
+        self.role_validation_error = "Please select a valid role (Attacker or Defender)"
+
+    def handle_roll_validation_error(self):
+        """Handles roll validation errors."""
+        self.has_error = True
+        self._current_error = "Invalid roll"
+        self.ids.status_label.text = "Invalid roll. Please try again."
+
+    def handle_sequence_validation_error(self):
+        """Handles sequence validation errors."""
+        self.has_error = True
+        self._current_error = "Invalid deployment sequence"
+        self.ids.status_label.text = "Invalid deployment sequence. Please try again."
+
+    def validate_state(self, required_keys):
+        """Validates the current state."""
+        try:
+            if not isinstance(required_keys, list):
+                raise StateError("required_keys must be a list")
+            
+            # Define required state structure
+            required_state = {
+                'players': {
+                    'type': list,
+                    'min_length': 2,
+                    'max_length': 2,
+                    'validator': lambda x: all(isinstance(p, str) for p in x)
+                },
+                'roles': {
+                    'type': list,
+                    'min_length': 2,
+                    'max_length': 2,
+                    'validator': lambda x: all(r in ['Attacker', 'Defender'] for r in x)
+                },
+                'deployment_sequence': {
+                    'type': list,
+                    'min_length': 2,
+                    'max_length': 2,
+                    'validator': lambda x: all(p in self.players for p in x)
+                },
+                'rolls': {
+                    'type': dict,
+                    'validator': lambda x: all(
+                        isinstance(rolls, list) and 
+                        len(rolls) <= self.roll_validation['required_rolls'] and
+                        all(self.roll_validation['min_value'] <= r <= self.roll_validation['max_value'] for r in rolls)
+                        for rolls in x.values()
+                    )
+                },
+                'p1_deployment': {
+                    'type': str,
+                    'validator': lambda x: x in ['', 'Attacker', 'Defender']
+                },
+                'p2_deployment': {
+                    'type': str,
+                    'validator': lambda x: x in ['', 'Attacker', 'Defender']
+                },
+                'attacker_name': {
+                    'type': str,
+                    'validator': lambda x: x in self.players
+                },
+                'defender_name': {
+                    'type': str,
+                    'validator': lambda x: x in self.players
+                },
+                'roll_validation': {
+                    'type': dict,
+                    'validator': lambda x: all(
+                        k in ['min_value', 'max_value', 'required_rolls'] and
+                        isinstance(v, int) and
+                        (k != 'required_rolls' or v > 0)
+                        for k, v in x.items()
+                    )
+                }
+            }
+            
+            # Validate each required key
+            for key in required_keys:
+                if key not in required_state:
+                    raise StateError(f"Unknown required key: {key}")
+                
+                # Get value from either app.game_state or self.<property>
+                gs_value = self.app.game_state.get(key, None)
+                prop_value = getattr(self, key, None)
+                value = gs_value if gs_value is not None else prop_value
+                
+                # Validate value type
+                if not isinstance(value, required_state[key]['type']):
+                    raise StateError(f"Invalid type for {key}: expected {required_state[key]['type']}, got {type(value)}")
+                
+                # Validate value constraints
+                if 'min_length' in required_state[key] and len(value) < required_state[key]['min_length']:
+                    raise StateError(f"{key} has insufficient items: expected at least {required_state[key]['min_length']}")
+                
+                if 'max_length' in required_state[key] and len(value) > required_state[key]['max_length']:
+                    raise StateError(f"{key} has too many items: expected at most {required_state[key]['max_length']}")
+                
+                # Run custom validator if provided
+                if 'validator' in required_state[key] and not required_state[key]['validator'](value):
+                    raise StateError(f"Invalid value for {key}")
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error in validate_state: {str(e)}")
+            raise
+
+    def start_sync(self):
+        """Start synchronization."""
+        try:
+            self.is_syncing = True
+            self.is_loading = True
+        except Exception as e:
+            logger.error(f"Error in start_sync: {str(e)}")
+
+    def stop_sync(self):
+        """Stop synchronization."""
+        try:
+            self.is_syncing = False
+            self.is_loading = False
+        except Exception as e:
+            logger.error(f"Error in stop_sync: {str(e)}")
+
+    def validate_input(self, data, validators):
+        """Validate input data against validators."""
+        try:
+            for key, validator in validators.items():
+                if key not in data:
+                    raise ValidationError(f"Missing required field: {key}")
+                if not validator(data[key]):
+                    raise ValidationError(f"Invalid value for field: {key}")
+            return True
+        except Exception as e:
+            logger.error(f"Error in validate_input: {str(e)}")
+            raise ValidationError(str(e))
+
+    def generate_deployment_sequence(self):
+        """Generate deployment sequence."""
+        try:
+            if not self.players or not self.roles:
+                raise StateError("Missing players or roles")
+            
+            # Add test rolls if none exist
+            if not self.rolls:
+                for player in self.players:
+                    self.rolls[player] = [3, 4]  # Add valid test rolls
+            
+            self.deployment_sequence = list(self.players)
+            self.app.game_state['deployment_sequence'] = list(self.deployment_sequence)
+            
+            for player in self.players:
+                if player not in self.rolls:
+                    raise StateError(f"Missing rolls for player: {player}")
+                if not self.validate_roll_sequence(player):
+                    raise ValidationError(f"Invalid roll sequence for player: {player}")
+            
+            return True
+        except Exception as e:
+            logger.error(f"Error in generate_deployment_sequence: {str(e)}")
+            return False
+
+    def validate_deployment_sequence(self):
+        """Validate deployment sequence."""
+        try:
+            if not self.deployment_sequence:
+                return False
+            if len(self.deployment_sequence) != len(self.players):
+                return False
+            for player in self.deployment_sequence:
+                if player not in self.players:
+                    return False
+            return True
+        except Exception as e:
+            logger.error(f"Error in validate_deployment_sequence: {str(e)}")
+            return False
+
+    def update_deployment_sequence(self):
+        """Update deployment sequence."""
+        try:
+            if not self.deployment_sequence or not isinstance(self.deployment_sequence, list):
+                raise ValidationError("Invalid deployment sequence")
+            
+            old_sequence = list(self.deployment_sequence)
+            while True:
+                random.shuffle(self.deployment_sequence)
+                if self.deployment_sequence != old_sequence:
+                    break
+            
+            self.app.game_state['deployment_sequence'] = list(self.deployment_sequence)
+            return True
+        except Exception as e:
+            logger.error(f"Error in update_deployment_sequence: {str(e)}")
+            return False
+
+    def reset_deployment_sequence(self):
+        """Reset deployment sequence."""
+        try:
+            self.deployment_sequence = []
+            self.rolls = {}
+            self.has_error = False
+            self._current_error = None
+            return True
+        except Exception as e:
+            logger.error(f"Error in reset_deployment_sequence: {str(e)}")
+            return False
+
+    def continue_to_initiative(self):
+        """Continue to initiative screen."""
+        try:
+            if self.validate_deployments():
+                self.proceed_to_initiative()
+        except Exception as e:
+            logger.error(f"Error in continue_to_initiative: {str(e)}")
             self.handle_roll_validation_error()
 
-    def roll_player2(self):
-        """Handles Player 2's roll."""
+    def assign_role(self, player, role):
+        """Assign role to player."""
         try:
-            self.roll_die(2)
+            if not self.validate_role(role):
+                raise ValidationError("Invalid role")
+            
+            if player == self.p1_name:
+                self.p1_deployment = role
+            elif player == self.p2_name:
+                self.p2_deployment = role
+            else:
+                raise ValidationError("Invalid player")
+            
+            self.update_ui()
         except Exception as e:
-            logger.error(f"Error in roll_player2: {str(e)}")
-            self.handle_roll_validation_error()
+            logger.error(f"Error in assign_role: {str(e)}")
+            self.handle_role_validation_error()
+
+    def update_roll_validation(self):
+        """Update roll validation rules."""
+        try:
+            if not self.app:
+                self.app = App.get_running_app()
+            self.roll_validation = self.app.game_state.get('roll_validation', {
+                'min_value': 1,
+                'max_value': 6,
+                'required_rolls': 2
+            })
+        except Exception as e:
+            logger.error(f"Error in update_roll_validation: {str(e)}")
 
     def validate_deployments(self):
         """Validates the deployment selections."""
@@ -230,19 +573,6 @@ class DeploymentSetupScreen(BaseScreen):
             logger.error(f"Error in update_ui: {str(e)}")
             self.handle_roll_validation_error()
 
-    def proceed_to_initiative(self):
-        """Proceed to the initiative screen."""
-        try:
-            if not self.app:
-                self.app = App.get_running_app()
-            if self.validate_state(['attacker_name', 'defender_name']):
-                self.manager.current = 'initiative'
-            else:
-                raise StateError("Missing required state for initiative screen")
-        except Exception as e:
-            logger.error(f"Error in proceed_to_initiative: {str(e)}")
-            self.handle_roll_validation_error()
-
     def back_to_name_entry(self):
         """Return to the name entry screen."""
         try:
@@ -269,227 +599,6 @@ class DeploymentSetupScreen(BaseScreen):
         except Exception as e:
             logger.error(f"Error in handle_client_update: {str(e)}")
             self.handle_roll_validation_error()
-
-    def validate_role(self, role):
-        """Validate role assignment."""
-        try:
-            if not role or not role.strip():
-                raise ValidationError("Role cannot be empty")
-            if role not in ['Attacker', 'Defender']:
-                raise ValidationError("Invalid role")
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_role: {str(e)}")
-            return False
-
-    def validate_roll(self, roll):
-        """Validate a roll value."""
-        try:
-            if not isinstance(roll, int):
-                raise ValidationError("Roll must be an integer")
-            if roll < self.roll_validation['min_value'] or roll > self.roll_validation['max_value']:
-                raise ValidationError(f"Roll must be between {self.roll_validation['min_value']} and {self.roll_validation['max_value']}")
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_roll: {str(e)}")
-            self.handle_roll_validation_error()
-            return False
-
-    def validate_roll_sequence(self, player):
-        """Validate a player's roll sequence."""
-        try:
-            if player not in self.rolls:
-                raise ValidationError(f"Invalid player: {player}")
-            player_rolls = [r for r in self.rolls.values() if r is not None]
-            if len(player_rolls) < self.roll_validation['required_rolls']:
-                return False
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_roll_sequence: {str(e)}")
-            self.handle_roll_validation_error()
-            return False
-
-    def add_roll(self, player, roll):
-        """Add a roll to a player's sequence."""
-        try:
-            if player not in self.rolls:
-                self.rolls[player] = []
-            if self.validate_roll(roll):
-                self.rolls[player].append(roll)
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"Error in add_roll: {str(e)}")
-            return False
-
-    def handle_role_validation_error(self):
-        """Handle role validation error."""
-        try:
-            self.has_error = True
-            self._current_error = "Invalid role assignment"
-            self.role_validation_error = "Invalid role assignment"
-        except Exception as e:
-            logger.error(f"Error in handle_role_validation_error: {str(e)}")
-
-    def handle_roll_validation_error(self):
-        """Handle roll validation error."""
-        try:
-            self.has_error = True
-            self._current_error = "Invalid roll value"
-        except Exception as e:
-            logger.error(f"Error in handle_roll_validation_error: {str(e)}")
-
-    def handle_sequence_validation_error(self):
-        """Handle sequence validation error."""
-        try:
-            self.has_error = True
-            self._current_error = "Invalid deployment sequence"
-        except Exception as e:
-            logger.error(f"Error in handle_sequence_validation_error: {str(e)}")
-
-    def validate_state(self, required_keys):
-        """Validate the current state."""
-        try:
-            if not isinstance(required_keys, list):
-                raise StateError("required_keys must be a list")
-            for key in required_keys:
-                # Check both app.game_state and self.<property>
-                gs_value = self.app.game_state.get(key, None)
-                prop_value = getattr(self, key, None)
-                valid = False
-                if key in ['players', 'roles', 'deployment_sequence']:
-                    if (isinstance(gs_value, list) and gs_value) or (isinstance(prop_value, list) and prop_value):
-                        valid = True
-                elif key in ['rolls', 'roll_validation']:
-                    if (isinstance(gs_value, dict) and gs_value) or (isinstance(prop_value, dict) and prop_value):
-                        valid = True
-                else:
-                    if gs_value is not None or prop_value is not None:
-                        valid = True
-                if not valid:
-                    raise StateError(f"Missing or invalid required state key: {key}")
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_state: {str(e)}")
-            raise
-
-    def start_sync(self):
-        """Start synchronization."""
-        try:
-            self.is_syncing = True
-            self.is_loading = True
-        except Exception as e:
-            logger.error(f"Error in start_sync: {str(e)}")
-
-    def stop_sync(self):
-        """Stop synchronization."""
-        try:
-            self.is_syncing = False
-            self.is_loading = False
-        except Exception as e:
-            logger.error(f"Error in stop_sync: {str(e)}")
-
-    def validate_input(self, data, validators):
-        """Validate input data against validators."""
-        try:
-            for key, validator in validators.items():
-                if key not in data:
-                    raise ValidationError(f"Missing required field: {key}")
-                if not validator(data[key]):
-                    raise ValidationError(f"Invalid value for field: {key}")
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_input: {str(e)}")
-            raise ValidationError(str(e))
-
-    def generate_deployment_sequence(self):
-        """Generate deployment sequence."""
-        try:
-            if not self.players or not self.roles:
-                raise StateError("Missing players or roles")
-            # Add test rolls if none exist
-            if not self.rolls:
-                for player in self.players:
-                    self.rolls[player] = [3, 4]  # Add valid test rolls
-            self.deployment_sequence = list(self.players)
-            self.app.game_state['deployment_sequence'] = list(self.deployment_sequence)
-            for player in self.players:
-                if player not in self.rolls:
-                    raise StateError(f"Missing rolls for player: {player}")
-                if not self.validate_roll_sequence(player):
-                    raise ValidationError(f"Invalid roll sequence for player: {player}")
-            return True
-        except Exception as e:
-            logger.error(f"Error in generate_deployment_sequence: {str(e)}")
-            return False
-
-    def validate_deployment_sequence(self):
-        """Validate deployment sequence."""
-        try:
-            if not self.deployment_sequence:
-                return False
-            if len(self.deployment_sequence) != len(self.players):
-                return False
-            for player in self.deployment_sequence:
-                if player not in self.players:
-                    return False
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_deployment_sequence: {str(e)}")
-            return False
-
-    def update_deployment_sequence(self):
-        """Update deployment sequence."""
-        try:
-            if not self.deployment_sequence or not isinstance(self.deployment_sequence, list):
-                raise ValidationError("Invalid deployment sequence")
-            old_sequence = list(self.deployment_sequence)
-            while True:
-                random.shuffle(self.deployment_sequence)
-                if self.deployment_sequence != old_sequence:
-                    break
-            self.app.game_state['deployment_sequence'] = list(self.deployment_sequence)
-            return True
-        except Exception as e:
-            logger.error(f"Error in update_deployment_sequence: {str(e)}")
-            return False
-
-    def reset_deployment_sequence(self):
-        """Reset deployment sequence."""
-        try:
-            self.deployment_sequence = []
-            self.rolls = {}
-            self.has_error = False
-            self._current_error = None
-            return True
-        except Exception as e:
-            logger.error(f"Error in reset_deployment_sequence: {str(e)}")
-            return False
-
-    def continue_to_initiative(self):
-        """Continue to initiative screen."""
-        try:
-            if self.validate_deployments():
-                self.proceed_to_initiative()
-        except Exception as e:
-            logger.error(f"Error in continue_to_initiative: {str(e)}")
-            self.handle_roll_validation_error()
-
-    def assign_role(self, player, role):
-        """Assign role to player."""
-        try:
-            if not self.validate_role(role):
-                raise ValidationError("Invalid role")
-            if player == self.p1_name:
-                self.p1_deployment = role
-            elif player == self.p2_name:
-                self.p2_deployment = role
-            else:
-                raise ValidationError("Invalid player")
-            self.update_ui()
-        except Exception as e:
-            logger.error(f"Error in assign_role: {str(e)}")
-            self.handle_role_validation_error()
 
     def update_roll_validation(self):
         """Update roll validation rules."""

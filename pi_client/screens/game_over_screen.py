@@ -8,6 +8,7 @@ import logging
 import os
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
 from kivy.logger import Logger
+from ..state.game_over_state import GameOverState
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ class GameOverScreen(BaseScreen):
     final_scores = ListProperty([])
     show_winner = BooleanProperty(False)
     show_scores = BooleanProperty(False)
+    
+    # State manager
+    state = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         """Initialize the screen."""
@@ -69,8 +73,11 @@ class GameOverScreen(BaseScreen):
         self.is_loading = False
         self.is_syncing = False
         self.has_error = False
+        self.state = GameOverState()
         if not self.children:
             self.add_widget(Label(text='GameOverScreen loaded (no KV)'))
+        if not self.game_duration:
+            self.game_duration = '00:00'
 
     def on_pre_enter(self):
         """Called before the screen is entered."""
@@ -182,20 +189,61 @@ class GameOverScreen(BaseScreen):
             self.handle_score_validation_error()
 
     def determine_winner(self):
-        """Determine the winner based on scores, handle ties as 'Tie'."""
+        """Determine the winner based on scores."""
         try:
             if not self.scores or len(self.scores) < 2:
                 self.scores = {'Player1': 0, 'Player2': 0}
-            max_score = max(self.scores.values())
-            winners = [p for p, s in self.scores.items() if s == max_score]
-            if len(winners) == 1:
-                self.winner = winners[0]
-            elif len(winners) > 1:
-                self.winner = 'Tie'
+            
+            # Calculate total scores
+            p1_total = self.p1_primary_score + self.p1_secondary_score
+            p2_total = self.p2_primary_score + self.p2_secondary_score
+            
+            # Update scores dict
+            self.scores[self.p1_name] = p1_total
+            self.scores[self.p2_name] = p2_total
+            
+            # Determine winner
+            if p1_total > p2_total:
+                self.winner = self.p1_name
+                self.winner_name = self.p1_name
+                self.winner_score = p1_total
+                self.loser_name = self.p2_name
+                self.loser_score = p2_total
+                self.victory_type = 'Victory'
+            elif p2_total > p1_total:
+                self.winner = self.p2_name
+                self.winner_name = self.p2_name
+                self.winner_score = p2_total
+                self.loser_name = self.p1_name
+                self.loser_score = p1_total
+                self.victory_type = 'Victory'
             else:
-                self.winner = ''
+                self.winner = 'Tie'
+                self.winner_name = 'Tie'
+                self.winner_score = p1_total
+                self.loser_name = 'Tie'
+                self.loser_score = p2_total
+                self.victory_type = 'Draw'
+            
+            # Update game state
+            if self.app:
+                self.app.game_state.update({
+                    'winner': self.winner,
+                    'winner_name': self.winner_name,
+                    'winner_score': self.winner_score,
+                    'loser_name': self.loser_name,
+                    'loser_score': self.loser_score,
+                    'victory_type': self.victory_type,
+                    'scores': dict(self.scores)
+                })
+            
+            # Update UI
+            self.update_ui()
+            return True
         except Exception as e:
-            self.show_error("Critical error in winner validation")
+            logger.error(f"Error in determine_winner: {str(e)}")
+            self.handle_winner_determination_error()
+            return False
 
     def validate_scores(self):
         """Validate the current scores."""
@@ -302,26 +350,48 @@ class GameOverScreen(BaseScreen):
         """Update UI elements."""
         try:
             if hasattr(self, 'ids'):
+                # Update winner label
                 if 'winner_label' in self.ids:
-                    self.ids.winner_label.text = f"Winner: {self.winner}" if self.winner else "No winner"
-                if 'scores_list' in self.ids:
-                    self.ids.scores_list.clear_widgets()
-                    for score in self.final_scores:
-                        self.ids.scores_list.add_widget(score)
+                    if self.winner == 'Tie':
+                        self.ids.winner_label.text = "Game Ended in a Tie!"
+                    else:
+                        self.ids.winner_label.text = f"{self.winner} Wins!"
+                
+                # Update player names
+                if 'p1_name_label' in self.ids:
+                    self.ids.p1_name_label.text = self.p1_name
+                if 'p2_name_label' in self.ids:
+                    self.ids.p2_name_label.text = self.p2_name
+                
+                # Update scores
                 if 'p1_final_score_label' in self.ids:
-                    self.ids.p1_final_score_label.text = str(self.scores['p1'])
+                    p1_total = self.p1_primary_score + self.p1_secondary_score
+                    self.ids.p1_final_score_label.text = str(p1_total)
                 if 'p2_final_score_label' in self.ids:
-                    self.ids.p2_final_score_label.text = str(self.scores['p2'])
+                    p2_total = self.p2_primary_score + self.p2_secondary_score
+                    self.ids.p2_final_score_label.text = str(p2_total)
+                
+                # Update game duration
+                if 'total_time_label' in self.ids:
+                    self.ids.total_time_label.text = self.game_duration
+                
+                # Update error label
                 if 'error_label' in self.ids:
                     if self.has_error:
                         self.ids.error_label.opacity = 1
+                        self.ids.error_label.text = self._current_error or "An error occurred"
                     else:
                         self.ids.error_label.opacity = 0
-                    self.error_label.text = self._current_error or ""
-                if 'total_time_label' in self.ids:
-                    self.total_time_label.text = "00:00:00"
+                        self.ids.error_label.text = ""
+            
+            # Update final scores text
+            self.final_scores_text = f"{self.p1_name}: {self.p1_primary_score + self.p1_secondary_score} - {self.p2_name}: {self.p2_primary_score + self.p2_secondary_score}"
+            
+            return True
         except Exception as e:
+            logger.error(f"Error in update_ui: {str(e)}")
             self.handle_winner_determination_error()
+            return False
 
     def start_sync(self):
         """Start synchronization."""
@@ -340,42 +410,6 @@ class GameOverScreen(BaseScreen):
         except Exception as e:
             logger.error(f"Error in stop_sync: {str(e)}")
             self.handle_winner_determination_error()
-
-    def handle_client_update(self, update):
-        """Handle client update."""
-        try:
-            if not isinstance(update, dict):
-                raise ValidationError("Update must be a dictionary")
-                
-            if 'type' not in update:
-                raise ValidationError("Update must have a type")
-                
-            if update['type'] == 'scores':
-                if 'scores' not in update:
-                    raise ValidationError("Scores update must include scores")
-                self.update_scores(update['scores'])
-            else:
-                raise ValidationError("Invalid update type")
-                
-        except Exception as e:
-            if isinstance(e, ValidationError):
-                raise
-            self.show_error(f"Error in handle_client_update: {str(e)}")
-
-    def validate_winner(self, winner):
-        """Validate winner."""
-        try:
-            if not isinstance(winner, str):
-                return False
-            if winner not in ["Player1", "Player2", ""]:
-                return False
-            return True
-        except Exception as e:
-            logger.error(f"Error in validate_winner: {str(e)}")
-            return False
-
-    def handle_winner_determination_error(self):
-        self.show_error("Critical error in winner validation")
 
     def load_game_state(self):
         """Load game state from app."""
@@ -407,7 +441,7 @@ class GameOverScreen(BaseScreen):
         except Exception as e:
             self.logger.error(f"Error in handle_state_error: {str(e)}")
 
-    def reset(self):
+    def reset_screen(self):
         """Reset screen state."""
         self.has_error = False
         self._current_error = None
@@ -425,6 +459,7 @@ class GameOverScreen(BaseScreen):
         self.manager.current = 'resume_or_new'
 
     def on_state_update(self, state):
+        """Handle state updates from the state manager."""
         self.logger.debug(f"[GameOverScreen] Received state update: {state}")
         self.p1_name = state.get('p1_name', '')
         self.p2_name = state.get('p2_name', '')
@@ -437,4 +472,36 @@ class GameOverScreen(BaseScreen):
         self.winner = state.get('winner', '')
         self.scores = state.get('scores', {})
         self.final_scores = state.get('final_scores', [])
-        self.update_ui() 
+        self.update_ui()
+
+    def handle_winner_determination_error(self, error_msg=None):
+        """Handle errors during winner determination."""
+        try:
+            if error_msg is None:
+                error_msg = "Unable to determine winner"
+            
+            self.has_error = True
+            self._current_error = error_msg
+            
+            if hasattr(self, 'ids') and 'error_label' in self.ids:
+                self.ids.error_label.text = error_msg
+                self.ids.error_label.opacity = 1
+            
+            # Update game state
+            if self.app:
+                self.app.game_state['error'] = error_msg
+            
+            return False
+        except Exception as e:
+            logger.error(f"Error in handle_winner_determination_error: {str(e)}")
+            return False
+
+    def update_ui(self):
+        # ... existing code ...
+        # Only call handle_winner_determination_error if not already in error state
+        if not self.has_error:
+            # ... existing code ...
+            # If error condition detected:
+            # self.handle_winner_determination_error("Some error")
+            pass
+        # ... existing code ... 

@@ -27,22 +27,66 @@
             height: '48dp'
 
             Label:
+                id: p1_name_label
+                text: root.p1_name
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+            Label:
+                id: p2_name_label
+                text: root.p2_name
+                font_size: '20sp'
+                size_hint_x: 0.5
+
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: '48dp'
+
+            Label:
                 id: p1_final_score_label
-                text: '0'
+                text: str(root.p1_primary_score + root.p1_secondary_score)
                 font_size: '20sp'
                 size_hint_x: 0.5
 
             Label:
                 id: p2_final_score_label
-                text: '0'
+                text: str(root.p2_primary_score + root.p2_secondary_score)
                 font_size: '20sp'
                 size_hint_x: 0.5
+
+        Label:
+            id: total_time_label
+            text: root.game_duration
+            font_size: '18sp'
+            size_hint_y: None
+            height: '36dp'
+
+        Label:
+            id: error_label
+            text: ''
+            color: 1, 0, 0, 1
+            opacity: 0
+            size_hint_y: None
+            height: '36dp'
 
         Widget:
             size_hint_y: 1
 
-        RoundedButton:
-            text: 'New Game'
+        BoxLayout:
+            orientation: 'horizontal'
             size_hint_y: None
             height: '48dp'
-            on_release: root.start_new_game() 
+            spacing: '20dp'
+
+            RoundedButton:
+                id: new_game_button
+                text: 'New Game'
+                size_hint_x: 0.5
+                on_release: root.start_new_game()
+
+            RoundedButton:
+                id: exit_button
+                text: 'Exit'
+                size_hint_x: 0.5
+                on_release: app.stop() 

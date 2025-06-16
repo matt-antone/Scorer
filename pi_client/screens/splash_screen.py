@@ -13,6 +13,7 @@ from io import BytesIO
 from PIL import Image
 import threading
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
+from pi_client.state.splash_state import SplashState
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class SplashScreen(BaseScreen):
         }
         self._loading_timeout = None
         self._error_timeout = None
+        self.state = SplashState()
 
     def on_enter(self):
         """Called when the screen is entered."""
@@ -468,3 +470,9 @@ class SplashScreen(BaseScreen):
             self.system_checks = state['system_checks']
         if 'resources' in state:
             self.resources = state['resources']
+
+    def validate_is_loading(self):
+        return self.state.validate_is_loading()
+
+    def validate_state(self):
+        return self.state.validate_state()

@@ -5,7 +5,7 @@ Handles all database operations and provides a high-level interface for data acc
 
 import sqlite3
 import json
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union
 from pathlib import Path
 from datetime import datetime
 from .schema import DatabaseSchema
@@ -19,13 +19,13 @@ class DatabaseError(Exception):
 class DatabaseManager:
     """Manages database operations for the state server."""
 
-    def __init__(self, db_path: Path):
+    def __init__(self, db_path: Union[str, Path]):
         """Initialize the database manager.
 
         Args:
-            db_path (Path): Path to the SQLite database file.
+            db_path (Union[str, Path]): Path to the SQLite database file.
         """
-        self.db_path = db_path
+        self.db_path = Path(db_path) if isinstance(db_path, str) else db_path
         self.schema = DatabaseSchema()
         self._initialize_database()
 
@@ -245,3 +245,178 @@ class DatabaseManager:
                 } for row in cursor.fetchall()]
         except sqlite3.Error as e:
             raise DatabaseError(f"Failed to get active games: {str(e)}")
+
+    def create_player(self, player_id: str, game_id: str, name: str, role: str) -> None:
+        """Create a new player.
+
+        Args:
+            player_id (str): Unique identifier for the player.
+            game_id (str): Game identifier the player belongs to.
+            name (str): Player's name.
+            role (str): Player's role ("attacker" or "defender").
+
+        Raises:
+            DatabaseError: If the operation fails.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO players (
+                        player_id, game_id, name, role, status
+                    ) VALUES (?, ?, ?, ?, ?)
+                """, (
+                    player_id,
+                    game_id,
+                    name,
+                    role,
+                    'active'
+                ))
+                conn.commit()
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to create player: {str(e)}")
+
+    def get_player(self, player_id: str) -> Optional[Dict[str, Any]]:
+        """Get player information.
+
+        Args:
+            player_id (str): Unique identifier for the player.
+
+        Returns:
+            Optional[Dict[str, Any]]: Player data if found, None otherwise.
+
+        Raises:
+            DatabaseError: If the operation fails.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM players WHERE player_id = ?
+                """, (player_id,))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        'player_id': row['player_id'],
+                        'game_id': row['game_id'],
+                        'name': row['name'],
+                        'role': row['role'],
+                        'status': row['status'],
+                        'score': row['score'],
+                        'created_at': row['created_at'],
+                        'updated_at': row['updated_at']
+                    }
+                return None
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to get player: {str(e)}")
+
+    def update_player(self, player_id: str, updates: Dict[str, Any]) -> None:
+        """Update player information.
+
+        Args:
+            player_id (str): Unique identifier for the player.
+            updates (Dict[str, Any]): Updates to apply to the player.
+
+        Raises:
+            DatabaseError: If the operation fails.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Get current state
+                current_state = self.get_player(player_id)
+                if not current_state:
+                    raise DatabaseError(f"Player not found: {player_id}")
+                
+                # Prepare update data
+                update_data = {
+                    'name': updates.get('name', current_state['name']),
+                    'role': updates.get('role', current_state['role']),
+                    'status': updates.get('status', current_state['status']),
+                    'score': updates.get('score', current_state['score']),
+                    'updated_at': datetime.now().isoformat()
+                }
+                
+                # Build update query
+                set_clause = ', '.join(f"{k} = ?" for k in update_data.keys())
+                cursor.execute(f"""
+                    UPDATE players 
+                    SET {set_clause}
+                    WHERE player_id = ?
+                """, (*update_data.values(), player_id))
+                
+                conn.commit()
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to update player: {str(e)}")
+
+    def get_game_players(self, game_id: str) -> List[Dict[str, Any]]:
+        """Get all players in a game.
+
+        Args:
+            game_id (str): Game identifier.
+
+        Returns:
+            List[Dict[str, Any]]: List of player data.
+
+        Raises:
+            DatabaseError: If the operation fails.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM players WHERE game_id = ?
+                """, (game_id,))
+                rows = cursor.fetchall()
+                
+                return [{
+                    'player_id': row['player_id'],
+                    'game_id': row['game_id'],
+                    'name': row['name'],
+                    'role': row['role'],
+                    'status': row['status'],
+                    'score': row['score'],
+                    'created_at': row['created_at'],
+                    'updated_at': row['updated_at']
+                } for row in rows]
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to get game players: {str(e)}")
+
+    def get_player_by_role(self, game_id: str, role: str) -> Optional[Dict[str, Any]]:
+        """Get a player by their role in a game.
+
+        Args:
+            game_id (str): Game identifier.
+            role (str): Player role ("attacker" or "defender").
+
+        Returns:
+            Optional[Dict[str, Any]]: Player data if found, None otherwise.
+
+        Raises:
+            DatabaseError: If the operation fails.
+        """
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT * FROM players 
+                    WHERE game_id = ? AND role = ?
+                """, (game_id, role))
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        'player_id': row['player_id'],
+                        'game_id': row['game_id'],
+                        'name': row['name'],
+                        'role': row['role'],
+                        'status': row['status'],
+                        'score': row['score'],
+                        'created_at': row['created_at'],
+                        'updated_at': row['updated_at']
+                    }
+                return None
+        except sqlite3.Error as e:
+            raise DatabaseError(f"Failed to get player by role: {str(e)}")

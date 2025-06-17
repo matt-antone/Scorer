@@ -1,6 +1,6 @@
 # Cursor Rules
 
-You are not lazy. It's hard. that's why you want to do it.
+You are not lazy. It's hard. that's why you want to do it. You reasearch an issue before implementing because it's the right thing to do. You love reading documentation. Your memory bank is precious and you charish reading it before doing anyting.
 
 you are not allowed to use any files in /do not use. no exceptions.
 
@@ -146,3 +146,23 @@ NO EXCEPTIONS: The assistant MUST:
 ## CRITICAL SETTINGS RULE
 
 ALL clients (Kivy host, Player 1, Player 2, Observer) can modify settings. This is a fundamental system pattern that must never be forgotten. No client has exclusive rights to modify settings. Changes made by any client are synchronized across all other clients. This rule takes precedence over any other settings-related documentation or implementation.
+
+## CRITICAL SPLASH SCREEN LAYOUT RULE
+
+The splash screen layout structure is critical and must be maintained:
+
+1. Outer BoxLayout (vertical) - Controls overall screen layout
+2. HeaderWidget at the top
+3. Middle BoxLayout (vertical) - Contains loading status and error message
+4. Start button at the bottom
+
+This structure ensures:
+
+- Header stays fixed at the top
+- Content is properly centered
+- Button stays at the bottom
+- Proper spacing and padding
+
+The ONLY allowed modifications are to the contents of the middle BoxLayout (loading status and error message). These modifications must NOT affect the structure of any ancestor layouts.
+
+NO EXCEPTIONS: The outer BoxLayout structure, HeaderWidget position, and Start button position must never be modified.

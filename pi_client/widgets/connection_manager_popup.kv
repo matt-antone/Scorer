@@ -1,0 +1,83 @@
+<ConnectionManagerPopup>:
+    background: 'atlas://data/images/defaulttheme/modalview-background'
+    background_color: 0.2, 0.2, 0.2, 0.9
+    separator_color: 0.5, 0.5, 0.5, 1
+    title_color: 1, 1, 1, 1
+    title_size: '20sp'
+    title_align: 'center'
+    title_font: 'Roboto-Bold'
+
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10,]
+
+    Label:
+        id: status_label
+        text: 'Checking network...'
+        font_size: '20sp'
+        color: 1, 1, 1, 1
+        size_hint_y: None
+        height: '40dp'
+        text_size: self.size
+        halign: 'center'
+        valign: 'middle'
+
+    Label:
+        id: connection_label
+        text: ''
+        font_size: '16sp'
+        color: 1, 1, 1, 1
+        size_hint_y: None
+        height: '30dp'
+        text_size: self.size
+        halign: 'center'
+        valign: 'middle'
+
+    Label:
+        id: ip_label
+        text: ''
+        font_size: '16sp'
+        color: 1, 1, 1, 1
+        size_hint_y: None
+        height: '30dp'
+        text_size: self.size
+        halign: 'center'
+        valign: 'middle'
+
+    Label:
+        id: error_label
+        text: ''
+        font_size: '16sp'
+        color: 1, 0, 0, 1
+        size_hint_y: None
+        height: '30dp'
+        text_size: self.size
+        halign: 'center'
+        valign: 'middle'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: '50dp'
+        spacing: '10dp'
+        padding: '10dp'
+
+        Button:
+            id: retry_button
+            text: 'Retry'
+            size_hint_x: 0.5
+            background_color: 0.2, 0.6, 1, 1
+            background_normal: ''
+            on_release: root.on_retry()
+
+        Button:
+            id: close_button
+            text: 'Close'
+            size_hint_x: 0.5
+            background_color: 0.6, 0.6, 0.6, 1
+            background_normal: ''
+            on_release: root.on_close() 

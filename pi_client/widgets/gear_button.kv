@@ -1,0 +1,12 @@
+#:kivy 2.2.1
+
+<GearButton@ButtonBehavior+Label>:
+    size_hint: None, None
+    width: '24dp'
+    height: '24dp'
+    source: 'pi_client/assets/gear-solid-36.png'
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: root.source

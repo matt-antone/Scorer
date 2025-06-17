@@ -348,3 +348,7 @@ The settings system implementation must adhere to these fundamental principles:
    - Each client must validate changes
 
 This pattern is fundamental to the system's design and takes precedence over any other settings-related documentation or implementation.
+
+## Pi-only Testing Rule
+
+- The network manager and splash screen network check tests are **Pi-only**. These tests require real network interfaces and Kivy UI threading, and are not expected to pass on macOS or CI. This is a permanent project rule.

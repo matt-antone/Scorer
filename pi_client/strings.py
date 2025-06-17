@@ -24,7 +24,7 @@ UI_STRINGS = {
 
     # Splash Screen
     'splash': {
-        'title': 'AICamera Scorer',
+        'title': 'Scorer',
         'start': 'START',
         'status': 'Ready',
     },

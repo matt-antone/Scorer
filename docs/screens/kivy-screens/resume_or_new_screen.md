@@ -37,7 +37,7 @@ The `ResumeOrNewScreen` acts as a conditional gateway in the application's start
 
 ## Universal UI Requirements (MANDATORY)
 
-- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- This screen (and all others) must use `pi_client/assets/background.png` as the background image for the entire screen.
 - The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['resume_or_new']['found_game']`.
 - The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
 

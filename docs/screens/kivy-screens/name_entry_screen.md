@@ -42,7 +42,7 @@ The transition from this screen is handled by a hybrid model, allowing for both 
 
 ## Universal UI Requirements (MANDATORY)
 
-- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- This screen (and all others) must use `pi_client/assets/background.png` as the background image for the entire screen.
 - The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['name_entry']['title']`.
 - The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
 

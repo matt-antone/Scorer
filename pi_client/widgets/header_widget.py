@@ -1,6 +1,7 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import StringProperty
 from kivy.lang import Builder
+from .gear_button import GearButton
 
 class HeaderWidget(BoxLayout):
     title = StringProperty('')

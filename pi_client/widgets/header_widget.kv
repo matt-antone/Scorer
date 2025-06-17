@@ -1,6 +1,6 @@
 #:kivy 2.2.1
 #:import UI_STRINGS pi_client.strings.UI_STRINGS
-
+// this is complete do not modify
 <HeaderWidget>:
     orientation: 'horizontal'
     height: '60dp'
@@ -13,7 +13,6 @@
         Rectangle:
             pos: self.pos
             size: self.size
-
     Label:
         text: root.title if root.title else UI_STRINGS['header']['default_title']
         color: 1, 1, 1, 1
@@ -23,16 +22,6 @@
         valign: 'middle'
         text_size: self.size
         bold: True
-
-    Widget:
-        size_hint_x: None
-        width: '8dp'
-
-    Button:
-        text: '⚙'
-        font_size: '24sp'
-        size_hint_x: None
-        width: '48dp'
+    GearButton:
+        pos_hint: {'center_y': 0.5} 
         on_release: root.dispatch('on_settings')
-        background_color: 0, 0, 0, 0
-        color: 1, 1, 1, 1 

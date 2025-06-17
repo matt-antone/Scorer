@@ -62,7 +62,7 @@ pi_client/
 
 All screens in the application must adhere to the following UI standards:
 
-1. **Background Image**: Every screen must use `@background.png` as the background image, covering the entire screen.
+1. **Background Image**: Every screen must use `pi_client/assets/background.png` as the background image, covering the entire screen.
 2. **HeaderWidget**: Every screen must include the `HeaderWidget` at the top of the layout.
 3. **Screen-Specific Title**: The header's title must be set using the appropriate value from `UI_STRINGS` in `strings.py` for that screen.
 4. **Settings Cog**: The header must include a cog (settings) icon aligned to the far right. Tapping this icon launches the Settings screen.

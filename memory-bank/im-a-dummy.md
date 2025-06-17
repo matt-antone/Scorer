@@ -11,7 +11,6 @@ This document tracks the discrepancies between documented behavior and actual im
   - Start button is disabled until background tasks complete
   - Shows status text for current operation
 - **Actual Implementation**:
-  - Loading indicator is always visible when start button is disabled
   - No network checks
   - No QR code generation
   - Start button is always enabled (`start_enabled = BooleanProperty(True)`)

@@ -13,13 +13,19 @@
         orientation: 'vertical'
         padding: '20dp'
         spacing: '20dp'
+        canvas.before:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                source: '@background.png'
 
-        Label:
-            text: UI_STRINGS['resume_or_new']['found_game']
-            font_size: '24sp'
-            color: 1, 1, 1, 1
-            size_hint_y: None
-            height: '40dp'
+    HeaderWidget:
+        title: UI_STRINGS['resume_or_new']['found_game']
+
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '20dp'
 
         Label:
             text: UI_STRINGS['resume_or_new']['question']

@@ -58,6 +58,32 @@ pi_client/
 - Unit tests in `tests/unit/`
 - Test imports match new structure
 
+## Universal Screen UI Requirements
+
+All screens in the application must adhere to the following UI standards:
+
+1. **Background Image**: Every screen must use `@background.png` as the background image, covering the entire screen.
+2. **HeaderWidget**: Every screen must include the `HeaderWidget` at the top of the layout.
+3. **Screen-Specific Title**: The header's title must be set using the appropriate value from `UI_STRINGS` in `strings.py` for that screen.
+4. **Settings Cog**: The header must include a cog (settings) icon aligned to the far right. Tapping this icon launches the Settings screen.
+
+These requirements ensure a consistent and intuitive user experience across all screens.
+
+## Import Standards for pi_client
+
+All internal imports within the pi_client package must use relative imports (e.g., from .screens.splash_screen import SplashScreen). This is required for package consistency, maintainability, and to support refactoring. Absolute imports will break if the package is moved or run in different contexts.
+
+**Launcher and Execution:**
+The launcher script (pi_client/launch_scorer.sh) must run the app as a module using python -m pi_client.main. This is because Python only allows relative imports when running as a module, not as a script. This ensures all screens, state, and widgets can import each other reliably.
+
+**Why:**
+
+- Relative imports are robust to refactoring and package moves
+- They prevent namespace collisions
+- They are the Python standard for intra-package imports
+
+**See also:** memory-bank/systemPatterns.md for rationale and technical details.
+
 ```
 Scorer/
 ├── assets/            # Shared assets for all components

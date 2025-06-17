@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-# Always run from the directory where this script is located
-cd "$(dirname "$0")"
+# Always run from the project root
+cd "$(dirname "$0")/.."
+
+cd pi_client
 
 echo ">>> Launching Scorer..."
 
@@ -21,14 +23,19 @@ if ! pip show kivy &> /dev/null; then
     pip install kivy
 fi
 
-# Set PYTHONPATH to include the current directory
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+# Set PYTHONPATH to include the project root
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/.."
+
+# Set Kivy environment variables
+export KIVY_GL_BACKEND=sdl2
+export KIVY_WINDOW=sdl2
 
 if [ "$1" = "test" ]; then
     echo ">>> Running unit tests..."
-    cd ..  # Go to project root
+    cd ../
     pi_client/.venv/bin/python3 tests/screens/test_suite.py
 else
-    # Run the application using the venv's python
-    .venv/bin/python3 main.py 
+    # Change to project root and run the application as a module
+    cd ..
+    PYTHONPATH=$PYTHONPATH:. python3 -m pi_client.main
 fi 

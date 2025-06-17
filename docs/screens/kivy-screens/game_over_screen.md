@@ -41,3 +41,11 @@ The `GameOverScreen` is the final screen in the gameplay loop. It appears automa
 - **Fully Implemented**: The "New Game" and "Exit" buttons have fully implemented functionality, managed by the `ScorerApp` controller.
 - **State-Driven**: The appearance of this screen is entirely driven by the `game_phase` property in the central `game_state`.
 - **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['game_over']['title']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.

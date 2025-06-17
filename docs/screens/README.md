@@ -40,6 +40,18 @@ graph TD
     D -- "Pushes New State" --> C
 ```
 
+## Critical Settings Synchronization
+
+The settings system follows a fundamental pattern that must never be forgotten:
+
+1. **Equal Access**: ALL clients (Kivy host, Player 1, Player 2, Observer) can modify settings
+2. **No Restrictions**: No client has exclusive rights to modify settings
+3. **Global Synchronization**: Changes made by any client are synchronized across all other clients
+4. **Broadcast Updates**: Settings modifications are broadcast to all connected clients
+5. **Client Capabilities**: Each client type may have different capabilities in the settings screen
+
+This pattern is fundamental to the system's design and takes precedence over any other settings-related documentation or implementation.
+
 ## Documentation Index
 
 - [**Kivy Screens**](./kivy-screens/README.md): Documentation for the main application screens.

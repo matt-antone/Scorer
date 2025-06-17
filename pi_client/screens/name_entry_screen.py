@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 Builder.load_file(os.path.join(os.path.dirname(__file__), "name_entry_screen.kv"))
 
 class NameEntryScreen(BaseScreen):
-    """Screen for entering player names."""
+    """Screen for entering player names with comprehensive state management."""
     
     # Properties
     p1_name = StringProperty('')
@@ -28,55 +28,115 @@ class NameEntryScreen(BaseScreen):
     player_names = ListProperty([])
     qr_code = StringProperty('')
     name_validation = BooleanProperty(True)
-    
+    _error_timeout = None
+    _current_error = ''
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.logger.info("NameEntryScreen: Initializing")
+        self.logger.info("NameEntryScreen: Initializing with enhanced state management")
         self.app = App.get_running_app()
         self.players = []
+        self._error_timeout = None
+        self._current_error = ''
         if not self.children:
             self.add_widget(Label(text='NameEntryScreen loaded (no KV)'))
+        self._validate_initial_state()
 
-    def on_enter(self):
-        """Called when the screen is shown."""
+    def _validate_initial_state(self):
         try:
             if not self.app:
                 self.app = App.get_running_app()
-            # Register as observer
+            if not hasattr(self.app, 'game_state'):
+                self.app.game_state = {}
+            required_keys = ['p1_name', 'p2_name', 'player_names', 'qr_code', 'qr_code_valid', 'qr_code_error', 'name_validation']
+            for key in required_keys:
+                if key not in self.app.game_state:
+                    if key == 'player_names':
+                        self.app.game_state[key] = ['', '']
+                    elif key == 'qr_code':
+                        self.app.game_state[key] = ''
+                    elif key == 'qr_code_valid':
+                        self.app.game_state[key] = False
+                    elif key == 'qr_code_error':
+                        self.app.game_state[key] = ''
+                    elif key == 'name_validation':
+                        self.app.game_state[key] = True
+                    else:
+                        self.app.game_state[key] = ''
+            self.logger.debug("Initial state validation completed")
+        except Exception as e:
+            self.logger.error(f"Error in initial state validation: {str(e)}")
+            self.handle_error(e)
+
+    def on_enter(self):
+        try:
+            self.logger.info("NameEntryScreen: Entering with state management")
+            if not self.app:
+                self.app = App.get_running_app()
             if self.state_manager:
                 self.state_manager.register_observer(self)
+                self.logger.debug("Registered as state observer")
             self.reset_screen()
             self.update_view_from_state()
-            # Always set player_names, qr_code, qr_code_valid, qr_code_error, and name_validation in game state
             self.app.game_state['player_names'] = [self.p1_name, self.p2_name]
             self.app.game_state['qr_code'] = self.qr_code
             self.app.game_state['qr_code_valid'] = self.qr_code_valid
             self.app.game_state['qr_code_error'] = self.qr_code_error
             self.app.game_state['name_validation'] = self.name_validation
+            self.broadcast_state()
+            self.logger.info("NameEntryScreen: Successfully entered")
         except Exception as e:
-            logger.error(f"Error in on_enter: {str(e)}")
+            self.logger.error(f"Error in on_enter: {str(e)}")
             self.handle_name_validation_error()
 
     def on_leave(self):
-        # Unregister as observer
-        if self.state_manager:
-            self.state_manager.unregister_observer(self)
-        super().on_leave()
+        try:
+            self.logger.info("NameEntryScreen: Leaving with cleanup")
+            if self.state_manager:
+                self.state_manager.unregister_observer(self)
+                self.logger.debug("Unregistered as state observer")
+            if self._error_timeout:
+                self._error_timeout.cancel()
+                self._error_timeout = None
+            super().on_leave()
+            self.logger.info("NameEntryScreen: Successfully left")
+        except Exception as e:
+            self.logger.error(f"Error in on_leave: {str(e)}")
 
     def on_state_update(self, state):
-        self.logger.debug(f"[NameEntryScreen] Received state update: {state}")
-        self.p1_name = state.get('p1_name', '')
-        self.p2_name = state.get('p2_name', '')
-        self.player_names = [self.p1_name, self.p2_name]
-        self.qr_code = state.get('qr_code', '')
-        self.qr_code_valid = state.get('qr_code_valid', False)
-        self.qr_code_error = state.get('qr_code_error', '')
-        self.name_validation = state.get('name_validation', True)
-        self.update_ui()
+        try:
+            self.logger.debug(f"[NameEntryScreen] Received state update: {state}")
+            if not self.validate_incoming_state(state):
+                raise StateError("Invalid incoming state")
+            self.p1_name = state.get('p1_name', '')
+            self.p2_name = state.get('p2_name', '')
+            self.player_names = [self.p1_name, self.p2_name]
+            self.qr_code = state.get('qr_code', '')
+            self.qr_code_valid = state.get('qr_code_valid', False)
+            self.qr_code_error = state.get('qr_code_error', '')
+            self.name_validation = state.get('name_validation', True)
+            self.update_ui()
+            self.logger.debug("State update processed successfully")
+        except Exception as e:
+            self.logger.error(f"Error in on_state_update: {str(e)}")
+            self.handle_error(e)
+
+    def validate_incoming_state(self, state):
+        try:
+            if not isinstance(state, dict):
+                return False
+            required_keys = ['p1_name', 'p2_name', 'player_names', 'qr_code', 'qr_code_valid', 'qr_code_error', 'name_validation']
+            for key in required_keys:
+                if key not in state:
+                    self.logger.warning(f"Missing required key in state: {key}")
+                    return False
+            return True
+        except Exception as e:
+            self.logger.error(f"Error validating incoming state: {str(e)}")
+            return False
 
     def reset_screen(self):
-        """Reset screen state."""
         try:
             self.p1_name = ''
             self.p2_name = ''
@@ -86,32 +146,69 @@ class NameEntryScreen(BaseScreen):
             self.is_syncing = False
             self.has_error = False
             self.players = []
-            
-            # Update UI
             self.update_ui()
+            self.logger.debug("Screen reset completed")
         except Exception as e:
-            logger.error(f"Error in reset_screen: {str(e)}")
+            self.logger.error(f"Error in reset_screen: {str(e)}")
             self.handle_name_validation_error()
 
     def update_ui(self):
-        """Update UI elements."""
         try:
-            # Update input fields
-            self.ids.p1_name_input.text = self.p1_name
-            self.ids.p2_name_input.text = self.p2_name
-            
-            # Update continue button state
-            self.ids.continue_button.disabled = not self.validate_inputs()
-            
-            # Update error label
-            if self.qr_code_error:
-                self.ids.error_label.text = self.qr_code_error
-                self.ids.error_label.opacity = 1
-            else:
-                self.ids.error_label.opacity = 0
+            if hasattr(self.ids, 'p1_name_input'):
+                self.ids.p1_name_input.text = self.p1_name
+            if hasattr(self.ids, 'p2_name_input'):
+                self.ids.p2_name_input.text = self.p2_name
+            if hasattr(self.ids, 'continue_button'):
+                self.ids.continue_button.disabled = not self.validate_inputs()
+            if hasattr(self.ids, 'error_label'):
+                if self.qr_code_error:
+                    self.ids.error_label.text = self.qr_code_error
+                    self.ids.error_label.opacity = 1
+                else:
+                    self.ids.error_label.opacity = 0
+            self.logger.debug("UI update completed")
         except Exception as e:
-            logger.error(f"Error in update_ui: {str(e)}")
+            self.logger.error(f"Error in update_ui: {str(e)}")
             self.handle_name_validation_error()
+
+    def broadcast_state(self):
+        try:
+            if self.state_manager and self.state_manager.is_connected():
+                state_update = {
+                    'p1_name': self.p1_name,
+                    'p2_name': self.p2_name,
+                    'player_names': list(self.player_names),
+                    'qr_code': self.qr_code,
+                    'qr_code_valid': self.qr_code_valid,
+                    'qr_code_error': self.qr_code_error,
+                    'name_validation': self.name_validation,
+                    'current_screen': 'name_entry'
+                }
+                self.state_manager.broadcast_state(state_update)
+                self.logger.debug("State broadcast completed")
+            else:
+                self.logger.warning("State manager not available for broadcasting")
+        except Exception as e:
+            self.logger.error(f"Error in broadcast_state: {str(e)}")
+            self.handle_error(e)
+
+    def handle_error(self, error):
+        try:
+            if isinstance(error, ValidationError):
+                self.logger.warning(f"Validation error: {str(error)}")
+                self.show_error(f"Validation Error: {str(error)}")
+            elif isinstance(error, StateError):
+                self.logger.error(f"State error: {str(error)}")
+                self.show_error(f"State Error: {str(error)}")
+            elif isinstance(error, SyncError):
+                self.logger.error(f"Sync error: {str(error)}")
+                self.show_error(f"Sync Error: {str(error)}")
+            else:
+                self.logger.error(f"Unexpected error: {str(error)}")
+                self.show_error(f"Unexpected Error: {str(error)}")
+            self.update_ui()
+        except Exception as e:
+            self.logger.error(f"Error in handle_error: {str(e)}")
 
     def validate_inputs(self):
         """Validate input fields."""
@@ -251,14 +348,6 @@ class NameEntryScreen(BaseScreen):
             self.update_ui()
         else:
             raise ValidationError("Invalid update type")
-
-    def handle_error(self, error):
-        """Handle error."""
-        try:
-            self.show_error(str(error))
-        except Exception as e:
-            logger.error(f"Error in handle_error: {str(e)}")
-            self.handle_name_validation_error()
 
     def handle_name_validation_error(self):
         """Handle name validation errors."""

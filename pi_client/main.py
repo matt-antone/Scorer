@@ -7,24 +7,35 @@ from flask_socketio import SocketIO
 from kivy.app import App
 from kivy.utils import get_color_from_hex
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.lang import Builder
 
-# Absolute imports from pi_client package
-from pi_client.widgets.root_widget import ScorerRootWidget
-from pi_client.screens.splash_screen import SplashScreen
-from pi_client.screens.name_entry_screen import NameEntryScreen
-from pi_client.screens.deployment_setup_screen import DeploymentSetupScreen
-from pi_client.screens.initiative_screen import InitiativeScreen
-from pi_client.screens.scoreboard_screen import ScoreboardScreen
-from pi_client.widgets.header_widget import HeaderWidget
-from pi_client.widgets.number_pad_popup import NumberPadPopup
-from pi_client.screens.resume_or_new_screen import ResumeOrNewScreen
-from pi_client.state import GameState, GameStatus
-from pi_client.screens.game_over_screen import GameOverScreen
+# Relative imports from pi_client package
+from .widgets.root_widget import ScorerRootWidget
+from .screens.splash_screen import SplashScreen
+from .screens.name_entry_screen import NameEntryScreen
+from .screens.deployment_setup_screen import DeploymentSetupScreen
+from .screens.initiative_screen import InitiativeScreen
+from .screens.scoreboard_screen import ScoreboardScreen
+from .widgets.header_widget import HeaderWidget
+from .widgets.number_pad_popup import NumberPadPopup
+from .screens.resume_or_new_screen import ResumeOrNewScreen
+from .state import GameState, GameStatus
+from .screens.game_over_screen import GameOverScreen
 
 kivy.require('2.3.0')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
+
+# Load KV files
+Builder.load_file('pi_client/screens/splash_screen.kv')
+Builder.load_file('pi_client/screens/name_entry_screen.kv')
+Builder.load_file('pi_client/screens/deployment_setup_screen.kv')
+Builder.load_file('pi_client/screens/initiative_screen.kv')
+Builder.load_file('pi_client/screens/scoreboard_screen.kv')
+Builder.load_file('pi_client/screens/game_over_screen.kv')
+Builder.load_file('pi_client/screens/resume_or_new_screen.kv')
+Builder.load_file('pi_client/widgets/number_pad_popup.kv')
 
 # ----------------- FLASK & SOCKETIO SETUP -----------------
 # Correctly point to the client's build directory, relative to this script

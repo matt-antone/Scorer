@@ -52,3 +52,11 @@ The `InitiativeScreen` manages the roll-off to determine which player takes the 
 - **File Location**: `screens/initiative_screen.py`
 - **Controller-Responder Pattern**: This screen follows the standard pattern. All button presses delegate to handler methods in the `ScorerApp` controller, which updates the central `game_state`. The `InitiativeScreen` then updates its view based on that new state.
 - **Tie-Breaking**: This is a critical rule. The screen's logic must correctly identify the `attacker_player_id` from the `game_state` to resolve tie-breaks.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['initiative']['title']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.

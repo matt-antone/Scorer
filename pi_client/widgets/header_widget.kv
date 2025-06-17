@@ -2,19 +2,37 @@
 #:import UI_STRINGS pi_client.strings.UI_STRINGS
 
 <HeaderWidget>:
-    height: '86px'
+    orientation: 'horizontal'
+    height: '60dp'
     size_hint_y: None
+    padding: '12dp', '10dp', '12dp', '10dp'
+    spacing: '8dp'
     canvas.before:
         Color:
             rgba: 0.1, 0.1, 0.1, 1
         Rectangle:
             pos: self.pos
             size: self.size
+
     Label:
         text: root.title if root.title else UI_STRINGS['header']['default_title']
         color: 1, 1, 1, 1
         font_size: '24sp'
+        size_hint_x: 1
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        bold: True
+
+    Widget:
         size_hint_x: None
-        width: self.texture_size[0]
-        pos_hint: {'right': 1, 'center_y': 0.5}
-        padding: 10, 0 
+        width: '8dp'
+
+    Button:
+        text: '⚙'
+        font_size: '24sp'
+        size_hint_x: None
+        width: '48dp'
+        on_release: root.dispatch('on_settings')
+        background_color: 0, 0, 0, 0
+        color: 1, 1, 1, 1 

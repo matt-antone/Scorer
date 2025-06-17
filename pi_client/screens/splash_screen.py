@@ -13,7 +13,8 @@ from io import BytesIO
 from PIL import Image
 import threading
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
-from pi_client.state.splash_state import SplashState
+from ..state.splash_state import SplashState
+from ..strings import UI_STRINGS
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +47,17 @@ class SplashScreen(BaseScreen):
         self._loading_timeout = None
         self._error_timeout = None
         self.state = SplashState()
+        # Set the header title
+        if hasattr(self, 'ids') and 'header' in self.ids:
+            self.ids.header.title = UI_STRINGS['splash']['title']
 
     def on_enter(self):
         """Called when the screen is entered."""
         super().on_enter()
         self.start_loading()
+        # Ensure header title is set
+        if hasattr(self, 'ids') and 'header' in self.ids:
+            self.ids.header.title = UI_STRINGS['splash']['title']
 
     def start_loading(self):
         """Start the loading process."""
@@ -124,13 +131,13 @@ class SplashScreen(BaseScreen):
             self.is_loading = False
             self.start_enabled = True
             
-            # Transition to next screen
-            app = App.get_running_app()
-            if app and hasattr(app, 'root'):
-                if self.has_saved_game:
-                    app.root.current = 'resume'
-                else:
-                    app.root.current = 'name_entry'
+            # Temporarily disabled auto-advancing
+            # app = App.get_running_app()
+            # if app and hasattr(app, 'root'):
+            #     if self.has_saved_game:
+            #         app.root.current = 'resume'
+            #     else:
+            #         app.root.current = 'name_entry'
         except Exception as e:
             self.handle_error(str(e))
 
@@ -424,12 +431,14 @@ class SplashScreen(BaseScreen):
         if not self.start_enabled:
             return
             
-        app = App.get_running_app()
-        if app and hasattr(app, 'root'):
-            if self.has_saved_game:
-                app.root.current = 'resume_or_new'
-            else:
-                app.root.current = 'name_entry'
+        # Temporarily disabled screen transitions
+        self.status_text = "Screen transitions disabled for testing"
+        # app = App.get_running_app()
+        # if app and hasattr(app, 'root'):
+        #     if self.has_saved_game:
+        #         app.root.current = 'resume_or_new'
+        #     else:
+        #         app.root.current = 'name_entry'
 
     def on_state_update(self, state):
         """

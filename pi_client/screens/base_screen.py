@@ -3,7 +3,12 @@ from kivy.properties import BooleanProperty
 from kivy.clock import Clock
 from kivy.app import App
 import logging
-from pi_client.state.state_manager import StateManager
+
+# Try to import StateManager, but don't fail if it's not available
+try:
+    from state.state_manager import StateManager
+except ImportError:
+    StateManager = None
 
 class ScreenError(Exception):
     """Base exception for screen-related errors."""

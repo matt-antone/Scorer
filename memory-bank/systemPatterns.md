@@ -613,3 +613,27 @@ from pi_app.strings import UI_STRINGS
 - @/decisions/state_management_design.md
 - @/decisions/common_implementation_patterns.md
 - @/decisions/2024-06-11-pi-app-structure.md
+
+## Critical System Patterns
+
+### Settings Synchronization
+
+- ALL clients (Kivy host, Player 1, Player 2, Observer) can modify settings
+- Changes made by any client are synchronized across all other clients
+- No client has exclusive rights to modify settings
+- Settings modifications are broadcast to all connected clients
+- Each client type may have different capabilities in the settings screen
+- This is a fundamental system pattern that must never be forgotten
+
+## Import Structure and Module Execution
+
+To ensure consistent and maintainable imports across the pi_client package, all internal imports must use relative paths (e.g., from .screens.splash_screen import SplashScreen). This approach:
+
+- Prevents import errors when refactoring or moving files
+- Ensures the package can be run and tested as a true Python package
+- Avoids namespace collisions and ambiguity
+
+**Launcher Requirement:**
+The launcher script must run the application as a module (python -m pi_client.main) rather than as a script (python main.py). This is required because Python only allows relative imports when the entry point is a module, not a script. The launcher sets PYTHONPATH to the package root and executes the app as a module, ensuring all relative imports work as intended.
+
+**Reference:** See pi_client/launch_scorer.sh for the correct invocation and pi_client/main.py for import patterns.

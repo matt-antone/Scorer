@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 Builder.load_file(os.path.join(os.path.dirname(__file__), "initiative_screen.kv"))
 
 class InitiativeScreen(BaseScreen):
-    """Screen for determining initiative order."""
+    """Screen for determining initiative order with comprehensive state management."""
     
     # Properties
     p1_name = StringProperty('')
@@ -37,13 +37,15 @@ class InitiativeScreen(BaseScreen):
     players = ListProperty([])
     rolls = DictProperty({})
     roll_validation = DictProperty({'min_value': 1, 'max_value': 6})
-    
+    _error_timeout = None
+    _current_error = ''
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.logger = logging.getLogger(__name__)
-        self.logger.info("InitiativeScreen: Initializing")
+        self.logger.info("InitiativeScreen: Initializing with enhanced state management")
         self.app = App.get_running_app()
-        self.initiative_winner = None  # Initialize with None
+        self.initiative_winner = None
         self.initiative_loser = None
         self._error_timeout = None
         self._current_error = ''
@@ -51,60 +53,137 @@ class InitiativeScreen(BaseScreen):
             self.add_widget(Label(text='InitiativeScreen loaded (no KV)'))
         self.p1_roll_button = Button(disabled=False)
         self.p2_roll_button = Button(disabled=False)
+        self._validate_initial_state()
+
+    def _validate_initial_state(self):
+        try:
+            if not self.app:
+                self.app = App.get_running_app()
+            if not hasattr(self.app, 'game_state'):
+                self.app.game_state = {}
+            required_keys = ['players', 'rolls', 'roll_validation', 'current_round']
+            for key in required_keys:
+                if key not in self.app.game_state:
+                    if key == 'players':
+                        self.app.game_state[key] = ['Player1', 'Player2']
+                    elif key == 'rolls':
+                        self.app.game_state[key] = {p: None for p in self.app.game_state['players']}
+                    elif key == 'roll_validation':
+                        self.app.game_state[key] = {'min_value': 1, 'max_value': 6}
+                    elif key == 'current_round':
+                        self.app.game_state[key] = 1
+            self.logger.debug("Initial state validation completed")
+        except Exception as e:
+            self.logger.error(f"Error in initial state validation: {str(e)}")
+            self.handle_error(e)
 
     def on_pre_enter(self):
-        """Called before the screen is entered."""
-        super().on_pre_enter()
-        self.initialize_rolls()
-        
+        try:
+            self.logger.info("InitiativeScreen: Pre-entering with state management")
+            super().on_pre_enter()
+            self.initialize_rolls()
+            self.has_error = False
+            self.update_view_from_state()
+            self.logger.info("InitiativeScreen: Pre-enter completed")
+        except Exception as e:
+            self.logger.error(f"Error in on_pre_enter: {str(e)}")
+            self.handle_error(e)
+
     def on_enter(self):
-        """Called when the screen is entered."""
-        super().on_enter()
-        # Register as observer
-        if self.state_manager:
-            self.state_manager.register_observer(self)
-        self.update_view_from_state()
+        try:
+            self.logger.info("InitiativeScreen: Entering with state management")
+            if self.state_manager:
+                self.state_manager.register_observer(self)
+                self.logger.debug("Registered as state observer")
+            self.update_view_from_state()
+            self.broadcast_state()
+            self.logger.info("InitiativeScreen: Successfully entered")
+        except Exception as e:
+            self.logger.error(f"Error in on_enter: {str(e)}")
+            self.handle_error(e)
 
     def on_leave(self):
-        """Called when leaving the screen."""
-        # Unregister as observer
-        if self.state_manager:
-            self.state_manager.unregister_observer(self)
-        super().on_leave()
-        self.stop_sync()
-        if self._error_timeout:
-            self._error_timeout.cancel()
-            
-    def initialize_rolls(self):
-        """Initialize the rolls from game state."""
         try:
-            self.players = self.app.game_state.get('players', [])
+            self.logger.info("InitiativeScreen: Leaving with cleanup")
+            if self.state_manager:
+                self.state_manager.unregister_observer(self)
+                self.logger.debug("Unregistered as state observer")
+            self.stop_sync()
+            if self._error_timeout:
+                self._error_timeout.cancel()
+                self._error_timeout = None
+            super().on_leave()
+            self.logger.info("InitiativeScreen: Successfully left")
+        except Exception as e:
+            self.logger.error(f"Error in on_leave: {str(e)}")
+
+    def on_state_update(self, state):
+        try:
+            self.logger.debug(f"[InitiativeScreen] Received state update: {state}")
+            if not self.validate_incoming_state(state):
+                raise StateError("Invalid incoming state")
+            self.p1_name = state.get('p1_name', '')
+            self.p2_name = state.get('p2_name', '')
+            self.current_round = state.get('current_round', 1)
+            self.players = state.get('players', ['Player1', 'Player2'])
+            self.rolls = state.get('rolls', {p: None for p in self.players})
+            self.roll_validation = state.get('roll_validation', {'min_value': 1, 'max_value': 6})
+            self.initiative_winner = state.get('initiative_winner', None)
+            self.initiative_loser = state.get('initiative_loser', None)
+            self.update_ui()
+            self.logger.debug("State update processed successfully")
+        except Exception as e:
+            self.logger.error(f"Error in on_state_update: {str(e)}")
+            self.handle_error(e)
+
+    def validate_incoming_state(self, state):
+        try:
+            if not isinstance(state, dict):
+                return False
+            required_keys = ['players', 'rolls', 'roll_validation', 'current_round']
+            for key in required_keys:
+                if key not in state:
+                    self.logger.warning(f"Missing required key in state: {key}")
+                    return False
+            if not isinstance(state.get('rolls', {}), dict):
+                return False
+            if not isinstance(state.get('players', []), list):
+                return False
+            return True
+        except Exception as e:
+            self.logger.error(f"Error validating incoming state: {str(e)}")
+            return False
+
+    def initialize_rolls(self):
+        try:
+            self.players = self.app.game_state.get('players', ['Player1', 'Player2'])
             self.rolls = {player: None for player in self.players}
             self.roll_validation = self.app.game_state.get('roll_validation', {'min_value': 1, 'max_value': 6})
+            self.logger.debug("Rolls initialized successfully")
         except Exception as e:
+            self.logger.error(f"Error in initialize_rolls: {str(e)}")
             self.handle_roll_validation_error()
-            
+
     def validate_roll(self, roll):
-        """Validate a roll value."""
-        if not isinstance(roll, int) or roll < 1 or roll > 6:
-            raise ValidationError("Invalid roll value")
-        return True
-            
+        try:
+            min_val = self.roll_validation.get('min_value', 1)
+            max_val = self.roll_validation.get('max_value', 6)
+            if not isinstance(roll, int) or roll < min_val or roll > max_val:
+                raise ValidationError("Invalid roll value")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error in validate_roll: {str(e)}")
+            self.handle_roll_validation_error()
+            return False
+
     def determine_initiative(self):
-        """Determine initiative based on roll results."""
         try:
             if None in self.rolls.values():
                 return
-            
-            # Get roll values
             p1_roll = self.rolls.get(self.players[0], 0)
             p2_roll = self.rolls.get(self.players[1], 0)
-            
-            # Update UI with roll results
             self.ids.p1_roll_label.text = str(p1_roll)
             self.ids.p2_roll_label.text = str(p2_roll)
-            
-            # Determine winner
             if p1_roll > p2_roll:
                 self.winner_id = 1
                 self.initiative_winner = self.players[0]
@@ -120,147 +199,177 @@ class InitiativeScreen(BaseScreen):
                 self.ids.p2_choice_box.opacity = 1
                 self.ids.p2_choice_box.disabled = False
             else:
-                # Tie - reset for re-roll
                 self.reset_rolls()
                 self.ids.status_label.text = "It's a tie! Roll again."
                 return
-            
-            # Update game state
             if self.app:
                 self.app.game_state.update({
                     'initiative_winner': self.initiative_winner,
                     'initiative_loser': self.initiative_loser,
                     'current_round': self.current_round
                 })
-                
+            self.broadcast_state()
+            self.logger.debug("Initiative determined and state broadcasted")
         except Exception as e:
-            logger.error(f"Error in determine_initiative: {str(e)}")
+            self.logger.error(f"Error in determine_initiative: {str(e)}")
             self.handle_winner_validation_error()
 
     def handle_initiative_tie(self):
-        """Handle initiative tie by having tied players roll again."""
         try:
-            # Find players with the highest roll
             max_roll = max(self.rolls.values())
             tied_players = [p for p, r in self.rolls.items() if r == max_roll]
-            
-            # Reset rolls for tied players
             for player in tied_players:
                 self.rolls[player] = None
-                
-            # Update UI to show tie
             if hasattr(self, 'ids'):
                 if 'status_label' in self.ids:
                     self.ids.status_label.text = "Tie detected - tied players must roll again"
-                    
-                # Enable roll buttons for tied players
                 for player in tied_players:
                     button_id = f'{player}_roll_button'
                     if button_id in self.ids:
                         self.ids[button_id].disabled = False
-                        
-            # Show error message
             self.show_error("Tie detected - tied players must roll again")
-            
+            self.logger.debug("Initiative tie handled")
         except Exception as e:
+            self.logger.error(f"Error in handle_initiative_tie: {str(e)}")
             self.handle_initiative_determination_error()
-            
+
     def handle_roll_validation_error(self):
-        """Handle roll validation errors."""
-        self.show_error("Invalid roll value")
-        
-    def handle_initiative_determination_error(self):
-        """Handle initiative determination errors."""
-        self.show_error("Failed to determine initiative")
-        
-    def validate_state(self, required_keys=None):
-        """Validate the current state."""
-        if required_keys is None:
-            required_keys = [
-                'players', 'rolls', 'initiative_winner',
-                'roll_validation'
-            ]
-            
-        for key in required_keys:
-            if not hasattr(self, key):
-                raise StateError(f"Missing required state key: {key}")
-                
-        return True
-        
-    def validate_input(self, data, validators):
-        """Validate input data against validators."""
-        if not isinstance(data, dict):
-            raise ValidationError("Input must be a dictionary")
-            
-        for key, validator in validators.items():
-            if key not in data:
-                raise ValidationError(f"Missing required input: {key}")
-            if not validator(data[key]):
-                raise ValidationError(f"Invalid input for {key}")
-                
-        return True
-        
-    def update_view_from_state(self):
-        """Update the view based on current state."""
         try:
-            if not self.app:
-                self.app = App.get_running_app()
-            self.players = self.app.game_state.get('players', [])
-            self.rolls = self.app.game_state.get('rolls', {})
-            self.initiative_winner = self.app.game_state.get('initiative_winner', None)
-            self.roll_validation = self.app.game_state.get('roll_validation', {'min_value': 1, 'max_value': 6})
-            # Update dummy UI attributes for test compatibility
-            self.p1_roll_button.disabled = False
-            self.p2_roll_button.disabled = False
+            self.has_error = True
+            self._current_error = "Invalid roll value"
+            if hasattr(self.ids, 'error_label'):
+                self.ids.error_label.text = "Invalid roll value"
+                self.ids.error_label.opacity = 1
+            self.logger.warning("Roll validation error handled")
+        except Exception as e:
+            self.logger.error(f"Error in handle_roll_validation_error: {str(e)}")
+
+    def handle_initiative_determination_error(self):
+        try:
+            self.has_error = True
+            self._current_error = "Failed to determine initiative"
+            if hasattr(self.ids, 'error_label'):
+                self.ids.error_label.text = "Failed to determine initiative"
+                self.ids.error_label.opacity = 1
+            self.logger.warning("Initiative determination error handled")
+        except Exception as e:
+            self.logger.error(f"Error in handle_initiative_determination_error: {str(e)}")
+
+    def validate_state(self, required_keys=None):
+        try:
+            if required_keys is None:
+                required_keys = [
+                    'players', 'rolls', 'initiative_winner',
+                    'roll_validation'
+                ]
+            for key in required_keys:
+                if not hasattr(self, key):
+                    raise StateError(f"Missing required state key: {key}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error in validate_state: {str(e)}")
+            return False
+
+    def validate_input(self, data, validators):
+        try:
+            if not isinstance(data, dict):
+                raise ValidationError("Input must be a dictionary")
+            for key, validator in validators.items():
+                if key not in data:
+                    raise ValidationError(f"Missing required input: {key}")
+                if not validator(data[key]):
+                    raise ValidationError(f"Invalid input for {key}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error in validate_input: {str(e)}")
+            return False
+
+    def update_view_from_state(self):
+        try:
+            self.logger.debug("Updating view from state")
+            if not self.app or not hasattr(self.app, 'game_state'):
+                raise StateError("Game state not available")
+            state = self.app.game_state
+            self.p1_name = state.get('p1_name', '')
+            self.p2_name = state.get('p2_name', '')
+            self.current_round = state.get('current_round', 1)
+            self.players = state.get('players', ['Player1', 'Player2'])
+            self.rolls = state.get('rolls', {p: None for p in self.players})
+            self.roll_validation = state.get('roll_validation', {'min_value': 1, 'max_value': 6})
+            self.initiative_winner = state.get('initiative_winner', None)
+            self.initiative_loser = state.get('initiative_loser', None)
+            self.update_ui()
+            self.logger.debug("View update from state completed")
+        except Exception as e:
+            self.logger.error(f"Error in update_view_from_state: {str(e)}")
+            self.handle_error(e)
+
+    def update_ui(self):
+        try:
+            self.logger.debug("Updating UI elements")
+            if hasattr(self.ids, 'p1_name_label'):
+                self.ids.p1_name_label.text = self.p1_name or 'Player 1'
+            if hasattr(self.ids, 'p2_name_label'):
+                self.ids.p2_name_label.text = self.p2_name or 'Player 2'
+            if hasattr(self.ids, 'p1_roll_label'):
+                self.ids.p1_roll_label.text = str(self.rolls.get(self.players[0], ''))
+            if hasattr(self.ids, 'p2_roll_label'):
+                self.ids.p2_roll_label.text = str(self.rolls.get(self.players[1], ''))
+            if hasattr(self.ids, 'status_label'):
+                if self.initiative_winner:
+                    self.ids.status_label.text = f"{self.initiative_winner} won initiative!"
+                else:
+                    self.ids.status_label.text = "Roll to determine initiative."
+            if hasattr(self.ids, 'error_label'):
+                if self.has_error and self._current_error:
+                    self.ids.error_label.text = self._current_error
+                    self.ids.error_label.opacity = 1
+                else:
+                    self.ids.error_label.opacity = 0
+            self.logger.debug("UI update completed")
+        except Exception as e:
+            self.logger.error(f"Error in update_ui: {str(e)}")
+            self.handle_error(e)
+
+    def broadcast_state(self):
+        try:
+            if self.state_manager and self.state_manager.is_connected():
+                state_update = {
+                    'p1_name': self.p1_name,
+                    'p2_name': self.p2_name,
+                    'current_round': self.current_round,
+                    'players': list(self.players),
+                    'rolls': dict(self.rolls),
+                    'roll_validation': dict(self.roll_validation),
+                    'initiative_winner': self.initiative_winner,
+                    'initiative_loser': self.initiative_loser,
+                    'current_screen': 'initiative'
+                }
+                self.state_manager.broadcast_state(state_update)
+                self.logger.debug("State broadcast completed")
+            else:
+                self.logger.warning("State manager not available for broadcasting")
+        except Exception as e:
+            self.logger.error(f"Error in broadcast_state: {str(e)}")
+            self.handle_error(e)
+
+    def handle_error(self, error):
+        try:
+            if isinstance(error, ValidationError):
+                self.logger.warning(f"Validation error: {str(error)}")
+                self.show_error(f"Validation Error: {str(error)}")
+            elif isinstance(error, StateError):
+                self.logger.error(f"State error: {str(error)}")
+                self.show_error(f"State Error: {str(error)}")
+            elif isinstance(error, SyncError):
+                self.logger.error(f"Sync error: {str(error)}")
+                self.show_error(f"Sync Error: {str(error)}")
+            else:
+                self.logger.error(f"Unexpected error: {str(error)}")
+                self.show_error(f"Unexpected Error: {str(error)}")
             self.update_ui()
         except Exception as e:
-            self.handle_initiative_determination_error()
-            
-    def update_ui(self):
-        """Update the UI elements."""
-        try:
-            if hasattr(self, 'ids'):
-                # Update roll buttons
-                for player in self.players:
-                    button_id = f'{player}_roll_button'
-                    if button_id in self.ids:
-                        self.ids[button_id].disabled = self.rolls.get(player) is not None
-                        
-                # Update roll displays
-                for player in self.players:
-                    display_id = f'{player}_roll_display'
-                    if display_id in self.ids:
-                        roll = self.rolls.get(player)
-                        self.ids[display_id].text = str(roll) if roll is not None else '-'
-                        
-                # Update winner display
-                if 'winner_display' in self.ids:
-                    self.ids.winner_display.text = f"Winner: {self.initiative_winner}" if self.initiative_winner else ""
-                    
-        except Exception as e:
-            self.handle_initiative_determination_error()
-            
-    def handle_client_update(self, update):
-        """Handle client updates."""
-        try:
-            if not isinstance(update, dict):
-                raise ValidationError("Invalid update format")
-                
-            update_type = update.get('type')
-            if update_type == 'roll':
-                player = update.get('player')
-                roll = update.get('value')
-                if player and roll is not None:
-                    self.validate_roll(roll)
-                    self.rolls[player] = roll
-                    self.update_ui()
-            elif update_type == 'initiative':
-                self.determine_initiative()
-            else:
-                raise ValidationError("Invalid update type")
-                
-        except Exception as e:
-            self.handle_initiative_determination_error()
+            self.logger.error(f"Error in handle_error: {str(e)}")
 
     def reset_screen(self, is_reroll=False):
         """Resets the screen to its initial state."""
@@ -378,14 +487,6 @@ class InitiativeScreen(BaseScreen):
             logger.error(f"Error in handle_winner_error: {str(e)}")
             self.handle_winner_validation_error()
 
-    def handle_error(self, error):
-        """Handle error."""
-        try:
-            self.show_error(str(error))
-        except Exception as e:
-            logger.error(f"Error in handle_error: {str(e)}")
-            self.handle_winner_validation_error()
-
     def proceed_to_scoreboard(self):
         """Proceed to scoreboard screen."""
         try:
@@ -414,22 +515,6 @@ class InitiativeScreen(BaseScreen):
             self.reset_screen()
         except Exception as e:
             logger.error(f"Error in handle_round_validation_error: {str(e)}")
-            self.handle_winner_validation_error()
-
-    def broadcast_state(self):
-        """Broadcast current state to all clients."""
-        try:
-            app = App.get_running_app()
-            if app and hasattr(app, 'game_state'):
-                app.game_state['p1_roll'] = self.p1_roll
-                app.game_state['p2_roll'] = self.p2_roll
-                app.game_state['winner_id'] = self.winner_id
-                app.game_state['initiative_winner'] = self.initiative_winner
-                app.game_state['initiative_loser'] = self.initiative_loser
-                if hasattr(app, 'broadcast_state'):
-                    app.broadcast_state()
-        except Exception as e:
-            logger.error(f"Error in broadcast_state: {str(e)}")
             self.handle_winner_validation_error()
 
     def add_roll(self, player, roll):
@@ -484,17 +569,4 @@ class InitiativeScreen(BaseScreen):
             self.rolls[player] = None
         self.initiative_winner = None
         self.initiative_loser = None
-        self.update_ui()
-
-    def on_state_update(self, state):
-        self.logger.debug(f"[InitiativeScreen] Received state update: {state}")
-        self.p1_name = state.get('p1_name', '')
-        self.p2_name = state.get('p2_name', '')
-        self.players = state.get('players', [])
-        self.rolls = state.get('rolls', {})
-        self.roll_validation = state.get('roll_validation', {'min_value': 1, 'max_value': 6})
-        self.current_round = state.get('current_round', 1)
-        self.max_rounds = state.get('max_rounds', 5)
-        self.initiative_winner = state.get('initiative_winner', None)
-        self.initiative_loser = state.get('initiative_loser', None)
         self.update_ui() 

@@ -529,3 +529,15 @@ def handle_client_update(self, update):
 - @/decisions/state_management_design.md
 - @/decisions/common_implementation_patterns.md
 - @/decisions/2024-06-11-pi-app-structure.md
+
+## NEVER FORGET
+
+### Settings Synchronization
+
+- ALL clients can modify settings
+- No client has exclusive rights
+- Changes sync across all clients
+- This is a fundamental truth
+- Never implement settings as host-only
+- Never restrict settings modification
+- Never forget this pattern

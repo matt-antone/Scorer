@@ -8,7 +8,7 @@ import logging
 import os
 import json
 from .base_screen import BaseScreen, ValidationError, StateError, SyncError
-from pi_client.state.resume_or_new_state import ResumeOrNewState
+from ..state.resume_or_new_state import ResumeOrNewState
 
 logger = logging.getLogger(__name__)
 

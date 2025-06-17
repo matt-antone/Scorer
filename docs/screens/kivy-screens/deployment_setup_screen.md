@@ -50,3 +50,11 @@ This screen functions as both a controller and a real-time display.
 - **Dual Functionality**: This screen must be able to both send actions (rolling, choosing roles) and passively receive state updates initiated from player clients, updating its UI in real-time.
 - **State-Driven UI**: The entire state of the screen—button status, roll results, visibility of choice/continue buttons—is derived directly from the central `game_state`.
 - **Name Display**: Player names are displayed from the previous name entry phase and are not updated in real-time during the deployment phase.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['deployment']['title']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.

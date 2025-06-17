@@ -4,52 +4,74 @@
 <SplashScreen>:
     canvas.before:
         Color:
-            rgba: 0.1, 0.1, 0.1, 1
+            rgba: 1, 1, 1, 1
         Rectangle:
             pos: self.pos
             size: self.size
+            source: 'pi_client/assets/background.png'
 
     BoxLayout:
         orientation: 'vertical'
-        padding: '40dp'
-        spacing: '40dp'
-
-        # Title
-        Label:
-            id: title_label
-            text: UI_STRINGS['splash']['title']
-            font_size: '32sp'
+        HeaderWidget:
+            id: header
+            title: UI_STRINGS['splash']['title']
             size_hint_y: None
-            height: '100dp'
+            height: '60dp'
 
-        # Version
-        Label:
-            id: version_label
-            text: root.app_version
-            font_size: '18sp'
-            size_hint_y: None
-            height: '30dp'
+        BoxLayout:
+            orientation: 'vertical'
+            padding: '40dp'
+            spacing: '20dp'
+            # Version
+            Label:
+                id: version_label
+                text: root.app_version
+                font_size: '18sp'
+                size_hint_y: None
+                height: '30dp'
+                color: 0, 0, 0, 1
 
-        # Loading Status
-        Label:
-            id: loading_label
-            text: root.loading_status
-            font_size: '20sp'
-            size_hint_y: None
-            height: '40dp'
+            # Loading Status
+            Label:
+                id: loading_label
+                text: root.loading_status
+                font_size: '20sp'
+                size_hint_y: None
+                height: '40dp'
+                color: 0, 0, 0, 1
 
-        # Status
-        Label:
-            text: root.status_text
-            font_size: '24sp'
-            size_hint_y: None
-            height: '50dp'
+            # Loading Indicator
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: None
+                height: '40dp'
+                spacing: '10dp'
 
-        # Start Button
-        Button:
-            text: UI_STRINGS['splash']['start']
-            font_size: '28sp'
-            size_hint_y: None
-            height: '80dp'
-            disabled: not root.start_enabled
-            on_release: root.on_start_button() 
+                Spinner:
+                    id: loading_spinner
+                    size_hint_x: None
+                    width: '40dp'
+                    active: root.is_loading
+                    color: 0, 0, 0, 1
+
+                Label:
+                    id: status_label
+                    text: root.status_text
+                    font_size: '24sp'
+                    color: 0, 0, 0, 1
+
+            # Start Button
+            Button:
+                text: UI_STRINGS['splash']['start']
+                font_size: '28sp'
+                size_hint_y: None
+                height: '80dp'
+                disabled: not root.start_enabled
+                on_release: root.on_start_button()
+                canvas.before:
+                    Color:
+                        rgba: [0.2, 0.2, 0.2, 1] if self.disabled else [0.3, 0.3, 0.3, 1]
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                color: [0.7, 0.7, 0.7, 1] if self.disabled else [1, 1, 1, 1] 

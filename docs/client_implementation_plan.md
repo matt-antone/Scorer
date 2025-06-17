@@ -1,5 +1,17 @@
 # Web Client Implementation Plan
 
+## Critical Settings Synchronization
+
+The settings system follows a fundamental pattern that must never be forgotten:
+
+1. **Equal Access**: ALL clients (Kivy host, Player 1, Player 2, Observer) can modify settings
+2. **No Restrictions**: No client has exclusive rights to modify settings
+3. **Global Synchronization**: Changes made by any client are synchronized across all other clients
+4. **Broadcast Updates**: Settings modifications are broadcast to all connected clients
+5. **Client Capabilities**: Each client type may have different capabilities in the settings screen
+
+This pattern is fundamental to the system's design and takes precedence over any other settings-related documentation or implementation.
+
 ## 1. Project Structure
 
 ```
@@ -310,3 +322,29 @@ export const mediaQueries = {
 6. Implement screens
 7. Add styling
 8. Test and deploy
+
+## Critical Settings Implementation
+
+The settings system implementation must adhere to these fundamental principles:
+
+1. **Universal Access**
+
+   - ALL clients can modify settings
+   - No client has exclusive rights
+   - Changes sync across all clients
+   - This is a fundamental truth
+
+2. **Implementation Requirements**
+
+   - Never implement settings as host-only
+   - Never restrict settings modification
+   - Always broadcast settings changes
+   - Always sync settings across clients
+
+3. **Client Responsibilities**
+   - Each client must handle settings updates
+   - Each client must broadcast its changes
+   - Each client must maintain sync state
+   - Each client must validate changes
+
+This pattern is fundamental to the system's design and takes precedence over any other settings-related documentation or implementation.

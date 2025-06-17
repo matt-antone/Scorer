@@ -142,3 +142,7 @@ NO EXCEPTIONS: The assistant MUST:
 # CRITICAL PI DEVELOPMENT RULE
 
 # Never edit project files directly on the Pi. All changes must be made on the development machine and pushed via git. This is a mandatory workflow rule for all development and testing.
+
+## CRITICAL SETTINGS RULE
+
+ALL clients (Kivy host, Player 1, Player 2, Observer) can modify settings. This is a fundamental system pattern that must never be forgotten. No client has exclusive rights to modify settings. Changes made by any client are synchronized across all other clients. This rule takes precedence over any other settings-related documentation or implementation.

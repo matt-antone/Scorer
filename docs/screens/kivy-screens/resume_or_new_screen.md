@@ -34,3 +34,11 @@ The `ResumeOrNewScreen` acts as a conditional gateway in the application's start
 - **Robust Initialization**: This screen uses the robust widget initialization pattern (binding to `ObjectProperty` changes) to prevent race conditions. This ensures that the buttons are fully loaded and ready before any `on_enter` logic attempts to access them, preventing potential `AttributeError` crashes.
 - **Controller Logic**: The decision to show this screen and the handling of the user's choice are managed by the main `ScorerApp` class, reinforcing the Controller-Responder pattern.
 - **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['resume_or_new']['found_game']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.

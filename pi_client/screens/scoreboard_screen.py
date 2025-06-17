@@ -1,18 +1,28 @@
-from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from pi_client.widgets.number_pad_popup import NumberPadPopup
-from pi_client.widgets.concede_confirm_popup import ConcedeConfirmPopup
+from kivy.app import App
+from kivy.properties import BooleanProperty, StringProperty, NumericProperty, ObjectProperty, DictProperty, ListProperty
+from kivy.lang import Builder
 from kivy.clock import Clock
+from ..state import GameStatus
+from .base_screen import BaseScreen, ValidationError, StateError, SyncError
+from kivy.uix.label import Label
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.popup import Popup
+from ..state.scoreboard_state import ScoreboardState
+from ..widgets.number_pad_popup import NumberPadPopup
+from ..widgets.concede_confirm_popup import ConcedeConfirmPopup
 import time
 import logging
-from pi_client.state import GameStatus
 from kivy.properties import BooleanProperty, StringProperty, NumericProperty, DictProperty, ListProperty
 from kivy.lang import Builder
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 import os
-from .base_screen import BaseScreen, ValidationError, StateError, SyncError
-from pi_client.state.scoreboard_state import ScoreboardState
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 
 logger = logging.getLogger(__name__)
 

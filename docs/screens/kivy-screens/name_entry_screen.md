@@ -39,3 +39,11 @@ The transition from this screen is handled by a hybrid model, allowing for both 
 - **Reliable Image Loading**: This screen is a key example of the robust image loading pattern documented in `.cursorrules`. It ensures that images generated at runtime (the QR codes) are displayed reliably.
 - **Controller Logic**: The main `ScorerApp` class handles all logic, including listening for remote name submissions and triggering the automatic screen transition.
 - **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['name_entry']['title']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.

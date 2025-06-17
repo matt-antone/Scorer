@@ -43,3 +43,11 @@ While the loading indicator is shown, the application performs several critical 
 - **Manual Start**: The transition is intentionally manual (requiring a button press) rather than timed. This ensures all background tasks have ample time to complete without creating race conditions.
 - **Feedback**: The loading indicator is a key piece of UX, informing the user that the application is preparing for use.
 - **Synchronization**: The activation of this screen on the Kivy host triggers a corresponding screen change on all connected observer and player clients, ensuring a synchronized experience across all views.
+
+## Universal UI Requirements (MANDATORY)
+
+- This screen (and all others) must use `@background.png` as the background image for the entire screen.
+- The `HeaderWidget` must be present at the top, with its `title` property set to `UI_STRINGS['splash']['title']`.
+- The header must include a cog (settings) icon on the far right; tapping it launches the Settings screen.
+
+These requirements are now mandatory for all screens to ensure UI consistency.
